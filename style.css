@@ -13,6 +13,11 @@
     --accent-red: #c70025;
 }
 
+/* --- Utility Class --- */
+.hidden {
+    display: none !important;
+}
+
 /* --- Base Body & Font Setup --- */
 body {
     /* Use brand fonts, falling back to Bootstrap's default sans-serif */
@@ -246,4 +251,13 @@ h1, .lead {
     color: var(--text-color);
     border-color: #ffffff; /* Change border to white on focus */
     box-shadow: 0 0 0 0.25rem rgba(253, 226, 0, 0.25); /* Yellow glow */
+}
+
+/* --- Location Info Text Color --- */
+
+/* This targets all h2 and p tags inside the info wrapper */
+#location-info-wrapper h2,
+#location-info-wrapper p {
+    color: #000; /* Sets text to black */
+    text-shadow: none; /* Removes the shadow */
 }

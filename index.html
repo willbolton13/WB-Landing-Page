@@ -44,35 +44,65 @@
             </div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card">
-                    <div class="icon-placeholder mb-3">ICON</div>
-                    <h3>Canvas</h3>
-                </a>
-            </div>
+    <div id="location-buttons-wrapper">
 
+        <div class="row g-4 justify-content-center">
             <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card">
-                    <div class="icon-placeholder mb-3">ICON</div>
-                    <h3>EventMap</h3>
-                </a>
+                <a href="#" class="portal-card"><h3>Universal Link 1</h3></a>
             </div>
-
             <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card">
-                    <div class="icon-placeholder mb-3">ICON</div>
-                    <h3>Library</h3>
-                </a>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card">
-                    <div class="icon-placeholder mb-3">ICON</div>
-                    <h3>Wellbeing</h3>
-                </a>
+                <a href="#" class="portal-card"><h3>Universal Link 2</h3></a>
             </div>
         </div>
+
+        <div class="row g-4 location-content hidden mt-4" id="brighton-buttons">
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Brighton Portal 1</h3></a></div>
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Brighton Portal 2</h3></a></div>
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Brighton Portal 3</h3></a></div>
+        </div>
+
+        <div class="row g-4 location-content hidden mt-4" id="sheffield-buttons">
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Sheffield Portal 1</h3></a></div>
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Sheffield Portal 2</h3></a></div>
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Sheffield Portal 3</h3></a></div>
+        </div>
+
+        <div class="row g-4 location-content hidden mt-4" id="online-buttons">
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Online Portal 1</h3></a></div>
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Online Portal 2</h3></a></div>
+            <div class="col-lg-3 col-md-6"><a href="#" class="portal-card"><h3>Online Portal 3</h3></a></div>
+        </div>
+
+    </div>
+
+
+    <div id="location-info-wrapper" class="container my-5">
+
+    <div class="row location-content hidden location-info-box" id="brighton-info">
+        <div class="col-md-6"><img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Brighton"></div>
+        <div class="col-md-6">
+            <h2>Welcome, Brighton Students</h2>
+            <p>Here is some specific information about your campus, upcoming events, and resources available only to you.</p>
+        </div>
+    </div>
+
+    <div class="row location-content hidden location-info-box" id="sheffield-info">
+        <div class="col-md-6"><img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Sheffield"></div>
+        <div class="col-md-6">
+            <h2>Welcome, Sheffield Students</h2>
+            <p>Here is some specific information about your campus, upcoming events, and resources available only to you.</p>
+        </div>
+    </div>
+
+    <div class="row location-content hidden location-info-box" id="online-info">
+        <div class="col-md-6"><img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Online"></div>
+        <div class="col-md-6">
+            <h2>Welcome, Online Students</h2>
+            <p>Here you can find links to your virtual learning environment, online support channels, and digital resources.</p>
+        </div>
+    </div>
+
+</div>
     </main>
 
     <footer class="site-footer">
@@ -128,6 +158,49 @@
 </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Wait until the entire page is loaded before running the script
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Get a reference to the dropdown menu
+            const locationSelect = document.getElementById('location-select');
+            
+            // Get a reference to ALL the content blocks that can be hidden/shown
+            const allLocationContent = document.querySelectorAll('.location-content');
+
+            // Listen for any change in the dropdown menu
+            locationSelect.addEventListener('change', function() {
+
+                // --- Step 1: Hide Everything ---
+                // Loop through all content blocks and add the 'hidden' class to them.
+                // This resets the page every time a new selection is made.
+                allLocationContent.forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                // --- Step 2: Show the Selected Content ---
+                // Get the value of the selected option (e.g., "brighton")
+                const selectedValue = this.value;
+
+                // Check if a valid location was selected (not the 'Choose...' option)
+                if (selectedValue) {
+                    // Find the specific button and info blocks that match the selection
+                    const selectedButtons = document.getElementById(selectedValue + '-buttons');
+                    const selectedInfo = document.getElementById(selectedValue + '-info');
+
+                    // If the elements exist, remove the 'hidden' class to make them visible
+                    if (selectedButtons) {
+                        selectedButtons.classList.remove('hidden');
+                    }
+                    if (selectedInfo) {
+                        selectedInfo.classList.remove('hidden');
+                    }
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
