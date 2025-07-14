@@ -14,9 +14,36 @@
     --accent-green: #6D9D7E;
 }
 
-/* --- Utility Class --- */
-.hidden {
-    display: none !important;
+/* --- Animation Styling for Dynamic Content --- */
+
+/* This is the default, "hidden" state for our content blocks */
+.location-content {
+    /* Smooth transition for all animated properties */
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out, max-height 0.5s ease-in-out;
+
+    /* Start transparent and slightly moved down */
+    opacity: 0;
+    transform: translateY(20px);
+
+    /* Collapse the element so it takes up no space */
+    max-height: 0;
+    overflow: hidden;
+    
+    /* Prevents interacting with the hidden element */
+    pointer-events: none; 
+}
+
+/* This is the "visible" state we will add with JavaScript */
+.location-content.is-visible {
+    /* Become fully opaque and move to its final position */
+    opacity: 1;
+    transform: translateY(0);
+
+    /* Expand to its full height */
+    max-height: 1500px; /* A large value to accommodate any content */
+    
+    /* Allow interaction */
+    pointer-events: auto;
 }
 
 /* --- Base Body & Font Setup --- */
