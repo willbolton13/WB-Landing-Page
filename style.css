@@ -20,36 +20,27 @@ html {
     scroll-behavior: smooth;
 }
 
-/* This is the default, "hidden" state for our content blocks */
 .location-content {
+    /* MODIFIED: Removed margin-top from the transition */
+    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.5s ease;
 
-    border-top: 1px solid transparent;
-    /* Smooth transition for all animated properties */
-    transition: opacity 0.4s ease-out, transform 0.4s ease-out, max-height 0.5s ease-in-out;
-
-    /* Start transparent and slightly moved down */
-    opacity: 0;
-    transform: translateY(20px);
-
-    /* Collapse the element so it takes up no space */
+    /* Collapse the element and its spacing */
     max-height: 0;
     overflow: hidden;
+    opacity: 0;
+    margin-top: 0; /* IMPORTANT: Margin is zero when hidden */
     
-    /* Prevents interacting with the hidden element */
     pointer-events: none; 
 }
 
-/* This is the "visible" state we will add with JavaScript */
+/* This is the "visible" state we add with JavaScript */
 .location-content.is-visible {
-    /* Become fully opaque and move to its final position */
     opacity: 1;
-    transform: translateY(0);
-
-    /* Expand to its full height */
     max-height: 1500px; /* A large value to accommodate any content */
-    
-    /* Allow interaction */
     pointer-events: auto;
+
+    /* IMPORTANT: The top margin is no longer needed here */
+    margin-top: 0; 
 }
 
 /* --- Base Body & Font Setup --- */
@@ -310,6 +301,14 @@ h1, .lead {
 #location-info-wrapper p {
     color: #000; /* Sets text to black */
     text-shadow: none; /* Removes the shadow */
+}
+
+#location-info-wrapper .location-content.is-visible {
+    margin-top: 3rem;
+}
+
+#location-buttons-wrapper .location-content.is-visible {
+    margin-top: -1.5rem;
 }
 
 /* --- Reusable Content Block System --- */
