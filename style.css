@@ -205,6 +205,7 @@ h1, .lead {
     list-style: none;
     padding: 0;
     margin: 0;
+    margin-top: -10px;
 }
 
 .footer-links a {
@@ -241,9 +242,12 @@ h1, .lead {
     border-radius: 50%;
     text-decoration: none;
     margin: 0 5px;
-    /* IMPORTANT: This makes the Font Awesome icon inside the link white */
     color: var(--text-color); 
     font-size: 1rem; /* Adjust icon size if needed */
+}
+
+.social-icons {
+    text-align: left;
 }
 
 .contact-info p {
