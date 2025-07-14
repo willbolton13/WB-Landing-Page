@@ -10,6 +10,7 @@
     --text-color: #ffffff;
     --accent-yellow: #fde200;
     --button-text-color: #000000;
+    --accent-red: #c70025;
 }
 
 /* --- Base Body & Font Setup --- */
@@ -122,4 +123,95 @@ h1, .lead {
     /* On hover, fill with yellow and make text black */
     background-color: var(--accent-yellow);
     color: var(--button-text-color);
+}
+
+/* --- Corrected Footer Styling --- */
+.site-footer {
+    background-color: var(--accent-red);
+    color: var(--text-color);
+    padding: 5rem 0 2rem 0; 
+    position: relative;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .site-footer {
+        text-align: left; 
+    }
+}
+
+.back-to-top {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--accent-yellow);
+    color: var(--button-text-color);
+    padding: 10px 25px;
+    border-radius: 5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.footer-links, .footer-why-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.3rem;
+    display: inline-block;
+    padding: 0.2rem 0;
+}
+
+.footer-why-list li {
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.footer-logo {
+    /* IMPORTANT: This rule constrains the logo size */
+    max-width: 250px;
+}
+
+.partner-logo {
+    max-width: 200px;
+    opacity: 0.8;
+}
+
+.social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #000;
+    border-radius: 50%;
+    text-decoration: none;
+    margin: 0 5px;
+    /* IMPORTANT: This makes the Font Awesome icon inside the link white */
+    color: var(--text-color); 
+    font-size: 1rem; /* Adjust icon size if needed */
+}
+
+.contact-info p {
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+}
+
+.contact-info a {
+    color: var(--text-color);
+}
+
+/* --- Social Icon Color Fix --- */
+
+/* This explicitly targets the icon itself to ensure it's white */
+.social-icons a i {
+    color: var(--text-color); 
 }
