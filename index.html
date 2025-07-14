@@ -55,6 +55,7 @@
             </div>
         </div>
 
+
         <div class="row g-4 location-content mt-1" id="brighton-buttons">
             <div class="col-lg-3 col-md-6"><a href="#" class="portal-card portal-card-green"><h3>Brighton Portal 1</h3></a></div>
             <div class="col-lg-3 col-md-6"><a href="#" class="portal-card portal-card-green"><h3>Brighton Portal 2</h3></a></div>
@@ -79,9 +80,9 @@
     </div>
 
 
-    <div id="location-info-wrapper" class="my-5">
+    <div id="location-info-wrapper" class="location-content">
 
-    <div class="row location-content location-info-box" id="brighton-info">
+    <div class="row location-content location-info-box mt-3" id="brighton-info">
         <div class="col-md-6"><img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Brighton"></div>
         <div class="col-md-6">
             <h2>Welcome, Brighton Students</h2>
@@ -89,7 +90,7 @@
         </div>
     </div>
 
-    <div class="row location-content location-info-box" id="sheffield-info">
+    <div class="row location-content location-info-box mt-3" id="sheffield-info">
         <div class="col-md-6"><img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Sheffield"></div>
         <div class="col-md-6">
             <h2>Welcome, Sheffield Students</h2>
@@ -97,7 +98,7 @@
         </div>
     </div>
 
-    <div class="row location-content location-info-box" id="online-info">
+    <div class="row location-content location-info-box mt-3" id="online-info">
         <div class="col-md-6"><img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Online"></div>
         <div class="col-md-6">
             <h2>Welcome, Online Students</h2>
@@ -113,7 +114,7 @@
 
         <a href="#" class="back-to-top">▲ BACK TO TOP</a>
 
-        <div class="row">
+        <div class="row align-items-start">
 
             <div class="col-lg-3 col-md-6 mb-4">
                 <ul class="footer-links">
@@ -165,14 +166,15 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Get references to all the elements we need to control
         const locationSelect = document.getElementById('location-select');
-        const allLocationContent = document.querySelectorAll('.location-content');
+        const allContent = document.querySelectorAll('.location-content');
+        const infoWrapper = document.getElementById('location-info-wrapper');
 
         locationSelect.addEventListener('change', function() {
             // --- Step 1: Hide Everything ---
-            // Loop through all content blocks and REMOVE the 'is-visible' class.
-            // This will trigger the fade-out/slide-up animation.
-            allLocationContent.forEach(content => {
+            // Remove the 'is-visible' class from all dynamic content blocks.
+            allContent.forEach(content => {
                 content.classList.remove('is-visible');
             });
 
@@ -180,15 +182,21 @@
             const selectedValue = this.value;
 
             if (selectedValue) {
+                // Find the specific buttons and info *inside* the wrappers
                 const selectedButtons = document.getElementById(selectedValue + '-buttons');
                 const selectedInfo = document.getElementById(selectedValue + '-info');
 
-                // If the elements exist, ADD the 'is-visible' class to trigger the animation.
+                // Make them visible
                 if (selectedButtons) {
                     selectedButtons.classList.add('is-visible');
                 }
                 if (selectedInfo) {
                     selectedInfo.classList.add('is-visible');
+                }
+
+                // IMPORTANT: Also make the main info WRAPPER visible
+                if (infoWrapper) {
+                    infoWrapper.classList.add('is-visible');
                 }
             }
         });
