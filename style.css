@@ -21,8 +21,7 @@ html {
 }
 
 .location-content {
-    /* MODIFIED: Removed margin-top from the transition */
-    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.5s ease;
+    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.5s ease, margin-top 0.5s ease;
 
     /* Collapse the element and its spacing */
     max-height: 0;
@@ -303,12 +302,12 @@ h1, .lead {
     text-shadow: none; /* Removes the shadow */
 }
 
-#location-info-wrapper .location-content.is-visible {
-    margin-top: 3rem;
+#location-buttons-wrapper > .location-content.is-visible {
+    margin-top: -1.5rem;
 }
 
-#location-buttons-wrapper .location-content.is-visible {
-    margin-top: -1.5rem;
+#location-info-wrapper > .location-content.is-visible {
+    margin-top: 3rem;
 }
 
 /* --- Reusable Content Block System --- */
@@ -403,7 +402,7 @@ h1, .lead {
 /* A utility class to trigger the fade-out/slide-up animation */
 .is-fading-out {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-5px);
 }
 
 /* Styles the location name inside the H1 heading */
