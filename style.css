@@ -16,8 +16,14 @@
 
 /* --- Animation Styling for Dynamic Content --- */
 
+html {
+    scroll-behavior: smooth;
+}
+
 /* This is the default, "hidden" state for our content blocks */
 .location-content {
+
+    border-top: 1px solid transparent;
     /* Smooth transition for all animated properties */
     transition: opacity 0.4s ease-out, transform 0.4s ease-out, max-height 0.5s ease-in-out;
 
@@ -91,7 +97,8 @@ h1, .lead {
     color: var(--accent-yellow);
     font-weight: 800; /* Makes the yellow text slightly bolder to pop */
     text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
-    font-size: 1.8rem; 
+    font-size: 1.7rem;
+    text-transform: uppercase;
 }
 
 .display-4 {
@@ -361,3 +368,36 @@ h1, .lead {
     transform: scale(1.05);
 }
 
+/* --- Universal Icon Styling --- */
+.portal-card-icon {
+    /* Spacing for the wrapper */
+    margin-bottom: 1rem;
+    
+    /* Styles for Bootstrap Icons (as they are like a font) */
+    font-size: 5rem; /* Controls the size of Bootstrap Icons */
+    color: inherit; /* Makes Bootstrap Icons inherit the button's text color */
+}
+
+/* Styles specifically for your custom image icons */
+.portal-card-icon img {
+    height: 50px; /* Set a consistent height for your custom icons */
+    width: auto;
+}
+
+/* --- Text Animation & Styling --- */
+
+/* Base styles for elements that will animate */
+.display-4, .location-prompt {
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+/* A utility class to trigger the fade-out/slide-up animation */
+.is-fading-out {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* Styles the location name inside the H1 heading */
+.location-name {
+    color: var(--accent-yellow);
+}
