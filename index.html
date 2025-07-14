@@ -33,7 +33,15 @@
     <main class="container my-5">
         <div class="text-center mb-5">
             <h1 class="display-4">Welcome to your student portal</h1>
-            <p class="lead">Select a service to get started.</p>
+            <h3 class="lead location-prompt">Select a location to get started.</h3>
+
+            <div class="col-lg-6 mx-auto"> <select class="form-select" id="location-select" aria-label="Select a location">
+                    <option selected disabled>Choose your campus...</option>
+                    <option value="brighton">Brighton</option>
+                    <option value="sheffield">Sheffield</option>
+                    <option value="online">Online</option>
+                </select>
+            </div>
         </div>
 
         <div class="row g-4">

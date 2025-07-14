@@ -44,14 +44,21 @@ header {
 main.container {
     position: relative; /* Crucial for z-index to work */
     z-index: 2;         /* Places the content IN FRONT of the hero */
-    margin-top: -30vh !important; /* Pulls content up over the hero image */
+    margin-top: -40vh !important; /* Pulls content up over the hero image */
 }
 
 /* --- Typography --- */
 h1, .lead {
     color: var(--text-color);
     /* Added text-shadow for readability on image backgrounds */
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.location-prompt {
+    color: var(--accent-yellow);
+    font-weight: 800; /* Makes the yellow text slightly bolder to pop */
+    text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
+    font-size: 1.4rem; 
 }
 
 .display-4 {
@@ -214,4 +221,29 @@ h1, .lead {
 /* This explicitly targets the icon itself to ensure it's white */
 .social-icons a i {
     color: var(--text-color); 
+}
+
+/* --- Location Dropdown Styling --- */
+.form-select {
+    background-color: var(--header-color);
+    color: var(--text-color);
+    border: 2px solid var(--accent-yellow);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+    padding: .5rem;
+}
+
+/* Style for the dropdown options */
+.form-select option {
+    background: var(--header-color);
+    color: var(--text-color);
+}
+
+/* Style for when the dropdown is clicked/focused */
+.form-select:focus {
+    background-color: var(--header-color);
+    color: var(--text-color);
+    border-color: #ffffff; /* Change border to white on focus */
+    box-shadow: 0 0 0 0.25rem rgba(253, 226, 0, 0.25); /* Yellow glow */
 }
