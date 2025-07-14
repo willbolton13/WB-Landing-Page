@@ -8,9 +8,10 @@
     --background-color: #ffffff;
     --header-color: #000000;
     --text-color: #ffffff;
-    --accent-yellow: #fde200;
+    --accent-yellow: #F6DD0D;
     --button-text-color: #000000;
-    --accent-red: #c70025;
+    --accent-red: #DE0029;
+    --accent-green: #6D9D7E;
 }
 
 /* --- Utility Class --- */
@@ -101,6 +102,12 @@ h1, .lead {
     text-transform: uppercase;
     margin: 0; /* Remove default margin from h3 */
     color: inherit; /* Ensures text color changes with the parent link */
+}
+
+/* --- Green Button Modifier --- */
+.portal-card-green {
+    background-color: var(--accent-green);
+    color: var(--text-color); /* White text */
 }
 
 /* --- Placeholder for an Icon inside the cards --- */
