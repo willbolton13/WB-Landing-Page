@@ -91,7 +91,7 @@ h1, .lead {
     color: var(--accent-yellow);
     font-weight: 800; /* Makes the yellow text slightly bolder to pop */
     text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
-    font-size: 1.4rem; 
+    font-size: 1.8rem; 
 }
 
 .display-4 {
@@ -246,10 +246,6 @@ h1, .lead {
     font-size: 1rem; /* Adjust icon size if needed */
 }
 
-.social-icons {
-    text-align: left;
-}
-
 .contact-info p {
     margin-bottom: 1rem;
     font-size: 0.8rem;
@@ -298,4 +294,15 @@ h1, .lead {
 #location-info-wrapper p {
     color: #000; /* Sets text to black */
     text-shadow: none; /* Removes the shadow */
+}
+
+/* --- Reusable Content Block Styling --- */
+.content-block {
+    /* Adds space below each block */
+    margin-bottom: 3rem; 
+}
+
+/* Removes the margin from the very last block in a section */
+.content-block:last-child {
+    margin-bottom: 0;
 }
