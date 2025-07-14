@@ -134,21 +134,25 @@ h1, .lead {
     font-size: 1.5rem;
     font-weight: 700;
     text-transform: uppercase;
-    margin: 0; /* Remove default margin from h3 */
-    color: inherit; /* Ensures text color changes with the parent link */
+    /* Remove default margins to allow for tight grouping */
+    margin-top: 0;
+    margin-bottom: 0.25rem; /* Adds a small gap above the subtitle */
+    color: inherit;
+}
+
+.portal-card-subtitle {
+    font-size: 0.9rem;
+    font-weight: 400; /* Regular font weight */
+    text-transform: none; /* Ensures it's not uppercase */
+    margin: 0; /* Removes any default paragraph margins */
+    color: inherit;
+    max-width: 90%; /* Prevents text from hitting the button edges */
 }
 
 /* --- Green Button Modifier --- */
 .portal-card-green {
     background-color: var(--accent-green);
     color: var(--text-color); /* White text */
-}
-
-/* --- Placeholder for an Icon inside the cards --- */
-.icon-placeholder {
-    font-size: 3rem;
-    font-weight: bold;
-    /* In a real scenario, you would style an <img> or <svg> tag here */
 }
 
 /* --- Logout Button Styling --- */
@@ -371,11 +375,17 @@ h1, .lead {
 /* --- Universal Icon Styling --- */
 .portal-card-icon {
     /* Spacing for the wrapper */
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     
     /* Styles for Bootstrap Icons (as they are like a font) */
     font-size: 5rem; /* Controls the size of Bootstrap Icons */
     color: inherit; /* Makes Bootstrap Icons inherit the button's text color */
+
+    height: 60px;
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Styles specifically for your custom image icons */
