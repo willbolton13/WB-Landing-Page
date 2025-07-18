@@ -209,6 +209,18 @@ h1, .lead {
     margin-top: -10px;
 }
 
+/* Hide footer links by default (on small screens) */
+.footer-links {
+    display: none; /* Add this line */
+}
+
+/* Show footer links only on screens wider than 767px (typical tablet/desktop breakpoint) */
+@media (min-width: 768px) { /* This matches Bootstrap's 'md' breakpoint */
+    .footer-links {
+        display: block; /* Change to block for desktop display */
+    }
+}
+
 .footer-links a {
     color: var(--text-color);
     text-decoration: none;
@@ -408,4 +420,77 @@ h1, .lead {
 /* Styles the location name inside the H1 heading */
 .location-name {
     color: var(--accent-yellow);
+}
+
+/* --- Header Adjustments --- */
+header .container {
+    padding-right: 15px; /* Add some padding to the right to prevent overlap with toggler */
+}
+
+/* --- Hamburger Menu Icon Styling --- */
+.navbar-toggler {
+    border: none; /* Remove default border */
+    padding: 0; /* Remove default padding */
+}
+
+.navbar-toggler:hover {
+    filter: brightness(.3); /* Slightly darken the toggler on focus */
+    filter: blur(5px);
+    filter: grayscale(100%);
+}
+
+.navbar-toggler-icon {
+    /* Customizing the hamburger icon color */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23F6DD0D' stroke-linecap='round' stroke-miterlimit='10' stroke-width='4' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    /* Make the icon white */
+    font-size: 1.8rem;
+}
+
+/* --- Offcanvas Menu Styling --- */
+.offcanvas {
+    background-color: var(  --accent-red); /* Match header background */
+    color: var(--text-color); /* White text for menu items */
+}
+
+.offcanvas-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Subtle separator */
+}
+
+.offcanvas-title {
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+.offcanvas .btn-close {
+    filter: brightness(0) invert(1); /* Make close button white */
+    font-size: 1.4rem;
+}
+
+.offcanvas-body .nav-link {
+    color: var(--text-color); /* White text for links */
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 0.75rem 0;
+    transition: color 0.2s ease-in-out;
+}
+
+.offcanvas-body .nav-link:hover {
+   color: var(--header-color);
+}
+
+.btn-logout-mobile {
+    background-color: var(--text-color); /* Changed to white for high contrast on red background */
+    color: var(--button-text-color) !important; /* Text color now accent-red */
+    padding: 0.75rem 1rem !important;
+    border-radius: 5px;
+    text-align: center;
+    margin-top: 1rem;
+    display: block;
+    font-size: 1.2rem !important;
+    font-weight: 700; /* Ensure it's bold */
+}
+
+.btn-logout-mobile:hover {
+    background-color: #000000; /* Slightly off-white/light gray on hover for the button */
+    color: var(--text-color) !important;
 }
