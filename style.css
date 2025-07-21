@@ -448,12 +448,17 @@ header .container {
 
 /* --- Offcanvas Menu Styling --- */
 .offcanvas {
-    background-color: var(  --accent-red); /* Match header background */
-    color: var(--text-color); /* White text for menu items */
+    background-color: var(--accent-red);
+    color: var(--text-color);
+}
+
+.offcanvas-body {
+    flex-grow: 0;
 }
 
 .offcanvas-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Subtle separator */
+    /* This creates the TOP separator line */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
 }
 
 .offcanvas-title {
@@ -462,12 +467,12 @@ header .container {
 }
 
 .offcanvas .btn-close {
-    filter: brightness(0) invert(1); /* Make close button white */
+    filter: brightness(0) invert(1);
     font-size: 1.4rem;
 }
 
 .offcanvas-body .nav-link {
-    color: var(--text-color); /* White text for links */
+    color: var(--text-color);
     font-weight: 700;
     font-size: 1.2rem;
     padding: 0.75rem 0;
@@ -478,19 +483,26 @@ header .container {
    color: var(--header-color);
 }
 
+/* NEW: Styles for the new footer section */
+.offcanvas-footer {
+    padding: 1.5rem 1rem;
+    /* This creates the BOTTOM separator line */
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .btn-logout-mobile {
-    background-color: var(--text-color); /* Changed to white for high contrast on red background */
-    color: var(--button-text-color) !important; /* Text color now accent-red */
+    background-color: var(--text-color);
+    color: var(--button-text-color) !important;
     padding: 0.75rem 1rem !important;
     border-radius: 5px;
     text-align: center;
-    margin-top: 1rem;
-    display: block;
+    display: block; /* Makes it full-width inside the footer */
     font-size: 1.2rem !important;
-    font-weight: 700; /* Ensure it's bold */
+    font-weight: 700;
+    text-decoration: none; /* Add this line to remove the underline */
 }
 
 .btn-logout-mobile:hover {
-    background-color: #000000; /* Slightly off-white/light gray on hover for the button */
+    background-color: #000000;
     color: var(--text-color) !important;
 }
