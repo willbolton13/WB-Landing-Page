@@ -45,4 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         }, 200); 
     });
+
+    lucide.createIcons();
 });

@@ -1,7 +1,3 @@
-/* =================================================================
-   University Portal Stylesheet
-   All current styles as of 15 July 2025
-   ================================================================= */
 
 /* --- Core Brand Styles & Variables --- */
 :root {
@@ -12,6 +8,7 @@
     --button-text-color: #000000;
     --accent-red: #DE0029;
     --accent-green: #6D9D7E;
+    --icon-size: 80px; /* Default icon size */
 }
 
 /* --- Animation Styling for Dynamic Content --- */
@@ -384,23 +381,30 @@ h1, .lead {
 
 /* --- Universal Icon Styling --- */
 .portal-card-icon {
-    /* Spacing for the wrapper */
-    margin-bottom: 2rem;
-    
     /* Styles for Bootstrap Icons (as they are like a font) */
-    font-size: 5rem; /* Controls the size of Bootstrap Icons */
     color: inherit; /* Makes Bootstrap Icons inherit the button's text color */
-
-    height: 60px;
-    width: 60px;
+    height: 30%;
+    width: 30%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+.portal-card-icon svg {
+    margin-bottom: 30px;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    stroke: currentColor; /* Use the inherited color for the icon lines */
+}
+
+.portal-card-icon .bi {
+    margin-bottom: 30px;
+    font-size: var(--icon-size); /* Controls the size of Bootstrap Icons */
+}
+
 /* Styles specifically for your custom image icons */
 .portal-card-icon img {
-    height: 50px; /* Set a consistent height for your custom icons */
+    height: var(--icon-size); /* Set a consistent height for your custom icons */
     width: auto;
 }
 
