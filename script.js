@@ -81,13 +81,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     buttonsContainer.innerHTML = buttonHTML;
                 }
 
+                let contentHTML = '';
+                
                 if (fields.informationBlocks) {
                     const infoHTML = fields.informationBlocks.map((block, index) => createInfoBlockHTML(block, data.includes, index)).join('');
-                    infoContainer.innerHTML = `<div class="location-content is-visible">${infoHTML}</div>`;
+                    contentHTML += infoHTML;
+                }
+                
+                if (fields.centreStaff) {
+                    const staffHTML = createStaffSectionHTML(fields.centreStaff, data.includes);
+                    contentHTML += staffHTML;
+                }
+                
+                if (contentHTML) {
+                    infoContainer.innerHTML = `<div class="location-content is-visible">${contentHTML}</div>`;
 
                     // Use Intersection Observer directly instead of Motion's inView
                     setTimeout(() => {
-                        const blocks = infoContainer.querySelectorAll('.content-block');
+                        const blocks = infoContainer.querySelectorAll('.content-block, .staff-member');
                         
                         // Set initial state for all blocks
                         blocks.forEach((block, index) => {
@@ -167,6 +178,43 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
+    function createStaffSectionHTML(staffMembers, includes) {
+        const staffHTML = staffMembers.map(memberLink => {
+            const memberId = memberLink.sys.id;
+            const member = includes.Entry.find(entry => entry.sys.id === memberId);
+            if (!member) return '';
+            
+            const { fullName, jobTitle, staffEmail, photo } = member.fields;
+            const photoId = photo?.sys.id;
+            const photoAsset = photoId ? includes.Asset.find(asset => asset.sys.id === photoId) : null;
+            const photoUrl = photoAsset ? `https:${photoAsset.fields.file.url}` : 'https://placehold.co/300x300/DE0029/FFFFFF?text=' + (fullName ? fullName.charAt(0) : '?');
+            
+            return `
+                <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+                    <div class="staff-member">
+                        <div class="staff-photo">
+                            <img src="${photoUrl}" alt="${fullName}" class="img-fluid">
+                        </div>
+                        <div class="staff-info">
+                            <h4 class="staff-name">${fullName}</h4>
+                            <p class="staff-title">${jobTitle}</p>
+                            <a href="mailto:${staffEmail}" class="staff-email">${staffEmail}</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        return `
+            <div class="staff-section">
+                <div class="section-divider"></div>
+                <div class="row">
+                    ${staffHTML}
+                </div>
+            </div>
+        `;
+    }
+
     function createInfoBlockHTML(blockLink, includes, index) {
         const blockId = blockLink.sys.id;
         const block = includes.Entry.find(entry => entry.sys.id === blockId);
@@ -184,9 +232,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const layoutClass = index % 2 === 1 ? 'image-left' : '';
         return `
-            <hr>
             <div class="content-block ${layoutClass}">
-                <div class="row align-items-center">
+                <div class="row align-items-center justify-content-between">
                     <div class="col-md-7 content-block-text">
                         <h2>${heading}</h2>
                         <p>${contentHTML}</p>

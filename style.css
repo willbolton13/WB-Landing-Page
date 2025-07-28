@@ -1,4 +1,3 @@
-
 /* --- Core Brand Styles & Variables --- */
 :root {
     --background-color: #ffffff;
@@ -322,8 +321,8 @@ h1, .lead {
 /* --- Reusable Content Block System --- */
 .content-block {
     margin-bottom: 3rem;
-
 }
+
 .content-block:last-child {
     margin-bottom: 2rem;
 }
@@ -378,6 +377,79 @@ h1, .lead {
     background-color: var(--text-color);
     color: var(--button-text-color);
     transform: scale(1.05);
+}
+
+/* --- Staff Section Styling --- */
+.staff-section {
+    margin-top: 4rem;
+}
+
+.section-divider {
+    height: 3px;
+    background-color: var(--accent-yellow);
+    margin: 2rem 0 3rem 0;
+    border-radius: 2px;
+}
+
+.staff-member {
+    text-align: center;
+    padding: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.staff-member:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.staff-photo {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1rem auto;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--accent-red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.staff-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.staff-info {
+    color: #000;
+}
+
+.staff-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: #000;
+    text-transform: uppercase;
+}
+
+.staff-title {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+}
+
+.staff-email {
+    font-size: 0.9rem;
+    color: var(--accent-red);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.staff-email:hover {
+    color: var(--accent-green);
+    text-decoration: underline;
 }
 
 /* --- Universal Icon Styling --- */
