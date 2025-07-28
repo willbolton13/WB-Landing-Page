@@ -316,6 +316,13 @@ h1, .lead {
 
 #location-info-wrapper > .location-content.is-visible {
     margin-top: 3rem;
+    position: relative;
+    z-index: 2;
+}
+
+.buttons-container {
+  position: relative;
+  z-index: 1;
 }
 
 /* --- Reusable Content Block System --- */
@@ -583,3 +590,6 @@ header .container {
     background-color: #000000;
     color: var(--text-color) !important;
 }
+
+
+
