@@ -322,6 +322,7 @@ h1, .lead {
 /* --- Reusable Content Block System --- */
 .content-block {
     margin-bottom: 3rem;
+
 }
 .content-block:last-child {
     margin-bottom: 2rem;
