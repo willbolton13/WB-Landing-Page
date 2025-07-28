@@ -73,10 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.title = fields.pageTitle;
                 heading.innerHTML = fields.pageTitle || originalHeadingText;
                 
-                if (fields.locationButtons) {
-                    const buttonHTML = fields.locationButtons.map(button => createPortalButtonHTML(button, data.includes.Entry)).join('');
-                    buttonsContainer.innerHTML = `<div class="row g-4 location-content is-visible">${buttonHTML}</div>`;
-                }
+            if (fields.locationButtons) {
+                const buttonHTML = fields.locationButtons.map(button => createPortalButtonHTML(button, data.includes.Entry)).join('');
+                // Add classes for styling/animation directly to the existing container
+                buttonsContainer.classList.add('location-content', 'is-visible'); 
+                // Inject only the columns, not another row
+                buttonsContainer.innerHTML = buttonHTML;
+            }
 
                 if (fields.informationBlocks) {
                     const infoHTML = fields.informationBlocks.map((block, index) => createInfoBlockHTML(block, data.includes, index)).join('');
@@ -147,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const buttonId = buttonLink.sys.id;
         const button = entries.find(entry => entry.sys.id === buttonId);
         if (!button) return '';
-        const { buttonText, link, icon } = button.fields;
+        const { buttonText, link, icon, buttonSubtitle} = button.fields;
         const iconHTML = icon.startsWith('bi-') 
             ? `<i class="bi ${icon}"></i>`
             : `<i data-lucide="${icon}"></i>`;
@@ -158,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${iconHTML}
                     </div>
                     <h3>${buttonText}</h3>
+                    <p class="portal-card-subtitle">${buttonSubtitle}</p>
                 </a>
             </div>
         `;
