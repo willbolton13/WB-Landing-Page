@@ -73,13 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.title = fields.pageTitle;
                 heading.innerHTML = fields.pageTitle || originalHeadingText;
                 
-            if (fields.locationButtons) {
-                const buttonHTML = fields.locationButtons.map(button => createPortalButtonHTML(button, data.includes.Entry)).join('');
-                // Add classes for styling/animation directly to the existing container
-                buttonsContainer.classList.add('location-content', 'is-visible'); 
-                // Inject only the columns, not another row
-                buttonsContainer.innerHTML = buttonHTML;
-            }
+                if (fields.locationButtons) {
+                    const buttonHTML = fields.locationButtons.map(button => createPortalButtonHTML(button, data.includes.Entry)).join('');
+                    // Add classes for styling/animation directly to the existing container
+                    buttonsContainer.classList.add('location-content', 'is-visible'); 
+                    // Inject only the columns, not another row
+                    buttonsContainer.innerHTML = buttonHTML;
+                }
 
                 if (fields.informationBlocks) {
                     const infoHTML = fields.informationBlocks.map((block, index) => createInfoBlockHTML(block, data.includes, index)).join('');
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ? `<i class="bi ${icon}"></i>`
             : `<i data-lucide="${icon}"></i>`;
         return `
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-6 col-md-6">
                 <a href="${link}" target="_blank" class="portal-card portal-card-green">
                     <div class="portal-card-icon">
                         ${iconHTML}
@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const layoutClass = index % 2 === 1 ? 'image-left' : '';
         return `
+            <hr>
             <div class="content-block ${layoutClass}">
                 <div class="row align-items-center">
                     <div class="col-md-7 content-block-text">
