@@ -1,4 +1,4 @@
-<!--Lucide Icon Test-->
+<!--Contentful Implimentation -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,16 +76,14 @@
             <h1 class="display-4">Welcome to your student portal</h1>
             <p class="lead location-prompt">Select a location to get started.</p>
 
-            <div class="col-lg-6 mx-auto"> <select class="form-select" id="location-select" aria-label="Select a location">
+            <div class="col-lg-6 mx-auto">
+                <select class="form-select" id="location-select" aria-label="Select a location">
                     <option selected disabled>Choose your campus...</option>
-                    <option value="brighton">Brighton</option>
-                    <option value="sheffield">Sheffield</option>
-                    <option value="online">Online</option>
                 </select>
             </div>
         </div>
 
-    <div id="location-buttons-wrapper">
+
 
         <div class="row g-4 justify-content-center mb-4">
             <div class="col-lg-6 col-md-6">
@@ -113,266 +111,14 @@
             </div>
         </div>
 
-
-        <div class="row g-4 location-content" id="brighton-buttons">
-
-            <div class="col-lg-3 col-md-6">
-                <a href="https://waterbear.instructure.com/courses/891" target="_blank" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i data-lucide="school"></i>
-                    </div>
-                    <h3>Brighton BA Canvas Hub</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i data-lucide="notebook-tabs"></i>
-                    </div>
-                    <h3>Brighton Portal 2</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i data-lucide="origami"></i>
-                    </div>
-                    <h3>Brighton Portal 3</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i data-lucide="grid-2x2"></i>
-                    </div>
-                    <h3>Brighton Portal 4</h3>
-                </a>
-
-            </div>
-
-
-        </div>
-
-        <div class="row g-4 location-content" id="sheffield-buttons">
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-house-fill"></i>
-                    </div>
-                    <h3>Sheffield Portal 1</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-view-stacked"></i>
-                    </div>
-                    <h3>Sheffield Portal 2</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-vinyl-fill"></i>
-                    </div>
-                    <h3>Sheffield Portal 3</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-microsoft"></i>
-                    </div>
-                    <h3>Sheffield Portal 4</h3>
-                </a>
-
-            </div>
-
-
-        </div>
-
-        <div class="row g-4 location-content" id="online-buttons">
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-house-fill"></i>
-                    </div>
-                    <h3>Online Portal 1</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-view-stacked"></i>
-                    </div>
-                    <h3>Online Portal 2</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-vinyl-fill"></i>
-                    </div>
-                    <h3>Online Portal 3</h3>
-                </a>
-
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <a href="#" class="portal-card portal-card-green">
-
-                    <div class="portal-card-icon">
-                    <i class="bi bi-microsoft"></i>
-                    </div>
-                    <h3>Online Portal 4</h3>
-                </a>
-
-            </div>
-
-
-        </div>
-
+    <div id="location-buttons-wrapper">
+        <div id="buttons-container" class="row g-4 justify-content-center mb-4"></div>
     </div>
 
-
     <div id="location-info-wrapper">
+        <div id="info-container"></div>
+    </div>
 
-        <div class="location-content" id="brighton-info">
-        
-            <div class="content-block image-left">
-                <div class="row align-items-center">
-                    <div class="col-md-7 content-block-text">
-                        <h2>Welcome, Brighton Students</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
-                    </div>
-
-                    <div class="col-md-5 content-block-image">
-                    <img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Placeholder">
-                    <a href="#" class="overlap-btn">Link Out</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-block">
-                <div class="row align-items-center">
-                    <div class="col-md-7 content-block-text">
-                        <h2>Something Else About Brighton</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
-                    </div>
-
-                    <div class="col-md-5 content-block-image">
-                    <img src="https://placehold.co/800x800" class="img-fluid rounded" alt="Placeholder">
-                    <a href="#" class="overlap-btn">Link Out</a>
-                    </div>
-
-                </div>
-            </div>
-
-        </div>
-
-        <div class="location-content" id="sheffield-info">
-        
-            <div class="content-block image-left">
-                <div class="row align-items-center">
-                    <div class="col-md-7 content-block-text">
-                        <h2>Welcome, Sheffield Students</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
-                    </div>
-
-                    <div class="col-md-5 content-block-image">
-                    <img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Placeholder">
-                    <a href="#" class="overlap-btn">Link Out</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-block">
-                <div class="row align-items-center">
-                    <div class="col-md-7 content-block-text">
-                        <h2>Something Else About Sheffield</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
-                    </div>
-
-                    <div class="col-md-5 content-block-image">
-                    <img src="https://placehold.co/800x800" class="img-fluid rounded" alt="Placeholder">
-                    <a href="#" class="overlap-btn">Link Out</a>
-                    </div>
-                    
-                </div>
-            </div>
-
-        </div>
-
-  
-
-
-        <div class="location-content" id="online-info">
-        
-            <div class="content-block image-left">
-                <div class="row align-items-center">
-                    <div class="col-md-7 content-block-text">
-                        <h2>Welcome, Online Students</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
-                    </div>
-
-                    <div class="col-md-5 content-block-image">
-                    <img src="https://placehold.co/600x400" class="img-fluid rounded" alt="Placeholder">
-                    <a href="#" class="overlap-btn">Link Out</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-block">
-                <div class="row align-items-center">
-                    <div class="col-md-7 content-block-text">
-                        <h2>Something Else About Online</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
-                    </div>
-
-                    <div class="col-md-5 content-block-image">
-                    <img src="https://placehold.co/800x800" class="img-fluid rounded" alt="Placeholder">
-                    <a href="#" class="overlap-btn">Link Out</a>
-                    </div>
-                    
-                </div>
-            </div>
-
-        </div>
-
-
-  </div>
-
-
-</div>
     </main>
 
     <footer class="site-footer">
