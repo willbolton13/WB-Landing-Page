@@ -265,44 +265,101 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset dropdown to default state on page load
     locationSelect.selectedIndex = 0;
     
-    locationSelect.addEventListener('change', async function() {
-        const selectedValue = this.value;
+ // Replace the location change event listener in script.js with this optimized version
 
-        // Animate content out
-        await Promise.all([
-            animate(heading, { opacity: 0 }, { duration: 0.4, easing: "ease-out" }).finished,
-            animate(buttonsContainer, { opacity: 0 }, { duration: 0.3 }).finished,
-            animate(infoContainer, { opacity: 0 }, { duration: 0.3 }).finished
-        ]);
+locationSelect.addEventListener('change', async function() {
+    const selectedValue = this.value;
+    const isResetting = !selectedValue || this.selectedIndex === 0 || selectedValue === "Choose your campus...";
+    
+    // Store current heading text to check if it actually changes
+    const currentHeadingText = heading.innerHTML;
+    
+    // Animate content out (but not heading yet)
+    await Promise.all([
+        animate(buttonsContainer, { opacity: 0 }, { duration: 0.3 }).finished,
+        animate(infoContainer, { opacity: 0 }, { duration: 0.3 }).finished
+    ]);
 
-        // Clear content
-        buttonsContainer.innerHTML = '';
-        infoContainer.innerHTML = '';
-        buttonsContainer.classList.remove('location-content', 'is-visible');
+    // Clear content
+    buttonsContainer.innerHTML = '';
+    infoContainer.innerHTML = '';
+    buttonsContainer.classList.remove('location-content', 'is-visible');
 
-        if (!selectedValue || this.selectedIndex === 0 || selectedValue === "Choose your campus...") {
-            document.title = 'WaterBear Student Portal';
+    if (isResetting) {
+        document.title = 'WaterBear Student Portal';
+        
+        // Only animate heading if text is actually changing
+        if (currentHeadingText !== originalHeadingText) {
+            // Use transform instead of pure opacity for Firefox
+            await animate(heading, { 
+                opacity: [1, 0.8, 0],
+                transform: ['translateY(0)', 'translateY(-2px)', 'translateY(-5px)']
+            }, { 
+                duration: 0.2, 
+                easing: "ease-out" 
+            }).finished;
+            
             heading.innerHTML = originalHeadingText;
-            animate(heading, { opacity: 1 }, { duration: 0.5, easing: "ease-out" });
-            lucide.createIcons();
-            return;
-        }
-
-        try {
-            const data = await loadLocationData(selectedValue);
-            renderLocationContent(data);
             
-            // Animate content back in
-            animate(heading, { opacity: 1 }, { duration: 0.4 });
-            setupAnimations();
-            
-        } catch (error) {
-            infoContainer.innerHTML = '<div class="alert alert-danger text-center">Sorry, we could not load the content right now. Please try again later.</div>';
-            animate(heading, { opacity: 1 }, { duration: 0.4 });
+            // Animate back with transform
+            animate(heading, { 
+                opacity: [0, 0.8, 1],
+                transform: ['translateY(-5px)', 'translateY(-2px)', 'translateY(0)']
+            }, { 
+                duration: 0.3, 
+                easing: "ease-out" 
+            });
         }
         
         lucide.createIcons();
-    });
+        return;
+    }
+
+    try {
+        const data = await loadLocationData(selectedValue);
+        const location = data.items[0];
+        const fields = location.fields;
+        const newHeadingText = fields.pageTitle || originalHeadingText;
+        
+        // Update page title immediately (no flicker here)
+        document.title = fields.pageTitle || 'WaterBear Student Portal';
+        
+        // Only animate heading if text is actually changing
+        if (currentHeadingText !== newHeadingText) {
+            // Firefox-optimized animation
+            await animate(heading, { 
+                opacity: [1, 0],
+                transform: ['translateY(0)', 'translateY(-5px)']
+            }, { 
+                duration: 0.15,  // Faster animation
+                easing: "ease-in" 
+            }).finished;
+            
+            heading.innerHTML = newHeadingText;
+            
+            // Force a reflow before animating back (Firefox fix)
+            heading.offsetHeight;
+            
+            animate(heading, { 
+                opacity: [0, 1],
+                transform: ['translateY(5px)', 'translateY(0)']
+            }, { 
+                duration: 0.2,
+                easing: "ease-out" 
+            });
+        }
+        
+        // Render the rest of the content
+        renderLocationContent(data);
+        setupAnimations();
+        
+    } catch (error) {
+        infoContainer.innerHTML = '<div class="alert alert-danger text-center">Sorry, we could not load the content right now. Please try again later.</div>';
+        // No heading animation on error
+    }
+    
+    lucide.createIcons();
+});
 
     function createPortalButtonHTML(buttonLink, entries) {
         const buttonId = buttonLink.sys.id;
