@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Animate content out
         await Promise.all([
-            animate(heading, { opacity: 0 }, { duration: 0.3 }).finished,
+            animate(heading, { opacity: 0 }, { duration: 0.4, easing: "ease-out" }).finished,
             animate(buttonsContainer, { opacity: 0 }, { duration: 0.3 }).finished,
             animate(infoContainer, { opacity: 0 }, { duration: 0.3 }).finished
         ]);
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedValue || this.selectedIndex === 0) {
             document.title = 'WaterBear Student Portal';
             heading.innerHTML = originalHeadingText;
-            animate(heading, { opacity: 1 }, { duration: 0.4 });
+            animate(heading, { opacity: 1 }, { duration: 0.5, easing: "ease-out" });
             lucide.createIcons();
             return;
         }
