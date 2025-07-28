@@ -591,5 +591,18 @@ header .container {
     color: var(--text-color) !important;
 }
 
+/* Firefox-specific performance fixes */
+.display-4 {
+    will-change: opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0); /* Force hardware acceleration */
+}
+
+/* Firefox animation smoothing */
+@-moz-document url-prefix() {
+    .display-4 {
+        transition: opacity 0.3s ease-out;
+    }
+}
 
 

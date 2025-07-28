@@ -262,7 +262,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize
     populateLocationDropdown();
     lucide.createIcons();
-
+    // Reset dropdown to default state on page load
+    locationSelect.selectedIndex = 0;
+    
     locationSelect.addEventListener('change', async function() {
         const selectedValue = this.value;
 
@@ -278,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         infoContainer.innerHTML = '';
         buttonsContainer.classList.remove('location-content', 'is-visible');
 
-        if (!selectedValue || this.selectedIndex === 0) {
+        if (!selectedValue || this.selectedIndex === 0 || selectedValue === "Choose your campus...") {
             document.title = 'WaterBear Student Portal';
             heading.innerHTML = originalHeadingText;
             animate(heading, { opacity: 1 }, { duration: 0.5, easing: "ease-out" });
