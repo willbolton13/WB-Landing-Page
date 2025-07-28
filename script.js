@@ -1,24 +1,130 @@
 import { animate, inView } from "motion";
 
-const CONTENTFUL_SPACE_ID = '61gxmoi51hte';
-const CONTENTFUL_ACCESS_TOKEN = 'yhnd1CMUnXDBRbr5EcoHFyI_zWQ6INfhIOhQGs0H7MY';
+// Environment-based configuration with fallbacks
+const CONFIG = {
+    CONTENTFUL_SPACE_ID: window.ENV?.CONTENTFUL_SPACE_ID || '61gxmoi51hte',
+    CONTENTFUL_ACCESS_TOKEN: window.ENV?.CONTENTFUL_ACCESS_TOKEN || 'yhnd1CMUnXDBRbr5EcoHFyI_zWQ6INfhIOhQGs0H7MY'
+};
+
+// Development mode check
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+function debugLog(...args) {
+    if (isDevelopment) {
+        console.log(...args);
+    }
+}
+
+// Contentful API client with rate limiting
+class ContentfulClient {
+    constructor(spaceId, accessToken) {
+        this.spaceId = spaceId;
+        this.accessToken = accessToken;
+        this.baseUrl = `https://cdn.contentful.com/spaces/${spaceId}/environments/master`;
+        this.lastRequestTime = 0;
+        this.requestQueue = [];
+        this.isProcessingQueue = false;
+    }
+
+    async makeRequest(endpoint, params = {}) {
+        return new Promise((resolve, reject) => {
+            this.requestQueue.push({ endpoint, params, resolve, reject });
+            this.processQueue();
+        });
+    }
+
+    async processQueue() {
+        if (this.isProcessingQueue || this.requestQueue.length === 0) {
+            return;
+        }
+
+        this.isProcessingQueue = true;
+
+        while (this.requestQueue.length > 0) {
+            const { endpoint, params, resolve, reject } = this.requestQueue.shift();
+            
+            try {
+                // Rate limiting: Contentful allows 78 requests/second, we'll use 20/second to be safe
+                const now = Date.now();
+                const timeSinceLastRequest = now - this.lastRequestTime;
+                const minInterval = 50; // 50ms = 20 requests per second
+
+                if (timeSinceLastRequest < minInterval) {
+                    await new Promise(res => setTimeout(res, minInterval - timeSinceLastRequest));
+                }
+
+                this.lastRequestTime = Date.now();
+
+                const queryParams = new URLSearchParams({
+                    access_token: this.accessToken,
+                    ...params
+                });
+
+                const url = `${this.baseUrl}/${endpoint}?${queryParams}`;
+                debugLog('Making Contentful request:', url);
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                resolve(data);
+
+            } catch (error) {
+                console.error('Contentful API Error:', error);
+                reject(new Error('Failed to load content. Please try again.'));
+            }
+        }
+
+        this.isProcessingQueue = false;
+    }
+
+    async getLocations() {
+        return this.makeRequest('entries', { content_type: 'location' });
+    }
+
+    async getLocationData(locationName) {
+        return this.makeRequest('entries', {
+            content_type: 'location',
+            'fields.locationName': locationName,
+            include: 10
+        });
+    }
+}
+
+// Content validation helpers
+function validateContentfulResponse(data) {
+    if (!data || !data.items || !Array.isArray(data.items)) {
+        throw new Error('Invalid response format from Contentful');
+    }
+    
+    if (data.items.length === 0) {
+        throw new Error('No content found');
+    }
+    
+    return data;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-    // All variables and functions are now correctly inside the listener.
+    // Initialize Contentful client
+    const contentfulClient = new ContentfulClient(
+        CONFIG.CONTENTFUL_SPACE_ID,
+        CONFIG.CONTENTFUL_ACCESS_TOKEN
+    );
+
     const locationSelect = document.getElementById('location-select');
     const heading = document.querySelector('.display-4');
     const originalHeadingText = heading.textContent;
-    const promptText = document.querySelector('.location-prompt');
     const buttonsContainer = document.getElementById('buttons-container');
     const infoContainer = document.getElementById('info-container');
 
     async function populateLocationDropdown() {
-        const url = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/environments/master/entries?access_token=${CONTENTFUL_ACCESS_TOKEN}&content_type=location`;
-        
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to load locations');
-            const data = await response.json();
+            const data = await contentfulClient.getLocations();
+            validateContentfulResponse(data);
+            
             data.items.sort((a, b) => a.fields.locationName.localeCompare(b.fields.locationName));
             data.items.forEach(location => {
                 const option = document.createElement('option');
@@ -28,194 +134,170 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (error) {
             console.error("Error populating locations:", error);
+            locationSelect.innerHTML = '<option disabled>Unable to load locations</option>';
         }
     }
 
+    async function loadLocationData(selectedValue) {
+        try {
+            const data = await contentfulClient.getLocationData(selectedValue);
+            debugLog('Contentful data:', data);
+            return validateContentfulResponse(data);
+        } catch (error) {
+            console.error('Error fetching data from Contentful:', error);
+            throw error;
+        }
+    }
+
+    function renderLocationContent(data) {
+        const location = data.items[0];
+        const fields = location.fields;
+
+        debugLog('Location data:', location);
+
+        // Update page metadata
+        document.title = fields.pageTitle || 'WaterBear Student Portal';
+        heading.innerHTML = fields.pageTitle || originalHeadingText;
+        
+        // Render buttons
+        if (fields.locationButtons) {
+            debugLog('Location buttons:', fields.locationButtons);
+            debugLog('Includes entries:', data.includes.Entry);
+            
+            const buttonHTML = fields.locationButtons
+                .map(button => {
+                    const html = createPortalButtonHTML(button, data.includes.Entry);
+                    debugLog('Generated button HTML:', html);
+                    return html;
+                })
+                .filter(html => html)
+                .join('');
+            
+            if (buttonHTML) {
+                buttonsContainer.classList.add('location-content', 'is-visible');
+                buttonsContainer.innerHTML = buttonHTML;
+            }
+        }
+
+        // Render content blocks
+        let contentHTML = '';
+        
+        if (fields.informationBlocks) {
+            const infoHTML = fields.informationBlocks
+                .map((block, index) => createInfoBlockHTML(block, data.includes, index))
+                .filter(html => html)
+                .join('');
+            contentHTML += infoHTML;
+        }
+        
+        if (fields.centreStaff) {
+            const staffHTML = createStaffSectionHTML(fields.centreStaff, data.includes);
+            contentHTML += staffHTML;
+        }
+        
+        if (contentHTML) {
+            infoContainer.innerHTML = `<div class="location-content is-visible">${contentHTML}</div>`;
+        }
+    }
+
+    function setupAnimations() {
+        setTimeout(() => {
+            buttonsContainer.style.opacity = '1';
+            
+            // Animate dynamic buttons with Intersection Observer
+            const dynamicButtons = buttonsContainer.querySelectorAll('.portal-card');
+            if (dynamicButtons.length > 0) {
+                setupElementAnimations(dynamicButtons);
+            } else {
+                animate(buttonsContainer, { opacity: [0, 1], y: [10, 0] }, { duration: 0.5, delay: 0.1 });
+            }
+            
+            // Animate content blocks
+            const blocks = infoContainer.querySelectorAll('.content-block, .staff-member');
+            if (blocks.length > 0) {
+                setupElementAnimations(blocks);
+            }
+        }, 200);
+        
+        infoContainer.style.opacity = '1';
+    }
+
+    function setupElementAnimations(elements) {
+        // Set initial state
+        elements.forEach((element) => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(30px)';
+            element.style.transition = 'none';
+        });
+        
+        // Create intersection observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const element = entry.target;
+                    const index = Array.from(elements).indexOf(element);
+                    
+                    animate(element, 
+                        { 
+                            opacity: 1, 
+                            transform: "translateY(0px)" 
+                        }, 
+                        { 
+                            duration: 0.6, 
+                            delay: index * 0.1
+                        }
+                    );
+                    
+                    observer.unobserve(element);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+        
+        elements.forEach(element => observer.observe(element));
+    }
+
+    // Initialize
     populateLocationDropdown();
     lucide.createIcons();
 
     locationSelect.addEventListener('change', async function() {
         const selectedValue = this.value;
 
-        // Animate content out first.
+        // Animate content out
         await Promise.all([
             animate(heading, { opacity: 0 }, { duration: 0.3 }).finished,
             animate(buttonsContainer, { opacity: 0 }, { duration: 0.3 }).finished,
             animate(infoContainer, { opacity: 0 }, { duration: 0.3 }).finished
         ]);
 
+        // Clear content
+        buttonsContainer.innerHTML = '';
+        infoContainer.innerHTML = '';
+        buttonsContainer.classList.remove('location-content', 'is-visible');
+
         if (!selectedValue || this.selectedIndex === 0) {
             document.title = 'WaterBear Student Portal';
             heading.innerHTML = originalHeadingText;
-            buttonsContainer.innerHTML = '';
-            infoContainer.innerHTML = '';
-            
-            // Animate the original heading back in
             animate(heading, { opacity: 1 }, { duration: 0.4 });
             lucide.createIcons();
             return;
         }
 
-        const url = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/environments/master/entries?access_token=${CONTENTFUL_ACCESS_TOKEN}&content_type=location&fields.locationName=${selectedValue}&include=10`;
-
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-
-            // Add debugging
-            console.log('Contentful data:', data);
-            console.log('Location data:', data.items[0]);
-
-            buttonsContainer.innerHTML = '';
-            infoContainer.innerHTML = '';
-
-            if (data.items.length > 0) {
-                const location = data.items[0];
-                const fields = location.fields;
-
-                document.title = fields.pageTitle;
-                heading.innerHTML = fields.pageTitle || originalHeadingText;
-                
-                if (fields.locationButtons) {
-                    console.log('Location buttons:', fields.locationButtons);
-                    console.log('Includes entries:', data.includes.Entry);
-                    
-                    const buttonHTML = fields.locationButtons.map(button => {
-                        const html = createPortalButtonHTML(button, data.includes.Entry);
-                        console.log('Generated button HTML:', html);
-                        return html;
-                    }).join('');
-                    
-                    // Add classes for styling/animation directly to the existing container
-                    buttonsContainer.classList.add('location-content', 'is-visible'); 
-                    // Inject only the columns, not another row
-                    buttonsContainer.innerHTML = buttonHTML;
-                }
-
-                let contentHTML = '';
-                
-                if (fields.informationBlocks) {
-                    const infoHTML = fields.informationBlocks.map((block, index) => createInfoBlockHTML(block, data.includes, index)).join('');
-                    contentHTML += infoHTML;
-                }
-                
-                if (fields.centreStaff) {
-                    const staffHTML = createStaffSectionHTML(fields.centreStaff, data.includes);
-                    contentHTML += staffHTML;
-                }
-                
-                if (contentHTML) {
-                    infoContainer.innerHTML = `<div class="location-content is-visible">${contentHTML}</div>`;
-                }
-            }
+            const data = await loadLocationData(selectedValue);
+            renderLocationContent(data);
+            
+            // Animate content back in
+            animate(heading, { opacity: 1 }, { duration: 0.4 });
+            setupAnimations();
+            
         } catch (error) {
-            console.error('Error fetching data from Contentful:', error);
-            console.error('Full error details:', error.message, error.stack);
-            infoContainer.innerHTML = '<p class="text-center">Sorry, we could not load the content right now.</p>';
+            infoContainer.innerHTML = '<div class="alert alert-danger text-center">Sorry, we could not load the content right now. Please try again later.</div>';
+            animate(heading, { opacity: 1 }, { duration: 0.4 });
         }
-        
-        // Animate the new content back in.
-        animate(heading, { opacity: 1 }, { duration: 0.4 });
-        
-        // Set up animations for both buttons and info content
-        setTimeout(() => {
-            // First, make sure the buttons container is visible
-            buttonsContainer.style.opacity = '1';
-            
-            // Handle dynamic buttons with Intersection Observer (same as info blocks)
-            const dynamicButtons = buttonsContainer.querySelectorAll('.portal-card');
-            if (dynamicButtons.length > 0) {
-                // Set initial state for buttons
-                dynamicButtons.forEach((button, index) => {
-                    button.style.opacity = '0';
-                    button.style.transform = 'translateY(30px)';
-                    button.style.transition = 'none';
-                });
-                
-                // Create intersection observer for dynamic buttons
-                const buttonObserver = new IntersectionObserver((entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            const button = entry.target;
-                            const index = Array.from(dynamicButtons).indexOf(button);
-                            
-                            // Animate the button
-                            animate(button, 
-                                { 
-                                    opacity: 1, 
-                                    transform: "translateY(0px)" 
-                                }, 
-                                { 
-                                    duration: 0.6, 
-                                    delay: index * 0.1
-                                }
-                            );
-                            
-                            // Stop observing this element
-                            buttonObserver.unobserve(button);
-                        }
-                    });
-                }, {
-                    threshold: 0.1,
-                    rootMargin: '0px 0px -50px 0px'
-                });
-                
-                // Start observing all buttons
-                dynamicButtons.forEach(button => buttonObserver.observe(button));
-                
-            } else {
-                // If no dynamic buttons, just animate the container
-                animate(buttonsContainer, { opacity: [0, 1], y: [10, 0] }, { duration: 0.5, delay: 0.1 });
-            }
-            
-            // Handle info content animations with Intersection Observer
-            const blocks = infoContainer.querySelectorAll('.content-block, .staff-member');
-            if (blocks.length > 0) {
-                // Set initial state for all blocks
-                blocks.forEach((block, index) => {
-                    block.style.opacity = '0';
-                    block.style.transform = 'translateY(30px)';
-                    block.style.transition = 'none';
-                });
-                
-                // Create intersection observer for info blocks
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            const block = entry.target;
-                            const index = Array.from(blocks).indexOf(block);
-                            
-                            // Animate the block
-                            animate(block, 
-                                { 
-                                    opacity: 1, 
-                                    transform: "translateY(0px)" 
-                                }, 
-                                { 
-                                    duration: 0.6, 
-                                    delay: index * 0.1
-                                }
-                            );
-                            
-                            // Stop observing this element
-                            observer.unobserve(block);
-                        }
-                    });
-                }, {
-                    threshold: 0.1,
-                    rootMargin: '0px 0px -50px 0px'
-                });
-                
-                // Start observing all blocks
-                blocks.forEach(block => observer.observe(block));
-            }
-            
-        }, 200);
-        
-        // Don't animate the info container itself - let the individual blocks handle their own animations
-        // Just make sure the container is visible
-        infoContainer.style.opacity = '1';
         
         lucide.createIcons();
     });
@@ -227,27 +309,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const { buttonText, link, icon, buttonSubtitle } = button.fields;
         
-        // Log the button data for debugging
-        console.log('Processing button:', { buttonText, link, icon, buttonSubtitle });
+        debugLog('Processing button:', { buttonText, link, icon, buttonSubtitle });
         
-        // Check for missing required fields individually
+        // Validate required fields
         if (!buttonText) {
-            console.warn('Button missing buttonText:', button.fields);
+            debugLog('Button missing buttonText:', button.fields);
             return '';
         }
         
         if (!link) {
-            console.warn('Button missing link:', button.fields);
+            debugLog('Button missing link:', button.fields);
             return '';
         }
         
-        // Handle icon - default to 'square' if missing, and assume all icons are Lucide
         const iconName = icon || 'square';
         const iconHTML = `<i data-lucide="${iconName}"></i>`;
         
         return `
             <div class="col-lg-6 col-md-6">
-                <a href="${link}" target="_blank" class="portal-card portal-card-green">
+                <a href="${link}" target="_blank" rel="noopener noreferrer" class="portal-card portal-card-green">
                     <div class="portal-card-icon">
                         ${iconHTML}
                     </div>
@@ -265,15 +345,23 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!member) return '';
             
             const { fullName, jobTitle, staffEmail, photo } = member.fields;
+            
+            // Validate required fields
+            if (!fullName || !jobTitle || !staffEmail) {
+                debugLog('Staff member missing required fields:', { fullName, jobTitle, staffEmail });
+                return '';
+            }
+            
             const photoId = photo?.sys.id;
             const photoAsset = photoId ? includes.Asset.find(asset => asset.sys.id === photoId) : null;
-            const photoUrl = photoAsset ? `https:${photoAsset.fields.file.url}` : 'https://placehold.co/300x300/DE0029/FFFFFF?text=' + (fullName ? fullName.charAt(0) : '?');
+            const photoUrl = photoAsset ? `https:${photoAsset.fields.file.url}` : 
+                `https://placehold.co/300x300/DE0029/FFFFFF?text=${encodeURIComponent(fullName.charAt(0))}`;
             
             return `
                 <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
                     <div class="staff-member">
                         <div class="staff-photo">
-                            <img src="${photoUrl}" alt="${fullName}" class="img-fluid">
+                            <img src="${photoUrl}" alt="${fullName}" class="img-fluid" loading="lazy">
                         </div>
                         <div class="staff-info">
                             <h4 class="staff-name">${fullName}</h4>
@@ -283,11 +371,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `;
-        }).join('');
+        }).filter(html => html).join('');
+        
+        if (!staffHTML) return '';
         
         return `
             <div class="staff-section">
-                <div class="section-divider"></div>
+                <div class="section-divider" role="separator"></div>
                 <div class="row">
                     ${staffHTML}
                 </div>
@@ -299,18 +389,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const blockId = blockLink.sys.id;
         const block = includes.Entry.find(entry => entry.sys.id === blockId);
         if (!block) return '';
+        
         const { heading, content, image, buttonText, buttonLink } = block.fields;
+        
+        // Validate required fields
+        if (!heading || !content) {
+            debugLog('Info block missing required fields:', { heading, content });
+            return '';
+        }
+        
         const imageId = image?.sys.id;
         const imageAsset = imageId ? includes.Asset.find(asset => asset.sys.id === imageId) : null;
         const imageUrl = imageAsset ? `https:${imageAsset.fields.file.url}` : 'https://placehold.co/600x400';
+        
         const contentHTML = content.content.map(node => 
             node.content.map(innerNode => innerNode.value).join('')
         ).join('<br>');
+        
         let buttonHTML = '';
         if (buttonText && buttonLink) {
-            buttonHTML = `<a href="${buttonLink}" target="_blank" class="overlap-btn">${buttonText}</a>`;
+            buttonHTML = `<a href="${buttonLink}" target="_blank" rel="noopener noreferrer" class="overlap-btn">${buttonText}</a>`;
         }
+        
         const layoutClass = index % 2 === 1 ? 'image-left' : '';
+        
         return `
             <div class="content-block ${layoutClass}">
                 <div class="row align-items-center justify-content-between">
@@ -319,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p>${contentHTML}</p>
                     </div>
                     <div class="col-md-5 content-block-image">
-                        <img src="${imageUrl}" class="img-fluid rounded" alt="${heading}">
+                        <img src="${imageUrl}" class="img-fluid rounded" alt="${heading}" loading="lazy">
                         ${buttonHTML} 
                     </div>
                 </div>

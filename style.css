@@ -320,7 +320,7 @@ h1, .lead {
     z-index: 2;
 }
 
-.buttons-container {
+#buttons-container {
   position: relative;
   z-index: 1;
 }
