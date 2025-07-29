@@ -73,9 +73,12 @@ self.addEventListener('fetch', event => {
         .then(response => {
           // Clone the response before caching
           const responseToCache = response.clone();
+          
+          // Cache in background, don't wait
           caches.open(CACHE_NAME).then(cache => {
             cache.put(request, responseToCache);
           });
+          
           return response;
         })
         .catch(() => {
@@ -86,41 +89,44 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // For everything else, try cache first, then network
+  // For static assets we've cached, serve from cache immediately
+  if (urlsToCache.some(cached => request.url.includes(cached))) {
+    event.respondWith(
+      caches.match(request)
+        .then(response => {
+          if (response) {
+            // Return cached version immediately
+            return response;
+          }
+          // Not in cache somehow, fetch it
+          return fetch(request);
+        })
+    );
+    return;
+  }
+
+  // For everything else (dynamic content), try network first
   event.respondWith(
-    caches.match(request)
+    fetch(request)
       .then(response => {
-        if (response) {
-          // Found in cache
+        // Check if valid response
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
 
-        // Not in cache, fetch from network
-        return fetch(request).then(response => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
+        // Clone the response
+        const responseToCache = response.clone();
 
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Add to cache for future use
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, responseToCache);
-          });
-
-          return response;
+        // Add to cache in background
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(request, responseToCache);
         });
+
+        return response;
       })
-      .catch(error => {
-        // Offline and not in cache
-        console.error('[Service Worker] Fetch failed:', error);
-        
-        // You could return a custom offline page here
-        // if (request.destination === 'document') {
-        //   return caches.match('/offline.html');
-        // }
+      .catch(() => {
+        // Network failed, try cache
+        return caches.match(request);
       })
   );
 });
