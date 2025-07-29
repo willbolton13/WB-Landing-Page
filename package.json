@@ -1,0 +1,16 @@
+{
+  "name": "temp-astro",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/netlify": "^6.5.3",
+    "astro": "^5.12.5",
+    "contentful": "^11.7.15"
+  }
+}
