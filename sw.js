@@ -1,5 +1,12 @@
 // Service Worker for WaterBear Student Portal
-const CACHE_NAME = 'waterbear-portal-v1';
+const CACHE_NAME = 'waterbear-portal-v2';
+
+// Additional patterns to cache dynamically
+const CACHE_PATTERNS = [
+  /^https:\/\/fonts\.gstatic\.com\//,  // Google Fonts files
+  /^https:\/\/fonts\.googleapis\.com\// // Google Fonts API
+];
+
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,6 +14,16 @@ const urlsToCache = [
   '/script.js',
   '/env.js',
   '/site.webmanifest',
+  // Local images
+  '/img/white-hori@4x.png',
+  '/img/hn-1536x796.jpg.webp',
+  // Favicon files
+  '/favicon/favicon-96x96.png',
+  '/favicon/favicon.svg',
+  '/favicon/favicon.ico',
+  '/favicon/apple-touch-icon.png',
+  '/favicon/web-app-manifest-192x192.png',
+  '/favicon/web-app-manifest-512x512.png',
   // External dependencies
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
@@ -79,14 +96,39 @@ self.addEventListener('fetch', event => {
         })
         .catch(() => {
           // If offline, try to serve from cache
-          return caches.match(request);
+          return caches.match(request).then(cachedResponse => {
+            if (cachedResponse) {
+              console.log('[Service Worker] Serving Contentful data from cache');
+              return cachedResponse;
+            }
+            
+            // No cached version available
+            console.log('[Service Worker] No cached Contentful data available');
+            // Return a proper error response instead of undefined
+            return new Response(
+              JSON.stringify({ 
+                error: 'Offline - No cached data available',
+                items: [] 
+              }), 
+              {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+          });
         })
     );
     return;
   }
 
+  // Check if this request matches our cache patterns (like Google Fonts)
+  const shouldCache = CACHE_PATTERNS.some(pattern => pattern.test(request.url));
+  
   // For static assets we've cached, serve from cache immediately
-  if (urlsToCache.some(cached => request.url.includes(cached))) {
+  if (urlsToCache.some(cached => request.url.includes(cached)) || shouldCache) {
     event.respondWith(
       caches.match(request)
         .then(response => {
@@ -94,8 +136,17 @@ self.addEventListener('fetch', event => {
             // Return cached version immediately
             return response;
           }
-          // Not in cache somehow, fetch it
-          return fetch(request);
+          // Not in cache, fetch and cache it
+          return fetch(request).then(response => {
+            // Only cache successful responses
+            if (response && response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(request, responseToCache);
+              });
+            }
+            return response;
+          });
         })
     );
     return;
@@ -122,7 +173,22 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         // Network failed, try cache
-        return caches.match(request);
+        return caches.match(request).then(response => {
+          if (response) {
+            return response;
+          }
+          
+          // If it's a navigation request, return the cached index.html
+          if (request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+          
+          // For images, you could return a placeholder
+          if (request.destination === 'image') {
+            // Return a transparent 1x1 pixel as fallback
+            return new Response(new Blob(), { headers: { 'Content-Type': 'image/gif' }});
+          }
+        });
       })
   );
 });

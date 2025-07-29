@@ -168,8 +168,50 @@ document.addEventListener('DOMContentLoaded', function() {
     const buttonsContainer = document.getElementById('buttons-container');
     const infoContainer = document.getElementById('info-container');
 
-    // Prevent animation on page load
-    let isInitialLoad = true;
+    // Network status indicator
+    function updateNetworkStatus() {
+        const isOnline = navigator.onLine;
+        let statusIndicator = document.getElementById('network-status');
+        
+        if (!statusIndicator) {
+            statusIndicator = document.createElement('div');
+            statusIndicator.id = 'network-status';
+            statusIndicator.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 700;
+                z-index: 9999;
+                transition: all 0.3s ease;
+            `;
+            document.body.appendChild(statusIndicator);
+        }
+        
+        if (isOnline) {
+            statusIndicator.textContent = 'Online';
+            statusIndicator.style.backgroundColor = '#6D9D7E';
+            statusIndicator.style.color = '#fff';
+            // Hide after 3 seconds when online
+            setTimeout(() => {
+                statusIndicator.style.opacity = '0';
+            }, 3000);
+        } else {
+            statusIndicator.textContent = 'Offline';
+            statusIndicator.style.backgroundColor = '#DE0029';
+            statusIndicator.style.color = '#fff';
+            statusIndicator.style.opacity = '1';
+        }
+    }
+    
+    // Monitor network status
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    
+    // Check initial status
+    updateNetworkStatus();
 
     async function populateLocationDropdown() {
         try {
@@ -185,7 +227,18 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (error) {
             console.error("Error populating locations:", error);
-            locationSelect.innerHTML = '<option disabled>Unable to load locations</option>';
+            
+            // Check if we're offline
+            if (!navigator.onLine) {
+                locationSelect.innerHTML = '<option disabled>Offline - Cannot load locations</option>';
+                // Try to show a message to the user
+                const offlineMessage = document.createElement('div');
+                offlineMessage.className = 'alert alert-warning text-center mt-3';
+                offlineMessage.innerHTML = '<strong>You are offline.</strong> Some features may be limited.';
+                locationSelect.parentElement.appendChild(offlineMessage);
+            } else {
+                locationSelect.innerHTML = '<option disabled>Unable to load locations</option>';
+            }
         }
     }
 
@@ -196,6 +249,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return validateContentfulResponse(data);
         } catch (error) {
             console.error('Error fetching data from Contentful:', error);
+            
+            // Check if we're offline
+            if (!navigator.onLine) {
+                // Create a more user-friendly offline error
+                const offlineError = new Error('You are currently offline. Please check your connection and try again.');
+                offlineError.isOffline = true;
+                throw offlineError;
+            }
+            
             throw error;
         }
     }
@@ -324,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
         heading.style.transition = '';
     }, 100);
     
-// Fixed location change event listener
+    // Fixed location change event listener
     locationSelect.addEventListener('change', async function() {
         const selectedValue = this.value;
         const isResetting = !selectedValue || this.selectedIndex === 0 || selectedValue === "Choose your campus...";
@@ -371,8 +433,18 @@ document.addEventListener('DOMContentLoaded', function() {
             setupAnimations();
             
         } catch (error) {
-            infoContainer.innerHTML = '<div class="alert alert-danger text-center">Sorry, we could not load the content right now. Please try again later.</div>';
-            // No heading animation on error
+            // Show appropriate error message
+            if (error.isOffline || !navigator.onLine) {
+                infoContainer.innerHTML = `
+                    <div class="alert alert-warning text-center">
+                        <h5>You're currently offline</h5>
+                        <p>Please connect to the internet to view location-specific content.</p>
+                        <p>You can still access Canvas and Timetabler if you have them bookmarked.</p>
+                    </div>
+                `;
+            } else {
+                infoContainer.innerHTML = '<div class="alert alert-danger text-center">Sorry, we could not load the content right now. Please try again later.</div>';
+            }
         }
         
         lucide.createIcons();
