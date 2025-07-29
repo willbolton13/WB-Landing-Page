@@ -255,40 +255,105 @@
             showInstallButton();
         });
 
-        function showInstallButton() {
-            // Only show if user hasn't already installed
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                // Create simple install button
-                const installBtn = document.createElement('button');
-                installBtn.textContent = '📱 Install App';
-                installBtn.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    background: #F6DD0D;
-                    color: #000;
-                    border: none;
-                    padding: 10px 15px;
-                    border-radius: 5px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    z-index: 1000;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                `;
-                
-                installBtn.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        console.log(`User ${outcome} the install prompt`);
-                        deferredPrompt = null;
-                        installBtn.remove();
-                    }
-                });
-                
-                document.body.appendChild(installBtn);
+function showInstallButton() {
+    // Only show if user hasn't already installed
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+        // Create install button styled like a mini portal card
+        const installBtn = document.createElement('button');
+        installBtn.className = 'install-prompt-btn';
+        installBtn.innerHTML = `
+            <div class="install-icon">
+                <i data-lucide="plus-square"></i>
+            </div>
+            <div class="install-text">
+                <strong>Add to Home Screen</strong>
+                <small></small>
+            </div>
+        `;
+        
+        // Add CSS for the button
+        const style = document.createElement('style');
+        style.textContent = `
+            .install-prompt-btn {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #F6DD0D;
+                color: #000;
+                border: none;
+                padding: 15px 20px;
+                border-radius: 8px;
+                font-weight: 700;
+                cursor: pointer;
+                z-index: 1000;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                transition: all 0.3s ease;
+                font-family: 'Futura', 'Jost', sans-serif;
             }
-        }
+            
+            .install-prompt-btn:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                background: #fff;
+            }
+            
+            .install-icon {
+                flex-shrink: 0;
+            }
+            
+            .install-icon svg {
+                width: 30px;
+                height: 30px;
+                stroke: currentColor;
+            }
+            
+            .install-text {
+                text-align: left;
+            }
+            
+            .install-text strong {
+                display: block;
+                font-size: 14px;
+                margin-bottom: 2px;
+            }
+            
+            .install-text small {
+                display: block;
+                font-size: 11px;
+                font-weight: 400;
+                opacity: 0.8;
+            }
+            
+            @media (max-width: 480px) {
+                .install-prompt-btn {
+                    bottom: 70px; /* Higher on mobile to avoid interfering with navigation */
+                    right: 10px;
+                    left: 10px;
+                    max-width: calc(100% - 20px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User ${outcome} the install prompt`);
+                deferredPrompt = null;
+                installBtn.remove();
+            }
+        });
+        
+        document.body.appendChild(installBtn);
+        
+        // Initialize Lucide icons for the new button
+        lucide.createIcons();
+    }
+}
 
         // Hide install button if already installed
         window.addEventListener('appinstalled', () => {

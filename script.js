@@ -115,8 +115,8 @@ function validateContentfulResponse(data) {
 }
 
 // Cross-browser animation helper
-async function animateHeading(element, from, to, skipAnimation = false) {
-    if (skipAnimation || from === to) return;
+async function animateHeading(element, from, to) {
+    if (from === to) return;
     
     if (browserInfo.isFirefox || browserInfo.isSafari) {
         // For Firefox and Safari, use a simpler approach
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
         heading.style.transition = '';
     }, 100);
     
-    // Fixed location change event listener
+// Fixed location change event listener
     locationSelect.addEventListener('change', async function() {
         const selectedValue = this.value;
         const isResetting = !selectedValue || this.selectedIndex === 0 || selectedValue === "Choose your campus...";
@@ -345,11 +345,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Only animate heading if text is actually changing
             if (currentHeadingText !== originalHeadingText) {
-                await animateHeading(heading, currentHeadingText, originalHeadingText, isInitialLoad);
+                await animateHeading(heading, currentHeadingText, originalHeadingText);
             }
             
             lucide.createIcons();
-            isInitialLoad = false;
             return;
         }
 
@@ -364,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Only animate heading if text is actually changing
             if (currentHeadingText !== newHeadingText) {
-                await animateHeading(heading, currentHeadingText, newHeadingText, isInitialLoad);
+                await animateHeading(heading, currentHeadingText, newHeadingText);
             }
             
             // CRITICAL FIX: Pass true to skip heading update in renderLocationContent
@@ -377,7 +376,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         lucide.createIcons();
-        isInitialLoad = false;
     });
 
     function createPortalButtonHTML(buttonLink, entries) {
