@@ -167,6 +167,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalHeadingText = heading.textContent;
     const buttonsContainer = document.getElementById('buttons-container');
     const infoContainer = document.getElementById('info-container');
+    
+    let wasOffline = !navigator.onLine;
 
     // Network status indicator
     function updateNetworkStatus() {
@@ -193,15 +195,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (isOnline) {
-            statusIndicator.textContent = 'Online';
-            statusIndicator.style.backgroundColor = '#6D9D7E';
-            statusIndicator.style.color = '#fff';
-            statusIndicator.style.opacity = '1';
-            // Hide after 2 seconds when online
-            setTimeout(() => {
-                statusIndicator.style.opacity = '0';
-            }, 2000);
+            if (wasOffline) {
+                statusIndicator.textContent = 'Online';
+                statusIndicator.style.backgroundColor = '#6D9D7E';
+                statusIndicator.style.color = '#fff';
+                statusIndicator.style.opacity = '1';
+                // Hide after 2 seconds when online
+                setTimeout(() => {
+                    statusIndicator.style.opacity = '0';
+                }, 2000);
+                wasOffline = false; // Reset the flag
+            }
         } else {
+            wasOffline = true; // Set the flag
             statusIndicator.textContent = 'Offline';
             statusIndicator.style.backgroundColor = '#DE0029';
             statusIndicator.style.color = '#fff';

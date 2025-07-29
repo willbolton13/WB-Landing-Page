@@ -197,7 +197,8 @@
     
     <script type="module" src="script.js"></script>
 
-    <script>
+
+<script>
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -255,110 +256,145 @@
             showInstallButton();
         });
 
-function showInstallButton() {
-    // Only show if user hasn't already installed
-    if (!window.matchMedia('(display-mode: standalone)').matches) {
-        // Create install button styled like a mini portal card
-        const installBtn = document.createElement('button');
-        installBtn.className = 'install-prompt-btn';
-        installBtn.innerHTML = `
-            <div class="install-icon">
-                <i data-lucide="plus-square"></i>
-            </div>
-            <div class="install-text">
-                <strong>Add to Home Screen</strong>
-                <small></small>
-            </div>
-        `;
-        
-        // Add CSS for the button
-        const style = document.createElement('style');
-        style.textContent = `
-            .install-prompt-btn {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: #DE0029;
-                color: #fff;
-                border: none;
-                padding: 15px 20px;
-                border-radius: 8px;
-                font-weight: 700;
-                cursor: pointer;
-                z-index: 1000;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                transition: all 0.3s ease;
-                font-family: 'Futura', 'Jost', sans-serif;
+        function showInstallButton() {
+            // Only show if user hasn't already installed
+            if (!window.matchMedia('(display-mode: standalone)').matches) {
+                // Create install button styled like a mini portal card
+                const installBtn = document.createElement('button');
+                installBtn.className = 'install-prompt-btn';
+                installBtn.innerHTML = `
+                    <div class="install-icon">
+                        <i data-lucide="plus-square"></i>
+                    </div>
+                    <div class="install-text">
+                        <strong>Add to Home Screen</strong>
+                        <small>Get the full app experience</small>
+                    </div>
+                    <button class="install-dismiss-btn" aria-label="Dismiss">&times;</button>
+                `;
+                
+                // Add CSS for the button
+                const style = document.createElement('style');
+                style.textContent = `
+                    .install-prompt-btn {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background: var(--header-color); /* Black for desktop */
+                        color: #fff;
+                        border: none;
+                        /* Increased right padding to make space for the close button */
+                        padding: 15px 45px 15px 20px; 
+                        border-radius: 8px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        z-index: 1000;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                        transition: all 0.3s ease;
+                        font-family: 'Futura', 'Jost', sans-serif;
+                    }
+                    
+                    .install-prompt-btn:hover {
+                        transform: translateY(-5px);
+                        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                    }
+                    
+                    .install-icon {
+                        flex-shrink: 0;
+                    }
+                    
+                    .install-icon svg {
+                        width: 30px;
+                        height: 30px;
+                        stroke: currentColor;
+                    }
+                    
+                    .install-text {
+                        text-align: left;
+                    }
+                    
+                    .install-text strong {
+                        display: block;
+                        font-size: 14px;
+                        margin-bottom: 2px;
+                    }
+                    
+                    .install-text small {
+                        display: block;
+                        font-size: 11px;
+                        font-weight: 400;
+                        opacity: 0.8;
+                    }
+
+                    .install-dismiss-btn {
+                        position: absolute;
+                        /* Adjusted position to align better */
+                        top: 5px;
+                        right: 10px;
+                        background: none;
+                        border: none;
+                        color: #fff;
+                        font-size: 24px;
+                        line-height: 1;
+                        padding: 5px;
+                        cursor: pointer;
+                        opacity: 0.7;
+                    }
+
+                    .install-dismiss-btn:hover {
+                        opacity: 1;
+                    }
+                    
+                    @media (max-width: 480px) {
+                        .install-prompt-btn {
+                            top: 80px; /* Position near the top on mobile */
+                            bottom: auto;
+                            right: 10px;
+                            left: 10px;
+                            max-width: calc(100% - 20px);
+                            background: var(--accent-yellow); /* Yellow for mobile */
+                            color: var(--button-text-color); /* Black text */
+                        }
+
+                        .install-prompt-btn .install-dismiss-btn {
+                            color: var(--button-text-color); /* Black 'x' to contrast with yellow */
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Add click listener for the main button to trigger the install prompt
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`User ${outcome} the install prompt`);
+                        deferredPrompt = null;
+                        installBtn.remove();
+                    }
+                });
+
+                // Add click listener for the new dismiss button
+                const dismissBtn = installBtn.querySelector('.install-dismiss-btn');
+                dismissBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevents the main button's click event
+                    installBtn.remove();
+                });
+                
+                document.body.appendChild(installBtn);
+                
+                // Initialize Lucide icons for the new button
+                lucide.createIcons();
             }
-            
-            .install-prompt-btn:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-                background: #fff;
-            }
-            
-            .install-icon {
-                flex-shrink: 0;
-            }
-            
-            .install-icon svg {
-                width: 30px;
-                height: 30px;
-                stroke: currentColor;
-            }
-            
-            .install-text {
-                text-align: left;
-            }
-            
-            .install-text strong {
-                display: block;
-                font-size: 14px;
-                margin-bottom: 2px;
-            }
-            
-            .install-text small {
-                display: block;
-                font-size: 11px;
-                font-weight: 400;
-                opacity: 0.8;
-            }
-            
-            @media (max-width: 480px) {
-                .install-prompt-btn {
-                    bottom: 70px; /* Higher on mobile to avoid interfering with navigation */
-                    right: 10px;
-                    left: 10px;
-                    max-width: calc(100% - 20px);
-                }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User ${outcome} the install prompt`);
-                deferredPrompt = null;
-                installBtn.remove();
-            }
-        });
-        
-        document.body.appendChild(installBtn);
-        
-        // Initialize Lucide icons for the new button
-        lucide.createIcons();
-    }
-}
+        }
 
         // Hide install button if already installed
         window.addEventListener('appinstalled', () => {
-            const installBtn = document.querySelector('button');
-            if (installBtn && installBtn.textContent.includes('Install')) {
+            const installBtn = document.querySelector('.install-prompt-btn');
+            if (installBtn) {
                 installBtn.remove();
             }
         });
