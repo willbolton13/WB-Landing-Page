@@ -2,6 +2,7 @@
 const CACHE_NAME = 'waterbear-portal-v1';
 const urlsToCache = [
   '/',
+  '/img',
   '/index.html',
   '/style.css',
   '/script.js',
@@ -14,10 +15,6 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css',
   'https://unpkg.com/lucide@latest',
   'https://cdn.skypack.dev/motion',
-  // Logo
-  'https://waterbear.org.uk/wp-content/uploads/2022/10/white-hori@4x.png',
-  // Hero image - you might want to cache this
-  'https://waterbear.org.uk/wp-content/smush-webp/2025/01/hn-1536x796.jpg.webp'
 ];
 
 // Install event - cache assets

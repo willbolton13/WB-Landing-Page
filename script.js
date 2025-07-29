@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (dynamicButtons.length > 0) {
                 setupElementAnimations(dynamicButtons);
             } else {
-                animate(buttonsContainer, { opacity: [0, 1], y: [10, 0] }, { duration: 0.5, delay: 0.1 });
+                animate(buttonsContainer, { opacity: [0, 1], y: [10, 0] }, { duration: 0.4, delay: 0.05 });
             }
             
             // Animate content blocks
