@@ -15,6 +15,13 @@ function debugLog(...args) {
     }
 }
 
+// Browser detection utility
+const browserInfo = {
+    isFirefox: navigator.userAgent.toLowerCase().indexOf('firefox') > -1,
+    isSafari: /^((?!chrome|android).)*safari/i.test(navigator.userAgent),
+    isChrome: /chrome/.test(navigator.userAgent.toLowerCase())
+};
+
 // Contentful API client with rate limiting
 class ContentfulClient {
     constructor(spaceId, accessToken) {
@@ -107,6 +114,47 @@ function validateContentfulResponse(data) {
     return data;
 }
 
+// Cross-browser animation helper
+async function animateHeading(element, from, to, skipAnimation = false) {
+    if (skipAnimation || from === to) return;
+    
+    if (browserInfo.isFirefox || browserInfo.isSafari) {
+        // For Firefox and Safari, use a simpler approach
+        element.style.transition = 'opacity 0.15s ease-out';
+        element.style.opacity = '0';
+        
+        // Wait for the transition to complete
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Update content
+        element.innerHTML = to;
+        
+        // Force reflow
+        void element.offsetHeight;
+        
+        // Fade back in
+        element.style.opacity = '1';
+        
+        // Cleanup after transition
+        await new Promise(resolve => setTimeout(resolve, 150));
+        element.style.transition = '';
+    } else {
+        // Use Motion One for Chrome and other browsers
+        await animate(element, { opacity: 0 }, { duration: 0.15 }).finished;
+        element.innerHTML = to;
+        await animate(element, { opacity: 1 }, { duration: 0.2 }).finished;
+    }
+}
+
+// Cross-browser content animation helper
+async function animateContentOut(container1, container2) {
+    // Motion One works fine for content fade out in all browsers
+    await Promise.all([
+        animate(container1, { opacity: 0 }, { duration: 0.3 }).finished,
+        animate(container2, { opacity: 0 }, { duration: 0.3 }).finished
+    ]);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Contentful client
     const contentfulClient = new ContentfulClient(
@@ -119,6 +167,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalHeadingText = heading.textContent;
     const buttonsContainer = document.getElementById('buttons-container');
     const infoContainer = document.getElementById('info-container');
+
+    // Prevent animation on page load
+    let isInitialLoad = true;
 
     async function populateLocationDropdown() {
         try {
@@ -267,6 +318,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset dropdown to default state on page load
     locationSelect.selectedIndex = 0;
     
+    // Ensure heading has no transitions on load
+    heading.style.transition = 'none';
+    setTimeout(() => {
+        heading.style.transition = '';
+    }, 100);
+    
     // Fixed location change event listener
     locationSelect.addEventListener('change', async function() {
         const selectedValue = this.value;
@@ -276,10 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentHeadingText = heading.innerHTML;
         
         // Animate content out (but not heading yet)
-        await Promise.all([
-            animate(buttonsContainer, { opacity: 0 }, { duration: 0.3 }).finished,
-            animate(infoContainer, { opacity: 0 }, { duration: 0.3 }).finished
-        ]);
+        await animateContentOut(buttonsContainer, infoContainer);
 
         // Clear content
         buttonsContainer.innerHTML = '';
@@ -291,28 +345,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Only animate heading if text is actually changing
             if (currentHeadingText !== originalHeadingText) {
-                // Use transform instead of pure opacity for Firefox
-                await animate(heading, { 
-                    opacity: [1, 0.8, 0],
-                    transform: ['translateY(0)', 'translateY(-2px)', 'translateY(-5px)']
-                }, { 
-                    duration: 0.2, 
-                    easing: "ease-out" 
-                }).finished;
-                
-                heading.innerHTML = originalHeadingText;
-                
-                // Animate back with transform
-                animate(heading, { 
-                    opacity: [0, 0.8, 1],
-                    transform: ['translateY(-5px)', 'translateY(-2px)', 'translateY(0)']
-                }, { 
-                    duration: 0.3, 
-                    easing: "ease-out" 
-                });
+                await animateHeading(heading, currentHeadingText, originalHeadingText, isInitialLoad);
             }
             
             lucide.createIcons();
+            isInitialLoad = false;
             return;
         }
 
@@ -327,27 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Only animate heading if text is actually changing
             if (currentHeadingText !== newHeadingText) {
-                // Firefox-optimized animation
-                await animate(heading, { 
-                    opacity: [1, 0],
-                    transform: ['translateY(0)', 'translateY(-5px)']
-                }, { 
-                    duration: 0.15,  // Faster animation
-                    easing: "ease-in" 
-                }).finished;
-                
-                heading.innerHTML = newHeadingText;
-                
-                // Force a reflow before animating back (Firefox fix)
-                heading.offsetHeight;
-                
-                animate(heading, { 
-                    opacity: [0, 1],
-                    transform: ['translateY(5px)', 'translateY(0)']
-                }, { 
-                    duration: 0.2,
-                    easing: "ease-out" 
-                });
+                await animateHeading(heading, currentHeadingText, newHeadingText, isInitialLoad);
             }
             
             // CRITICAL FIX: Pass true to skip heading update in renderLocationContent
@@ -360,6 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         lucide.createIcons();
+        isInitialLoad = false;
     });
 
     function createPortalButtonHTML(buttonLink, entries) {
