@@ -81,11 +81,25 @@ h1, .lead {
 
 .location-prompt {
     color: var(--accent-yellow);
-    font-weight: 800; /* Makes the yellow text slightly bolder to pop */
+    font-weight: 500; /* Makes the yellow text slightly bolder to pop */
     text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
-    font-size: 1.7rem;
+    font-size: 1.6rem;
     text-transform: uppercase;
 }
+
+@media (max-width: 992px) {
+    .location-prompt {
+        font-size: 1.4rem; /* A smaller font size for med */
+    }
+}
+
+@media (max-width: 768px) {
+    .location-prompt {
+        font-size: 1.2rem; /* A smaller font size for mobile */
+    }
+}
+
+
 
 .display-4 {
     font-weight: 700;
