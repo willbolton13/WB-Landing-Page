@@ -178,14 +178,16 @@ document.addEventListener('DOMContentLoaded', function() {
             statusIndicator.id = 'network-status';
             statusIndicator.style.cssText = `
                 position: fixed;
-                top: 10px;
-                right: 10px;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
                 padding: 8px 16px;
                 border-radius: 20px;
                 font-size: 12px;
                 font-weight: 700;
                 z-index: 9999;
                 transition: all 0.3s ease;
+                opacity: 0;
             `;
             document.body.appendChild(statusIndicator);
         }
@@ -194,17 +196,37 @@ document.addEventListener('DOMContentLoaded', function() {
             statusIndicator.textContent = 'Online';
             statusIndicator.style.backgroundColor = '#6D9D7E';
             statusIndicator.style.color = '#fff';
-            // Hide after 3 seconds when online
+            statusIndicator.style.opacity = '1';
+            // Hide after 2 seconds when online
             setTimeout(() => {
                 statusIndicator.style.opacity = '0';
-            }, 3000);
+            }, 2000);
         } else {
             statusIndicator.textContent = 'Offline';
             statusIndicator.style.backgroundColor = '#DE0029';
             statusIndicator.style.color = '#fff';
-            statusIndicator.style.opacity = '1';
+            // Don't show immediately - wait for scroll
+            if (window.scrollY > 100) {
+                statusIndicator.style.opacity = '1';
+            }
         }
     }
+    
+    // Show offline indicator on scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        if (!navigator.onLine) {
+            clearTimeout(scrollTimeout);
+            const statusIndicator = document.getElementById('network-status');
+            if (statusIndicator && window.scrollY > 100) {
+                statusIndicator.style.opacity = '1';
+                // Hide after 3 seconds of no scrolling
+                scrollTimeout = setTimeout(() => {
+                    statusIndicator.style.opacity = '0';
+                }, 3000);
+            }
+        }
+    });
     
     // Monitor network status
     window.addEventListener('online', updateNetworkStatus);
@@ -435,13 +457,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             // Show appropriate error message
             if (error.isOffline || !navigator.onLine) {
-                infoContainer.innerHTML = `
-                    <div class="alert alert-warning text-center">
-                        <h5>You're currently offline</h5>
-                        <p>Please connect to the internet to view location-specific content.</p>
-                        <p>You can still access Canvas and Timetabler if you have them bookmarked.</p>
-                    </div>
-                `;
+                // Don't show anything - the offline indicator is enough
+                console.log('Offline - content not available');
             } else {
                 infoContainer.innerHTML = '<div class="alert alert-danger text-center">Sorry, we could not load the content right now. Please try again later.</div>';
             }
