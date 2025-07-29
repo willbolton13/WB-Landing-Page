@@ -2,7 +2,6 @@
 const CACHE_NAME = 'waterbear-portal-v1';
 const urlsToCache = [
   '/',
-  '/img',
   '/index.html',
   '/style.css',
   '/script.js',
