@@ -1,16 +1,207 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getLocations } from '../lib/contentful';
 
+// Fetch locations from Contentful
+const locations = await getLocations();
+// Sort locations alphabetically
+locations.sort((a, b) => a.fields.locationName.localeCompare(b.fields.locationName));
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="WaterBear Student Portal">
+    <Header />
+    
+    <section class="hero-section">
+        <img src="/img/hn-1536x796.jpg.webp" alt="Hero image">
+    </section>
+    
+    <main class="container my-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4">Welcome to your student portal</h1>
+            <p class="lead location-prompt">Select a location to get started.</p>
+            
+            <div class="col-lg-6 mx-auto">
+                <select class="form-select" id="location-select" aria-label="Select a location">
+                    <option selected disabled>Choose your campus...</option>
+                    {locations.map((location) => (
+                        <option value={location.fields.locationName}>
+                            {location.fields.locationName}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        </div>
+        
+        <div class="row g-4 justify-content-center mb-4">
+            <div class="col-lg-6 col-md-6">
+                <a href="https://waterbear.instructure.com/login/canvas" target="_blank" class="portal-card">
+                    <div class="portal-card-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <h3>Canvas</h3>
+                    <p class="portal-card-subtitle">Learning Materials and Assignments</p>
+                </a>
+            </div>
+            
+            <div class="col-lg-6 col-md-6">
+                <a href="https://timetabler.optime.cloud/" target="_blank" class="portal-card">
+                    <div class="portal-card-icon">
+                        <i class="bi bi-calendar-range"></i>
+                    </div>
+                    <h3>Timetabler</h3>
+                    <p class="portal-card-subtitle">Classes and Bookings</p>
+                </a>
+            </div>
+        </div>
+    </main>
+    
+    <Footer />
+<script>
+  const locationSelect = document.getElementById('location-select');
+  
+  locationSelect?.addEventListener('change', (e) => {
+    const value = (e.target as HTMLSelectElement).value;
+    if (value && value !== 'Choose your campus...') {
+      // Convert location name to URL slug
+      const slug = value.toLowerCase().replace(/\s+/g, '-');
+      window.location.href = `/location/${slug}`;
+    }
+  });
+</script>
+
+</Layout>
+
+<style>
+  /* Hero section styles */
+  .hero-section {
+    height: 55vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  main.container {
+    position: relative;
+    z-index: 2;
+    margin-top: -40vh !important;
+  }
+
+  /* Typography */
+  h1, .lead {
+    color: var(--text-color);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .location-prompt {
+    color: var(--accent-yellow);
+    font-weight: 500;
+    text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
+    font-size: 1.6rem;
+    text-transform: uppercase;
+  }
+
+  .display-4 {
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  /* Form select */
+  .form-select {
+    background-color: var(--header-color);
+    color: var(--text-color);
+    border: 2px solid var(--accent-yellow);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+    padding: .5rem;
+  }
+
+  .form-select option {
+    background: var(--header-color);
+    color: var(--text-color);
+  }
+
+  .form-select:focus {
+    background-color: var(--header-color);
+    color: var(--text-color);
+    border-color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(253, 226, 0, 0.25);
+  }
+
+  /* Portal cards */
+  .portal-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 250px;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    background-color: var(--accent-yellow);
+    color: var(--button-text-color);
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .portal-card:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+
+  .portal-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+    color: inherit;
+  }
+
+  .portal-card-subtitle {
+    font-size: 0.9rem;
+    font-weight: 400;
+    text-transform: none;
+    margin: 0;
+    color: inherit;
+    max-width: 90%;
+  }
+
+  .portal-card-icon {
+    color: inherit;
+    height: 30%;
+    width: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .portal-card-icon .bi {
+    margin-bottom: 30px;
+    font-size: var(--icon-size);
+  }
+
+  /* Responsive */
+  @media (max-width: 992px) {
+    .location-prompt {
+      font-size: 1.4rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .location-prompt {
+      font-size: 1.2rem;
+    }
+  }
+</style>

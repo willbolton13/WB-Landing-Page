@@ -1,0 +1,127 @@
+---
+// No props needed for the header
+---
+
+<header class="py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="https://waterbear.org.uk/" target="_blank" rel="noopener noreferrer">
+            <img src="/img/white-hori@4x.png" alt="University Logo" style="height: 50px;">
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">QUICK LINKS</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            
+            <div class="offcanvas-body">
+                <ul class="navbar-nav justify-content-end flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Extra Link 1</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Extra Link 2</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Extra Link 3</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Extra Link 4</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="offcanvas-footer">
+                <a href="https://login.microsoftonline.com/common/oauth2/v2.0/logout" class="btn-logout-mobile">LOG OUT</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<style>
+  header {
+    position: relative;
+    z-index: 3;
+    background-color: var(--header-color);
+  }
+
+  header .container {
+    padding-right: 15px;
+  }
+
+  .navbar-toggler {
+    border: none;
+    padding: 0;
+  }
+
+  .navbar-toggler:hover {
+    filter: brightness(.3);
+  }
+
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23F6DD0D' stroke-linecap='round' stroke-miterlimit='10' stroke-width='4' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    font-size: 1.8rem;
+  }
+
+  /* Offcanvas styles */
+  .offcanvas {
+    background-color: var(--accent-red);
+    color: var(--text-color);
+  }
+
+  .offcanvas-body {
+    flex-grow: 0;
+  }
+
+  .offcanvas-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .offcanvas-title {
+    color: var(--text-color);
+    font-weight: 700;
+  }
+
+  .offcanvas .btn-close {
+    filter: brightness(0) invert(1);
+    font-size: 1.4rem;
+  }
+
+  .offcanvas-body .nav-link {
+    color: var(--text-color);
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 0.75rem 0;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .offcanvas-body .nav-link:hover {
+    color: var(--header-color);
+  }
+
+  .offcanvas-footer {
+    padding: 1.5rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-logout-mobile {
+    background-color: var(--text-color);
+    color: var(--button-text-color) !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 5px;
+    text-align: center;
+    display: block;
+    font-size: 1.2rem !important;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .btn-logout-mobile:hover {
+    background-color: #000000;
+    color: var(--text-color) !important;
+  }
+</style>
