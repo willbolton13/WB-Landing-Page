@@ -115,7 +115,7 @@ const { title } = Astro.props;
     margin-top: 0; 
   }
 
-  /* Horizontal slide animation for view transitions */
+  /* Horizontal slide animation for view transitions 
   @keyframes slide-out-left {
     from { 
       transform: translateX(0); 
@@ -138,7 +138,7 @@ const { title } = Astro.props;
     }
   }
 
-  /* Only animate the main content */
+  /* Only animate the main content
   ::view-transition-old(main-content) {
     animation: slide-out-left 0.3s ease-out forwards;
   }
@@ -146,6 +146,8 @@ const { title } = Astro.props;
   ::view-transition-new(main-content) {
     animation: slide-in-right 0.3s ease-in forwards;
   }
+
+   */
 
   /* Alternative fade animation (comment out the above and uncomment below to use) */
   /*
