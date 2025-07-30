@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@astrojs/netlify": "^6.5.3",
+    "@lucide/astro": "^0.534.0",
     "astro": "^5.12.5",
-    "contentful": "^11.7.15"
+    "contentful": "^11.7.15",
+    "motion": "^12.23.12"
   }
 }

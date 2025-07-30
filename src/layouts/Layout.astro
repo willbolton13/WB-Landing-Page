@@ -27,12 +27,22 @@ const { title } = Astro.props;
 </head>
 <body>
     <slot />
+    
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+      });
+    </script>
 </body>
 </html>
 
 <style is:global>
-  /* We'll add your global styles here in the next step */
+  /* CSS Variables */
   :root {
     --background-color: #ffffff;
     --header-color: #000000;
@@ -44,8 +54,31 @@ const { title } = Astro.props;
     --icon-size: 80px;
   }
 
+  /* Base styles */
   body {
     font-family: 'Futura', 'Jost', sans-serif;
     background-color: var(--background-color);
+  }
+
+  /* Animation classes for initial load */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Location content animation support */
+  .location-content {
+    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.5s ease, margin-top 0.5s ease;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: 0;
+    pointer-events: none; 
+  }
+
+  .location-content.is-visible {
+    opacity: 1;
+    max-height: 1500px;
+    pointer-events: auto;
+    margin-top: 0; 
   }
 </style>

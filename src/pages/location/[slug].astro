@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import StaticPortalCards from '../../components/StaticPortalCards.astro';
 import { getLocations, getAllLocationData } from '../../lib/contentful';
 
 // This function runs at build time and creates all the location pages
@@ -61,32 +62,17 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
     <div class="text-center mb-5">
       <h1 class="display-4">{pageTitle}</h1>
       <p class="lead location-prompt">
-        <a href="/" class="btn btn-outline-warning">← Back to locations</a>
+        <nav aria-label="breadcrumb" class="location-breadcrumb">
+        <ol class="breadcrumb justify-content-center">
+            <li class="breadcrumb-item"><a href="/">All Locations</a></li>
+            <li class="breadcrumb-item active">{locationName}</li>
+        </ol>
+        </nav>
       </p>
     </div>
     
-    <!-- Static Portal Cards (Canvas & Timetabler) -->
-    <div class="row g-4 justify-content-center mb-4">
-      <div class="col-lg-6 col-md-6">
-        <a href="https://waterbear.instructure.com/login/canvas" target="_blank" class="portal-card">
-          <div class="portal-card-icon">
-            <i class="bi bi-book"></i>
-          </div>
-          <h3>Canvas</h3>
-          <p class="portal-card-subtitle">Learning Materials and Assignments</p>
-        </a>
-      </div>
-      
-      <div class="col-lg-6 col-md-6">
-        <a href="https://timetabler.optime.cloud/" target="_blank" class="portal-card">
-          <div class="portal-card-icon">
-            <i class="bi bi-calendar-range"></i>
-          </div>
-          <h3>Timetabler</h3>
-          <p class="portal-card-subtitle">Classes and Bookings</p>
-        </a>
-      </div>
-    </div>
+    <!-- Use the static portal cards component -->
+    <StaticPortalCards />
     
     <!-- Dynamic Location Buttons -->
     {fields.locationButtons && fields.locationButtons.length > 0 && (
@@ -99,7 +85,7 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
             <div class="col-lg-6 col-md-6">
               <a href={button.fields.link} target="_blank" class="portal-card portal-card-green">
                 <div class="portal-card-icon">
-                  <i class="bi bi-{button.fields.icon || 'square'}"></i>
+                  <i data-lucide={button.fields.icon || 'square'}></i>
                 </div>
                 <h3>{button.fields.buttonText}</h3>
                 <p class="portal-card-subtitle">{button.fields.buttonSubtitle || ''}</p>
@@ -112,7 +98,7 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
     
     <!-- Information Blocks -->
     {fields.informationBlocks && fields.informationBlocks.length > 0 && (
-      <div class="location-content">
+      <div>
         {fields.informationBlocks.map((blockRef, index) => {
           const block = findIncludedEntry(blockRef.sys.id);
           if (!block) return null;
@@ -193,7 +179,7 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
 </Layout>
 
 <style>
-  /* All your location-specific styles */
+  /* Page-specific styles */
   .hero-section {
     height: 55vh;
     overflow: hidden;
@@ -232,64 +218,10 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
     text-transform: uppercase;
   }
 
-  /* Portal cards */
-  .portal-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 250px;
-    padding: 20px;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 8px;
-    background-color: var(--accent-yellow);
-    color: var(--button-text-color);
-    transition: all 0.3s ease;
-  }
-
-  .portal-card:hover {
-    background-color: var(--text-color);
-    color: var(--button-text-color);
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  }
-
+  /* Green variant for dynamic buttons */
   .portal-card-green {
     background-color: var(--accent-green);
     color: var(--text-color);
-  }
-
-  .portal-card h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-top: 0;
-    margin-bottom: 0.25rem;
-    color: inherit;
-  }
-
-  .portal-card-subtitle {
-    font-size: 0.9rem;
-    font-weight: 400;
-    text-transform: none;
-    margin: 0;
-    color: inherit;
-    max-width: 90%;
-  }
-
-  .portal-card-icon {
-    color: inherit;
-    height: 30%;
-    width: 30%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .portal-card-icon .bi {
-    margin-bottom: 30px;
-    font-size: var(--icon-size);
   }
 
   /* Content blocks */
@@ -314,6 +246,10 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
     .content-block.image-left .content-block-image {
       order: 1;
     }
+  }
+
+  .content-block-image {
+    position: relative;
   }
 
   .overlap-btn {
@@ -409,4 +345,119 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
     color: var(--accent-green);
     text-decoration: underline;
   }
+
+  @media (max-width: 992px) {
+    .location-prompt {
+      font-size: 1.4rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .location-prompt {
+      font-size: 1.2rem;
+    }
+  }
+
+  /* Add these portal card styles for dynamic buttons */
+.portal-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 250px;
+  padding: 20px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  background-color: var(--accent-green);
+  color: var(--background-color);
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-card:hover {
+  background-color: var(--text-color);
+  color: var(--button-text-color);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.portal-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 0;
+  margin-bottom: 0.25rem;
+  color: inherit;
+}
+
+.portal-card-subtitle {
+  font-size: 0.9rem;
+  font-weight: 400;
+  text-transform: none;
+  margin: 0;
+  color: inherit;
+  max-width: 90%;
+}
+
+.portal-card-icon {
+  color: inherit;
+  height: 30%;
+  width: 30%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-card-icon svg {
+  margin-bottom: 30px;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  stroke: currentColor;
+}
 </style>
+
+<script>
+  import { animate, inView } from "motion";
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Animate all portal cards (static and dynamic)
+    const allButtons = document.querySelectorAll('.portal-card');
+    allButtons.forEach((button, index) => {
+      button.style.opacity = '0';
+      button.style.transform = 'translateY(30px)';
+      
+      animate(button, 
+        { opacity: 1, transform: "translateY(0px)" }, 
+        { duration: 0.6, delay: 0.2 + (index * 0.1) }
+      );
+    });
+
+    // Animate content blocks on scroll
+    const contentBlocks = document.querySelectorAll('.content-block');
+    contentBlocks.forEach((block) => {
+      block.style.opacity = '0';
+      block.style.transform = 'translateY(30px)';
+      
+      inView(block, () => {
+        animate(block, 
+          { opacity: 1, transform: "translateY(0px)" }, 
+          { duration: 0.6 }
+        );
+      }, { margin: "-50px" });
+    });
+
+    // Animate staff members on scroll
+    const staffMembers = document.querySelectorAll('.staff-member');
+    staffMembers.forEach((member, index) => {
+      member.style.opacity = '0';
+      member.style.transform = 'translateY(30px)';
+      
+      inView(member, () => {
+        animate(member, 
+          { opacity: 1, transform: "translateY(0px)" }, 
+          { duration: 0.6, delay: (index % 4) * 0.1 }
+        );
+      }, { margin: "-50px" });
+    });
+  });
+</script>

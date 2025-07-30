@@ -1,0 +1,84 @@
+---
+// No props needed - these are always the same
+---
+
+<div class="row g-4 justify-content-center mb-4">
+  <div class="col-lg-6 col-md-6">
+    <a href="https://waterbear.instructure.com/login/canvas" target="_blank" class="portal-card">
+      <div class="portal-card-icon">
+        <i data-lucide="square-library"></i>
+      </div>
+      <h3>Canvas</h3>
+      <p class="portal-card-subtitle">Learning Materials and Assignments</p>
+    </a>
+  </div>
+  
+  <div class="col-lg-6 col-md-6">
+    <a href="https://timetabler.optime.cloud/" target="_blank" class="portal-card">
+      <div class="portal-card-icon">
+        <i data-lucide="calendar-range"></i>
+      </div>
+      <h3>Timetabler</h3>
+      <p class="portal-card-subtitle">Classes and Bookings</p>
+    </a>
+  </div>
+</div>
+
+<style>
+  /* Portal card styles - only defined here */
+  .portal-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 250px;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    background-color: var(--accent-yellow);
+    color: var(--button-text-color);
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .portal-card:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+
+  .portal-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+    color: inherit;
+  }
+
+  .portal-card-subtitle {
+    font-size: 0.9rem;
+    font-weight: 400;
+    text-transform: none;
+    margin: 0;
+    color: inherit;
+    max-width: 90%;
+  }
+
+  .portal-card-icon {
+    color: inherit;
+    height: 30%;
+    width: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .portal-card-icon svg {
+    margin-bottom: 30px;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    stroke: currentColor;
+  }
+</style>
