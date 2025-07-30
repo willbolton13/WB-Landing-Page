@@ -1,7 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
 import StaticPortalCards from '../components/StaticPortalCards.astro';
 import { getLocations } from '../lib/contentful';
 
@@ -17,7 +15,6 @@ locations.sort((a, b) => {
 ---
 
 <Layout title="WaterBear Student Portal">
-    <Header />
     
     <section class="hero-section">
         <img src="/img/hn-1536x796.jpg.webp" alt="Hero image">
@@ -43,8 +40,6 @@ locations.sort((a, b) => {
         <!-- Use the StaticPortalCards component -->
         <StaticPortalCards />
     </main>
-    
-    <Footer />
 </Layout>
 
 <style>
@@ -125,16 +120,29 @@ locations.sort((a, b) => {
   }
 </style>
 
+
 <script>
-  // Handle dropdown navigation
-  const locationSelect = document.getElementById('location-select');
-  
-  locationSelect?.addEventListener('change', (e) => {
-    const value = (e.target as HTMLSelectElement).value;
-    if (value && value !== 'Choose your campus...') {
-      // Convert location name to URL slug
-      const slug = value.toLowerCase().replace(/\s+/g, '-');
-      window.location.href = `/location/${slug}`;
+  import { navigate } from 'astro:transitions/client';
+
+  // 1. Wrap your logic in a function
+  function setupHomepage() {
+    const locationSelect = document.getElementById('location-select');
+
+    // 2. Important: a flag to prevent multiple listeners
+    if (locationSelect.dataset.listenerAttached) {
+      return;
     }
-  });
+    locationSelect.dataset.listenerAttached = 'true';
+
+    locationSelect?.addEventListener('change', (e) => {
+      const value = (e.target as HTMLSelectElement).value;
+      if (value && value !== 'Choose your campus...') {
+        const slug = value.toLowerCase().replace(/\s+/g, '-');
+        navigate(`/location/${slug}`);
+      }
+    });
+  }
+
+  // 3. Call the function on page load
+  document.addEventListener('astro:page-load', setupHomepage);
 </script>

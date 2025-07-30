@@ -1,7 +1,5 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
 import StaticPortalCards from '../../components/StaticPortalCards.astro';
 import { getLocations, getAllLocationData } from '../../lib/contentful';
 
@@ -52,7 +50,6 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
 ---
 
 <Layout title={pageTitle}>
-  <Header />
   
   <section class="hero-section">
     <img src="/img/hn-1536x796.jpg.webp" alt="Hero image">
@@ -175,7 +172,6 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
     )}
   </main>
   
-  <Footer />
 </Layout>
 
 <style>
@@ -414,50 +410,71 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
   height: var(--icon-size);
   stroke: currentColor;
 }
+
+.location-breadcrumb {
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+  }
+
+.breadcrumb-item a {
+  color: var(--accent-red); 
+
+}
+
+.breadcrumb-item a:hover {
+  text-decoration: underline;
+    color: var(--background-color);
+    transform: scale(1.05);
+    
+}
+.breadcrumb-item {
+    color: var(--accent-yellow);
+    font-weight: 600;
+    text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
+    font-size: 1.2rem;
+    text-transform: uppercase;
+  }
+
 </style>
 
+// File: [slug].astro
 <script>
   import { animate, inView } from "motion";
 
-  document.addEventListener('DOMContentLoaded', () => {
-    // Animate all portal cards (static and dynamic)
+  // 1. Wrap your animation logic in a function
+  function setupLocationPageAnimations() {
+    // Animate all portal cards
     const allButtons = document.querySelectorAll('.portal-card');
     allButtons.forEach((button, index) => {
+      // ... (rest of your animation code is the same)
       button.style.opacity = '0';
       button.style.transform = 'translateY(30px)';
-      
-      animate(button, 
-        { opacity: 1, transform: "translateY(0px)" }, 
-        { duration: 0.6, delay: 0.2 + (index * 0.1) }
-      );
+      animate(button, { opacity: 1, transform: "translateY(0px)" }, { duration: 0.6, delay: 0.2 + (index * 0.1) });
     });
 
-    // Animate content blocks on scroll
+    // Animate content blocks
     const contentBlocks = document.querySelectorAll('.content-block');
     contentBlocks.forEach((block) => {
+      // ... (rest of your animation code is the same)
       block.style.opacity = '0';
       block.style.transform = 'translateY(30px)';
-      
       inView(block, () => {
-        animate(block, 
-          { opacity: 1, transform: "translateY(0px)" }, 
-          { duration: 0.6 }
-        );
+        animate(block, { opacity: 1, transform: "translateY(0px)" }, { duration: 0.6 });
       }, { margin: "-50px" });
     });
 
-    // Animate staff members on scroll
+    // Animate staff members
     const staffMembers = document.querySelectorAll('.staff-member');
     staffMembers.forEach((member, index) => {
+      // ... (rest of your animation code is the same)
       member.style.opacity = '0';
       member.style.transform = 'translateY(30px)';
-      
       inView(member, () => {
-        animate(member, 
-          { opacity: 1, transform: "translateY(0px)" }, 
-          { duration: 0.6, delay: (index % 4) * 0.1 }
-        );
+        animate(member, { opacity: 1, transform: "translateY(0px)" }, { duration: 0.6, delay: (index % 4) * 0.1 });
       }, { margin: "-50px" });
     });
-  });
+  }
+
+  // 2. Call the function on page load
+  document.addEventListener('astro:page-load', setupLocationPageAnimations);
 </script>
