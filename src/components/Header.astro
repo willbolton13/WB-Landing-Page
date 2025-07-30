@@ -125,3 +125,17 @@
     color: var(--text-color) !important;
   }
 </style>
+
+<script>
+  // Ensure offcanvas is closed on navigation
+  document.addEventListener('astro:before-preparation', () => {
+    const offcanvas = document.getElementById('offcanvasNavbar');
+    if (offcanvas && offcanvas.classList.contains('show')) {
+      // Force close the offcanvas
+      offcanvas.classList.remove('show');
+      document.body.classList.remove('modal-open');
+      const backdrop = document.querySelector('.offcanvas-backdrop');
+      if (backdrop) backdrop.remove();
+    }
+  });
+</script>
