@@ -58,14 +58,6 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
   <main class="container my-5">
     <div class="text-center mb-5">
       <h1 class="display-4">{pageTitle}</h1>
-      <p class="lead location-prompt">
-        <nav aria-label="breadcrumb" class="location-breadcrumb">
-        <ol class="breadcrumb justify-content-center">
-            <li class="breadcrumb-item"><a href="/">All Locations</a></li>
-            <li class="breadcrumb-item active">{locationName}</li>
-        </ol>
-        </nav>
-      </p>
     </div>
     
     <!-- Use the static portal cards component -->
@@ -409,30 +401,6 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
   height: var(--icon-size);
   stroke: currentColor;
 }
-
-.location-breadcrumb {
-    margin-bottom: 20px;
-    font-size: 1.2rem;
-  }
-
-.breadcrumb-item a {
-  color: var(--accent-red); 
-
-}
-
-.breadcrumb-item a:hover {
-  text-decoration: underline;
-    color: var(--background-color);
-    transform: scale(1.05);
-    
-}
-.breadcrumb-item {
-    color: var(--accent-yellow);
-    font-weight: 400;
-    text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
-    font-size: 1.2rem;
-    text-transform: uppercase;
-  }
 
 </style>
 
