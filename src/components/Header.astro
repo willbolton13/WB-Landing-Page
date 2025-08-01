@@ -1,25 +1,20 @@
 ---
-// + Added: Import the function to get location data
+// --- All the code in the top section remains the same ---
 import { getLocations } from '../lib/contentful';
 
-// + Added: Fetch all locations at build time
 const locations = await getLocations();
-// + Added: Sort locations alphabetically for the menu
 locations.sort((a, b) => a.fields.locationName.localeCompare(b.fields.locationName));
 
-// * Modified: Replace the hardcoded map with a dynamic one from the fetched data
 const locationNameMap = locations.reduce((acc, loc) => {
   const slug = loc.fields.locationName.toLowerCase().replace(/\s+/g, '-');
   acc[slug] = loc.fields.locationName;
   return acc;
 }, {});
 
-// Get current location from URL if on a location page
 const currentPath = Astro.url.pathname;
 const locationMatch = currentPath.match(/\/location\/(.+)/);
 const currentLocationSlug = locationMatch ? locationMatch[1] : null;
 
-// * Modified: Use the new dynamic map
 const currentLocationName = currentLocationSlug ? locationNameMap[currentLocationSlug] : null;
 ---
 
@@ -72,10 +67,10 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
             
             <div class="offcanvas-footer">
                 <div class="extra-links-buttons">
-                    <a href="#" class="btn-extra-link">Extra Link 1</a> 
-                    <a href="#" class="btn-extra-link">Extra Link 2</a> 
-                    <a href="#" class="btn-extra-link">Extra Link 3</a> 
-                    <a href="#" class="btn-extra-link">Extra Link 4</a> 
+                    <a href="#" class="btn-extra-link">Extra Link 1</a>
+                    <a href="#" class="btn-extra-link">Extra Link 2</a>
+                    <a href="#" class="btn-extra-link">Extra Link 3</a>
+                    <a href="#" class="btn-extra-link">Extra Link 4</a>
                 </div>
                 <a href="https://login.microsoftonline.com/common/oauth2/v2.0/logout" class="btn-logout">LOG OUT</a>
             </div>
@@ -252,15 +247,36 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
 </style>
 
 <script>
-  // Ensure offcanvas is closed on navigation
-  document.addEventListener('astro:before-preparation', () => {
-    const offcanvas = document.getElementById('offcanvasNavbar');
-    if (offcanvas && offcanvas.classList.contains('show')) {
-      // Force close the offcanvas
-      offcanvas.classList.remove('show');
-      document.body.classList.remove('modal-open');
-      const backdrop = document.querySelector('.offcanvas-backdrop');
-      if (backdrop) backdrop.remove();
+  import { navigate } from 'astro:transitions/client';
+
+  function setupOffcanvasNavigation() {
+    const offcanvasElement = document.getElementById('offcanvasNavbar');
+    if (!offcanvasElement || offcanvasElement.dataset.navListenerAttached) {
+      return; // Exit if no offcanvas or if listeners are already on
     }
-  });
+    offcanvasElement.dataset.navListenerAttached = 'true';
+
+    const locationLinks = offcanvasElement.querySelectorAll('.location-item');
+    const bsOffcanvas = new bootstrap.Offcanvas(offcanvasElement);
+
+    locationLinks.forEach(link => {
+      link.addEventListener('click', (event) => {
+        // 1. Prevent the link from navigating immediately
+        event.preventDefault();
+        const targetUrl = link.getAttribute('href');
+
+        // 2. Listen for the 'hidden' event, which fires AFTER the closing animation
+        offcanvasElement.addEventListener('hidden.bs.offcanvas', () => {
+          // 4. Once hidden, navigate to the new page
+          navigate(targetUrl);
+        }, { once: true }); // Use {once: true} so this listener only runs once
+
+        // 3. Manually trigger the offcanvas to close
+        bsOffcanvas.hide();
+      });
+    });
+  }
+
+  // Run this setup after every page load, including client-side navigations
+  document.addEventListener('astro:page-load', setupOffcanvasNavigation);
 </script>
