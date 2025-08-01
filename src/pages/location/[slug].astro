@@ -367,7 +367,6 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
   border-radius: 8px;
   background-color: var(--accent-green);
   color: var(--background-color);
-  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .portal-card:hover {
@@ -441,40 +440,59 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
 <script>
   import { animate, inView } from "motion";
 
-  // 1. Wrap your animation logic in a function
+  // 1. All animation logic is wrapped in this function
   function setupLocationPageAnimations() {
-    // Animate all portal cards
-    const allButtons = document.querySelectorAll('.portal-card');
-    allButtons.forEach((button, index) => {
-      // ... (rest of your animation code is the same)
-      button.style.opacity = '0';
-      button.style.transform = 'translateY(30px)';
-      animate(button, { opacity: 1, transform: "translateY(0px)" }, { duration: 0.6, delay: 0.2 + (index * 0.1) });
+    
+    // --- STEP 1: Central Animation Configuration ---
+    // Change any value here to affect all animations at once.
+    const animationConfig = {
+      initialY: '30px',        // The starting vertical offset
+      duration: 0.5,           // The speed of the animation
+      ease: 'ease-out',        // The "personality" of the animation
+      margin: '50px 0px',     // The trigger margin for scrolling
+      staggerAmount: 0.07      // The time (in seconds) between staggered items
+    };
+
+    // --- STEP 2: Reusable Helper Function ---
+    // This function contains all the repeated logic.
+    function applyScrollAnimation(element, index, calculateDelay) {
+      // Set the element's starting state (hidden and moved down)
+      element.style.opacity = '0';
+      element.style.transform = `translateY(${animationConfig.initialY})`;
+      
+      // Calculate the specific delay for this element using the provided function
+      const delay = calculateDelay(index, animationConfig.staggerAmount);
+      
+      // Set up the scroll trigger
+      inView(element, () => {
+        // Animate to the final state (visible and in original position)
+        animate(element, 
+          { opacity: 1, transform: 'translateY(0px)' }, 
+          { duration: animationConfig.duration, ease: animationConfig.ease, delay: delay }
+        );
+      }, { margin: animationConfig.margin });
+    }
+
+    // --- STEP 3: Simplified, Streamlined Calls ---
+    // Now we just call our helper for each group of elements,
+    // telling it how to calculate the delay for that specific group.
+
+    // Animate all portal cards with a progressive stagger
+    document.querySelectorAll('.portal-card').forEach((el, i) => {
+      applyScrollAnimation(el, i, (index, stagger) => index * stagger);
     });
 
-    // Animate content blocks
-    const contentBlocks = document.querySelectorAll('.content-block');
-    contentBlocks.forEach((block) => {
-      // ... (rest of your animation code is the same)
-      block.style.opacity = '0';
-      block.style.transform = 'translateY(30px)';
-      inView(block, () => {
-        animate(block, { opacity: 1, transform: "translateY(0px)" }, { duration: 0.6 });
-      }, { margin: "-50px" });
+    // Animate content blocks with no stagger (delay is always 0)
+    document.querySelectorAll('.content-block').forEach((el, i) => {
+      applyScrollAnimation(el, i, () => 0);
     });
 
-    // Animate staff members
-    const staffMembers = document.querySelectorAll('.staff-member');
-    staffMembers.forEach((member, index) => {
-      // ... (rest of your animation code is the same)
-      member.style.opacity = '0';
-      member.style.transform = 'translateY(30px)';
-      inView(member, () => {
-        animate(member, { opacity: 1, transform: "translateY(0px)" }, { duration: 0.6, delay: (index % 4) * 0.1 });
-      }, { margin: "-50px" });
+    // Animate staff members with a repeating stagger for rows of 4
+    document.querySelectorAll('.staff-member').forEach((el, i) => {
+      applyScrollAnimation(el, i, (index, stagger) => (index % 4) * stagger);
     });
   }
 
-  // 2. Call the function on page load
+  // 2. Call the main function on page load
   document.addEventListener('astro:page-load', setupLocationPageAnimations);
 </script>
