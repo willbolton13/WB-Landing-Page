@@ -1,10 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import StaticPortalCards from '../components/StaticPortalCards.astro';
-// - Unused: We no longer need to fetch locations on this page.
-// import { getLocations } from '../lib/contentful';
-// const locations = await getLocations();
-// locations.sort(...)
 ---
 
 <Layout title="WaterBear Student Portal">
@@ -32,6 +28,12 @@ import StaticPortalCards from '../components/StaticPortalCards.astro';
     z-index: 1;
   }
 
+    main.container {
+    position: relative;
+    z-index: 2;
+    margin-top: -40vh !important;
+  }
+
   .hero-section img {
     width: 100%;
     height: 100%;
@@ -55,6 +57,7 @@ import StaticPortalCards from '../components/StaticPortalCards.astro';
   .display-4 {
     font-weight: 700;
     text-transform: uppercase;
+    min-height: 150px;
   }
 
   .form-select {

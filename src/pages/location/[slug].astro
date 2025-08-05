@@ -182,12 +182,6 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
     object-position: center;
   }
 
-  main.container {
-    position: relative;
-    z-index: 2;
-    margin-top: -40vh !important;
-  }
-
   h1, .lead {
     color: var(--text-color);
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
@@ -204,6 +198,13 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
   .display-4 {
     font-weight: 700;
     text-transform: uppercase;
+    min-height: 150px;
+  }
+
+    main.container {
+    position: relative;
+    z-index: 2;
+    margin-top: -40vh !important;
   }
 
   /* Green variant for dynamic buttons */
@@ -359,12 +360,13 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
   border-radius: 8px;
   background-color: var(--accent-green);
   color: var(--background-color);
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, box-shadow 0.2s ease;
 }
 
 .portal-card:hover {
   background-color: var(--text-color);
   color: var(--button-text-color);
-  transform: translateY(-5px);
+  transform: scale(1.02) !important;
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
@@ -384,6 +386,11 @@ const pageTitle = fields.pageTitle || `Welcome ${locationName} Students`;
   margin: 0;
   color: inherit;
   max-width: 90%;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
 }
 
 .portal-card-icon {
