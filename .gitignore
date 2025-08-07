@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # legacy files
 legacy/
+
+# testing pages
+testing/

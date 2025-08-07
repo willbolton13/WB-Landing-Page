@@ -137,15 +137,6 @@ const pageTitle = isCampusPage
         {/* Portal Cards - either custom or static based on campus settings */}
         {campusData.fields.useCustomButtons && customPortalButtons.length > 0 ? (
           <>
-            {/* Optional: Visual indicator for custom buttons (can be removed in production) */}
-            {Astro.url.hostname === 'localhost' && (
-              <div class="text-center mb-2">
-                <small class="custom-indicator">
-                  <i class="bi bi-info-circle"></i> Using campus-specific buttons
-                </small>
-              </div>
-            )}
-            
             {/* Custom portal buttons for this campus */}
             <div class="row g-4 justify-content-center mb-4">
               {customPortalButtons.map((button) => (
