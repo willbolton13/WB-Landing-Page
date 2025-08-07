@@ -1,0 +1,733 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import StaticPortalCards from '../../components/StaticPortalCards.astro';
+import { 
+  getCampuses,
+  getCampusBySlug,
+  getCoursesByCampus,
+  getCourseBySlug,
+  getCourseWithFullContent,
+  findIncludedEntry,
+  findIncludedAsset,
+  contentfulClient
+} from '../../lib/contentful';
+
+// Generate static paths for all campus and campus/course combinations
+export async function getStaticPaths() {
+  const campuses = await getCampuses();
+  const paths = [];
+  
+  for (const campus of campuses) {
+    // Add campus landing page path (course is empty array for rest params)
+    paths.push({
+      params: { 
+        campus: campus.fields.campusSlug,
+        course: undefined // This becomes an empty array for rest params
+      }
+    });
+    
+    // Add course paths if this campus has courses
+    if (campus.fields.courses && campus.fields.courses.length > 0) {
+      for (const courseRef of campus.fields.courses) {
+        try {
+          const course = await contentfulClient.getEntry(courseRef.sys.id);
+          paths.push({
+            params: { 
+              campus: campus.fields.campusSlug,
+              course: course.fields.courseSlug // This becomes a single-element array
+            }
+          });
+        } catch (error) {
+          console.error(`Error fetching course ${courseRef.sys.id}:`, error);
+        }
+      }
+    }
+  }
+  
+  return paths;
+}
+
+const { campus } = Astro.params;
+// For rest params [...course], Astro provides an array
+// Empty array for campus pages, single element for course pages
+const courseSlug = Astro.params.course ? Astro.params.course : undefined;
+
+// Fetch campus data
+const campusData = await getCampusBySlug(campus);
+if (!campusData) {
+  return Astro.redirect('/');
+}
+
+// Determine if this is a campus page or course page
+const isCampusPage = !courseSlug || courseSlug.length === 0;
+
+// Get courses for campus page
+let courses = [];
+let courseData = null;
+let courseResponse = null;
+let customPortalButtons = [];
+
+if (isCampusPage) {
+  courses = await getCoursesByCampus(campus);
+  
+  // Check if campus has custom portal buttons
+  if (campusData.fields.useCustomButtons && campusData.fields.customPortalButtons) {
+    // Resolve the custom button references
+    customPortalButtons = await Promise.all(
+      campusData.fields.customPortalButtons.map(buttonRef => 
+        contentfulClient.getEntry(buttonRef.sys.id)
+      )
+    );
+  }
+} else {
+  // Fetch course data for course page
+  courseResponse = await getCourseWithFullContent(campus, courseSlug);
+  if (courseResponse && courseResponse.items && courseResponse.items.length > 0) {
+    courseData = courseResponse.items[0];
+  }
+  
+  // Also get custom buttons for course pages
+  if (campusData.fields.useCustomButtons && campusData.fields.customPortalButtons) {
+    customPortalButtons = await Promise.all(
+      campusData.fields.customPortalButtons.map(buttonRef => 
+        contentfulClient.getEntry(buttonRef.sys.id)
+      )
+    );
+  }
+}
+
+// Set page title based on page type
+const pageTitle = isCampusPage 
+  ? (campusData.fields.welcomeHeading || `Welcome ${campusData.fields.campusName} Students`)
+  : (courseData ? (courseData.fields.pageTitle || courseData.fields.courseName) : 'Course');
+---
+
+<Layout title={pageTitle}>
+  <section class="hero-section">
+    <img src="/img/hn-1536x796.jpg.webp" alt="Hero image" />
+  </section>
+  
+  <main class="container my-5">
+    {isCampusPage ? (
+      // CAMPUS PAGE CONTENT
+      <>
+        <div class="text-center mb-5">
+          <h1 class="display-4">{pageTitle}</h1>
+          
+          {/* Course Selection - Simple buttons right under the header */}
+          {courses && courses.length > 0 && (
+            <div class="course-selection">
+              {courses.length > 1 && (
+                <p class="course-prompt">Select your course:</p>
+              )}
+              <div class="course-buttons">
+                {courses.map((courseItem) => (
+                  <a 
+                    href={`/${campus}/${courseItem.fields.courseSlug}`}
+                    class="course-btn"
+                  >
+                    {courseItem.fields.courseName}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Portal Cards - either custom or static based on campus settings */}
+        {campusData.fields.useCustomButtons && customPortalButtons.length > 0 ? (
+          <>
+            {/* Optional: Visual indicator for custom buttons (can be removed in production) */}
+            {Astro.url.hostname === 'localhost' && (
+              <div class="text-center mb-2">
+                <small class="custom-indicator">
+                  <i class="bi bi-info-circle"></i> Using campus-specific buttons
+                </small>
+              </div>
+            )}
+            
+            {/* Custom portal buttons for this campus */}
+            <div class="row g-4 justify-content-center mb-4">
+              {customPortalButtons.map((button) => (
+                <div class="col-lg-6 col-md-6">
+                  <a href={button.fields.link} target="_blank" class="portal-card custom-portal-card">
+                    <div class="portal-card-icon">
+                      <i data-lucide={button.fields.icon || 'square'}></i>
+                    </div>
+                    <h3>{button.fields.buttonText}</h3>
+                    <p class="portal-card-subtitle">{button.fields.buttonSubtitle || ''}</p>
+                  </a>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          // Default static portal cards
+          <StaticPortalCards />
+        )}
+        
+        {/* If no courses, show a message */}
+        {(!courses || courses.length === 0) && (
+          <div class="alert alert-info mt-5 text-center">
+            <p class="mb-0">No courses are currently available for this campus.</p>
+          </div>
+        )}
+      </>
+    ) : courseData ? (
+      // COURSE PAGE CONTENT
+      <>
+        <div class="text-center mb-5">
+          <h1 class="display-4">{pageTitle}</h1>
+          <p class="course-subtitle">{courseData.fields.courseName}</p>
+        </div>
+        
+        {/* Portal Cards - use campus custom buttons if available */}
+        {campusData.fields.useCustomButtons && customPortalButtons.length > 0 ? (
+          <div class="row g-4 justify-content-center mb-4">
+            {customPortalButtons.map((button) => (
+              <div class="col-lg-6 col-md-6">
+                <a href={button.fields.link} target="_blank" class="portal-card custom-portal-card">
+                  <div class="portal-card-icon">
+                    <i data-lucide={button.fields.icon || 'square'}></i>
+                  </div>
+                  <h3>{button.fields.buttonText}</h3>
+                  <p class="portal-card-subtitle">{button.fields.buttonSubtitle || ''}</p>
+                </a>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <StaticPortalCards />
+        )}
+        
+        {/* Dynamic Course Buttons */}
+        {courseData.fields.locationButtons && courseData.fields.locationButtons.length > 0 && (
+          <div class="row g-4 justify-content-center mb-4">
+            {courseData.fields.locationButtons.map((buttonRef) => {
+              const button = findIncludedEntry(courseResponse.includes, buttonRef.sys.id);
+              if (!button) return null;
+              
+              return (
+                <div class="col-lg-6 col-md-6">
+                  <a href={button.fields.link} target="_blank" class="portal-card portal-card-green">
+                    <div class="portal-card-icon">
+                      <i data-lucide={button.fields.icon || 'square'}></i>
+                    </div>
+                    <h3>{button.fields.buttonText}</h3>
+                    <p class="portal-card-subtitle">{button.fields.buttonSubtitle || ''}</p>
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        
+        {/* Information Blocks */}
+        {courseData.fields.informationBlocks && courseData.fields.informationBlocks.length > 0 && (
+          <div>
+            {courseData.fields.informationBlocks.map((blockRef, index) => {
+              const block = findIncludedEntry(courseResponse.includes, blockRef.sys.id);
+              if (!block) return null;
+              
+              const imageAsset = block.fields.image ? 
+                findIncludedAsset(courseResponse.includes, block.fields.image.sys.id) : null;
+              const imageUrl = imageAsset ? 
+                `https:${imageAsset.fields.file.url}` : 
+                'https://placehold.co/600x400';
+              
+              const contentText = block.fields.content?.content
+                ?.map(node => node.content?.map(innerNode => innerNode.value).join(''))
+                ?.join('<br>') || '';
+              
+              const layoutClass = index % 2 === 1 ? 'image-left' : '';
+              
+              return (
+                <div class={`content-block ${layoutClass}`}>
+                  <div class="row align-items-center justify-content-between">
+                    <div class="col-md-7 content-block-text">
+                      <h2>{block.fields.heading}</h2>
+                      <p set:html={contentText}></p>
+                    </div>
+                    <div class="col-md-5 content-block-image">
+                      <img src={imageUrl} class="img-fluid rounded" alt={block.fields.heading}>
+                      {block.fields.buttonText && block.fields.buttonLink && (
+                        <a href={block.fields.buttonLink} target="_blank" class="overlap-btn">
+                          {block.fields.buttonText}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        
+        {/* Staff Section */}
+        {courseData.fields.centreStaff && courseData.fields.centreStaff.length > 0 && (
+          <div class="staff-section">
+            <div class="section-divider"></div>
+            <div class="row">
+              {courseData.fields.centreStaff.map((staffRef) => {
+                const staff = findIncludedEntry(courseResponse.includes, staffRef.sys.id);
+                if (!staff) return null;
+                
+                const photoAsset = staff.fields.photo ? 
+                  findIncludedAsset(courseResponse.includes, staff.fields.photo.sys.id) : null;
+                const photoUrl = photoAsset ? 
+                  `https:${photoAsset.fields.file.url}` : 
+                  `https://placehold.co/300x300/DE0029/FFFFFF?text=${encodeURIComponent(staff.fields.fullName.charAt(0))}`;
+                
+                return (
+                  <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+                    <div class="staff-member">
+                      <div class="staff-photo">
+                        <img src={photoUrl} alt={staff.fields.fullName} class="img-fluid">
+                      </div>
+                      <div class="staff-info">
+                        <h4 class="staff-name">{staff.fields.fullName}</h4>
+                        <p class="staff-title">{staff.fields.jobTitle}</p>
+                        <a href={`mailto:${staff.fields.staffEmail}`} class="staff-email">
+                          {staff.fields.staffEmail}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </>
+    ) : (
+      // ERROR STATE
+      <div class="text-center">
+        <h1>Course Not Found</h1>
+        <p>
+          <a href={`/${campus}`} class="btn btn-secondary">← Back to {campusData.fields.campusName} Campus</a>
+        </p>
+      </div>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .hero-section {
+    height: 55vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  main.container {
+    position: relative;
+    z-index: 2;
+    margin-top: -40vh !important;
+  }
+
+  .text-center.mb-5 {
+    min-height: 200px; /* Adjust this value as needed */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+  h1 {
+    color: var(--text-color);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .course-subtitle {
+    color: var(--accent-yellow);
+    font-weight: 500;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Course selection - simple white outline buttons */
+  .course-selection {
+    margin-bottom: 2rem;
+  }
+
+  .course-prompt {
+    color: var(--text-color);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+  }
+
+  .course-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .course-btn {
+    padding: 0.75rem 2rem;
+    background-color: transparent;
+    border: 4px solid var(--text-color);
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    display: inline-block;
+  }
+
+  .course-btn:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.0);
+  }
+
+  .alert {
+    max-width: 600px;
+    margin: 3rem auto;
+  }
+
+  /* Portal card styles (for custom campus buttons) */
+  .portal-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 250px;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    background-color: var(--accent-yellow);
+    color: var(--button-text-color);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .custom-portal-card {
+    /* Custom cards can have different colors - could be set via inline styles if needed */
+    background-color: var(--accent-yellow);
+  }
+
+  .portal-card:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: scale(1.02);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+
+  .portal-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+    color: inherit;
+  }
+
+  .portal-card-subtitle {
+    font-size: 0.9rem;
+    font-weight: 400;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+  }
+
+  .portal-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .portal-card-icon svg {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    stroke: currentColor;
+  }
+
+  /* Portal card green variant */
+  .portal-card-green {
+    background-color: var(--accent-green);
+    color: var(--text-color);
+  }
+
+  .portal-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 250px;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .portal-card:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: scale(1.02);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+
+  .portal-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+    color: inherit;
+  }
+
+  .portal-card-subtitle {
+    font-size: 0.9rem;
+    font-weight: 400;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+  }
+
+  .portal-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .portal-card-icon svg {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    stroke: currentColor;
+  }
+
+  .custom-indicator {
+    color: #666;
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+  /* Content blocks */
+  .content-block {
+    margin-bottom: 3rem;
+  }
+
+  .content-block-text h2,
+  .content-block-text p {
+    color: #000;
+    text-shadow: none;
+  }
+
+  @media (min-width: 768px) {
+    .content-block.image-left .content-block-text {
+      order: 2;
+    }
+    .content-block.image-left .content-block-image {
+      order: 1;
+    }
+  }
+
+  .content-block-image {
+    position: relative;
+  }
+
+  .overlap-btn {
+    position: absolute;
+    bottom: -10px;
+    right: 20px;
+    background-color: var(--accent-green);
+    color: var(--text-color);
+    padding: 10px 25px;
+    border-radius: 5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .overlap-btn:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: scale(1.05);
+  }
+
+  /* Staff section */
+  .staff-section {
+    margin-top: 4rem;
+  }
+
+  .section-divider {
+    height: 3px;
+    background-color: var(--accent-yellow);
+    margin: 2rem 0 3rem 0;
+    border-radius: 2px;
+  }
+
+  .staff-member {
+    text-align: center;
+    padding: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .staff-member:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+
+  .staff-photo {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1rem auto;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--accent-red);
+  }
+
+  .staff-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .staff-info {
+    color: #000;
+  }
+
+  .staff-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: #000;
+    text-transform: uppercase;
+  }
+
+  .staff-title {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+
+  .staff-email {
+    font-size: 0.9rem;
+    color: var(--accent-red);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+  }
+
+  .staff-email:hover {
+    color: var(--accent-green);
+    text-decoration: underline;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background-color: var(--accent-green);
+    color: var(--text-color);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background-color: var(--accent-yellow);
+    color: var(--button-text-color);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    .course-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .btn-course {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+</style>
+
+<script>
+  import { animate, inView } from "motion";
+
+  function setupPageAnimations() {
+    const animationConfig = {
+      initialY: '30px',
+      duration: 0.5,
+      ease: 'ease-out',
+      margin: '50px 0px',
+      staggerAmount: 0.07
+    };
+
+    function applyScrollAnimation(element, index, calculateDelay) {
+      element.style.opacity = '0';
+      element.style.transform = `translateY(${animationConfig.initialY})`;
+      
+      const delay = calculateDelay(index, animationConfig.staggerAmount);
+      
+      inView(element, () => {
+        animate(element, 
+          { opacity: 1, transform: 'translateY(0px)' }, 
+          { duration: animationConfig.duration, ease: animationConfig.ease, delay: delay }
+        );
+      }, { margin: animationConfig.margin });
+    }
+
+    document.querySelectorAll('.portal-card').forEach((el, i) => {
+      applyScrollAnimation(el, i, (index, stagger) => index * stagger);
+    });
+
+    document.querySelectorAll('.btn-course').forEach((el, i) => {
+      applyScrollAnimation(el, i, (index, stagger) => index * stagger * 0.5);
+    });
+
+    document.querySelectorAll('.content-block').forEach((el, i) => {
+      applyScrollAnimation(el, i, () => 0);
+    });
+
+    document.querySelectorAll('.staff-member').forEach((el, i) => {
+      applyScrollAnimation(el, i, (index, stagger) => (index % 4) * stagger);
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupPageAnimations);
+</script>
