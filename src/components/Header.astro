@@ -1,21 +1,60 @@
 ---
-// --- All the code in the top section remains the same ---
-import { getLocations } from '../lib/contentful';
+import { getCampusesWithCourses, contentfulClient } from '../lib/contentful';
 
-const locations = await getLocations();
-locations.sort((a, b) => a.fields.locationName.localeCompare(b.fields.locationName));
+// Get all campuses with their courses
+const campuses = await getCampusesWithCourses();
+campuses.sort((a, b) => (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0));
 
-const locationNameMap = locations.reduce((acc, loc) => {
-  const slug = loc.fields.locationName.toLowerCase().replace(/\s+/g, '-');
-  acc[slug] = loc.fields.locationName;
-  return acc;
-}, {});
+// Resolve course references for each campus
+const campusesWithResolvedCourses = await Promise.all(
+  campuses.map(async (campus) => {
+    if (campus.fields.courses && campus.fields.courses.length > 0) {
+      const resolvedCourses = await Promise.all(
+        campus.fields.courses.map(courseRef => 
+          contentfulClient.getEntry(courseRef.sys.id)
+        )
+      );
+      // Sort courses by displayOrder
+      resolvedCourses.sort((a, b) => 
+        (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
+      );
+      return {
+        ...campus,
+        fields: {
+          ...campus.fields,
+          courses: resolvedCourses
+        }
+      };
+    }
+    return campus;
+  })
+);
 
+// Parse current URL to determine campus and course
 const currentPath = Astro.url.pathname;
-const locationMatch = currentPath.match(/\/location\/(.+)/);
-const currentLocationSlug = locationMatch ? locationMatch[1] : null;
+const pathParts = currentPath.split('/').filter(Boolean);
+// Only treat first part as campus if it's not the home page
+const isHomePage = currentPath === '/' || pathParts.length === 0;
+const currentCampusSlug = !isHomePage ? pathParts[0] : null;
+const currentCourseSlug = !isHomePage && pathParts.length > 1 ? pathParts[1] : null;
 
-const currentLocationName = currentLocationSlug ? locationNameMap[currentLocationSlug] : null;
+// Find current campus and course names
+let currentCampusName = null;
+let currentCourseName = null;
+
+if (currentCampusSlug) {
+  const campus = campusesWithResolvedCourses.find(c => c.fields.campusSlug === currentCampusSlug);
+  if (campus) {
+    currentCampusName = campus.fields.campusName;
+    
+    if (currentCourseSlug && campus.fields.courses) {
+      const course = campus.fields.courses.find(c => c.fields.courseSlug === currentCourseSlug);
+      if (course) {
+        currentCourseName = course.fields.courseName;
+      }
+    }
+  }
+}
 ---
 
 <header class="py-3">
@@ -25,11 +64,14 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
         </a>
         
         <div class="location-status d-none d-md-flex align-items-center gap-2">
-            
             <i class="bi bi-geo-alt-fill text-warning"></i>
-            {currentLocationName ?
-                (
-                <span>Campus: <strong class="text-warning">{currentLocationName}</strong></span>
+            {currentCampusName ? (
+                <span>
+                    Campus: <strong class="text-warning">{currentCampusName}</strong>
+                    {currentCourseName && (
+                        <span class="course-indicator"> | {currentCourseName}</span>
+                    )}
+                </span>
             ) : (
                 <span><strong>Select your campus to get started</strong></span>
             )}
@@ -43,24 +85,64 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
             aria-controls="offcanvasNavbar" 
             aria-label="Toggle navigation"
         >
-            {currentLocationName ? 'Change' : 'Select'} Campus
+            {currentCampusName ? 'Change' : 'Select'} Campus
             <i class="bi bi-list fs-5"></i>
         </button>
         
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="offcanvasNavbarLabel">SELECT YOUR CAMPUS</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" 
-                    aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             
             <div class="offcanvas-body location-list">
-                {locations.map((location) => {
-                    const slug = location.fields.locationName.toLowerCase().replace(/\s+/g, '-');
+                {campusesWithResolvedCourses.map((campus) => {
+                    const campusSlug = campus.fields.campusSlug;
+                    const hasCourses = campus.fields.courses && campus.fields.courses.length > 0;
+                    
                     return (
-                        <a href={`/location/${slug}`} class="location-item">
-                            {location.fields.locationName}
-                        </a>
+                        <div class="campus-group" data-campus={campusSlug}>
+                            {hasCourses ? (
+                                <>
+                                    <div class="campus-header-wrapper">
+                                        <a 
+                                            href={`/${campusSlug}`}
+                                            class="campus-link"
+                                            data-campus-link={campusSlug}
+                                        >
+                                            {campus.fields.campusName}
+                                        </a>
+                                        <button 
+                                            class="expand-btn"
+                                            data-campus-slug={campusSlug}
+                                            type="button"
+                                            aria-label="Expand courses"
+                                        >
+                                            <i class="bi bi-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                    <div class="course-list" id={`courses-${campusSlug}`}>
+                                        {campus.fields.courses.map((course) => (
+                                            <a 
+                                                href={`/${campusSlug}/${course.fields.courseSlug}`} 
+                                                class="course-item"
+                                                data-course-link={course.fields.courseSlug}
+                                            >
+                                                {course.fields.courseName}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <a 
+                                    href={`/${campusSlug}`} 
+                                    class="campus-header solo"
+                                    data-campus-link={campusSlug}
+                                >
+                                    {campus.fields.campusName}
+                                </a>
+                            )}
+                        </div>
                     );
                 })}
             </div>
@@ -79,7 +161,6 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
 </header>
 
 <style>
-  /* All existing styles remain the same */
   header {
     position: relative;
     z-index: 10;
@@ -103,6 +184,11 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
     color: var(--accent-yellow) !important;
   }
 
+  .course-indicator {
+    color: var(--text-color);
+    opacity: 0.8;
+  }
+
   .location-hamburger-btn {
     background-color: var(--accent-yellow);
     border: none;
@@ -110,7 +196,7 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
     font-weight: 700;
-    border-radius: 5px;
+    border-radius: 8px;
     transition: all 0.2s ease-in-out;
   }
 
@@ -120,18 +206,10 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
     transform: scale(1.05);
   }
 
-  .navbar-toggler {
-    border: none;
-    padding: 0;
-  }
-
-  .navbar-toggler:hover {
-    filter: brightness(.3);
-  }
-
   .offcanvas {
     background-color: var(--accent-yellow);
     color: var(--button-text-color);
+    transition: transform 0.1s ease-in-out !important;
   }
 
   .offcanvas-header {
@@ -161,23 +239,118 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
     gap: 0.5rem;
   }
 
-  .location-item {
-    display: block;
+  /* Campus group styling */
+  .campus-group {
+    margin-bottom: 1rem;
+  }
+
+  /* Campus header wrapper for split link/button */
+  .campus-header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s ease-in-out;
+  }
+
+  .campus-header-wrapper:hover {
+    border-bottom-color: var(--button-text-color);
+  }
+
+  /* Campus link (clickable name) */
+  .campus-link {
+    flex: 1;
     padding: 1rem 0;
     font-size: 2rem;
     font-weight: 700;
     color: var(--button-text-color);
     text-decoration: none;
     text-transform: uppercase;
-    transition: all 0.2s ease-in-out;
-    border-bottom: 2px solid transparent;
+    transition: transform 0.2s ease-in-out;
   }
 
-  .location-item:hover {
+  .campus-link:hover {
+    transform: translateX(10px);
+    color: var(--button-text-color);
+  }
+
+  /* Expand button (chevron only) */
+  .expand-btn {
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--button-text-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .expand-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+
+  .expand-btn .bi-chevron-down {
+    font-size: 1.5rem;
+    transition: transform 0.2s ease;
+  }
+
+  .expand-btn.expanded .bi-chevron-down {
+    transform: rotate(180deg);
+  }
+
+  /* Solo campus header (no courses) */
+  .campus-header.solo {
+    display: block;
+    width: 100%;
+    padding: 1rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--button-text-color);
+    text-decoration: none;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .campus-header.solo:hover {
     transform: translateX(10px);
     border-bottom-color: var(--button-text-color);
   }
 
+  /* Course list styling */
+  .course-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    padding-left: 2rem;
+  }
+
+  .course-list.expanded {
+    max-height: 500px;
+  }
+
+  .course-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--button-text-color);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .course-item:hover {
+    border-left-color: var(--button-text-color);
+    padding-left: 1.5rem;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  /* Footer section */
   .offcanvas-footer {
     padding: 1.5rem;
     border-top: 2px solid var(--button-text-color);
@@ -243,6 +416,18 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
     header img {
       height: 40px !important;
     }
+
+    .campus-link {
+      font-size: 1.5rem;
+    }
+
+    .course-item {
+      font-size: 1.1rem;
+    }
+
+    .expand-btn .bi-chevron-down {
+      font-size: 1.2rem;
+    }
   }
 </style>
 
@@ -252,31 +437,57 @@ const currentLocationName = currentLocationSlug ? locationNameMap[currentLocatio
   function setupOffcanvasNavigation() {
     const offcanvasElement = document.getElementById('offcanvasNavbar');
     if (!offcanvasElement || offcanvasElement.dataset.navListenerAttached) {
-      return; // Exit if no offcanvas or if listeners are already on
+      return;
     }
     offcanvasElement.dataset.navListenerAttached = 'true';
 
-    const locationLinks = offcanvasElement.querySelectorAll('.location-item');
     const bsOffcanvas = new bootstrap.Offcanvas(offcanvasElement);
 
-    locationLinks.forEach(link => {
+    // Setup expand buttons (chevrons only)
+    const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
+    expandButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation(); // Prevent any parent handlers
+        
+        const campusSlug = button.dataset.campusSlug;
+        const courseList = document.getElementById(`courses-${campusSlug}`);
+        
+        // Toggle expanded state
+        button.classList.toggle('expanded');
+        courseList.classList.toggle('expanded');
+        
+        // Optional: Collapse other campus sections
+        expandButtons.forEach(otherButton => {
+          if (otherButton !== button) {
+            otherButton.classList.remove('expanded');
+            const otherSlug = otherButton.dataset.campusSlug;
+            const otherList = document.getElementById(`courses-${otherSlug}`);
+            if (otherList) {
+              otherList.classList.remove('expanded');
+            }
+          }
+        });
+      });
+    });
+
+    // Setup navigation for campus links and course links
+    const navigationLinks = offcanvasElement.querySelectorAll('.campus-link, .campus-header.solo, .course-item');
+    navigationLinks.forEach(link => {
       link.addEventListener('click', (event) => {
-        // 1. Prevent the link from navigating immediately
         event.preventDefault();
         const targetUrl = link.getAttribute('href');
 
-        // 2. Listen for the 'hidden' event, which fires AFTER the closing animation
+        // Listen for hidden event and navigate
         offcanvasElement.addEventListener('hidden.bs.offcanvas', () => {
-          // 4. Once hidden, navigate to the new page
           navigate(targetUrl);
-        }, { once: true }); // Use {once: true} so this listener only runs once
+        }, { once: true });
 
-        // 3. Manually trigger the offcanvas to close
+        // Close the offcanvas
         bsOffcanvas.hide();
       });
     });
   }
 
-  // Run this setup after every page load, including client-side navigations
   document.addEventListener('astro:page-load', setupOffcanvasNavigation);
 </script>
