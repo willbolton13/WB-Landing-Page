@@ -213,46 +213,66 @@ const pageTitle = isCampusPage
           </div>
         )}
         
-        {/* Information Blocks */}
-        {courseData.fields.informationBlocks && courseData.fields.informationBlocks.length > 0 && (
-          <div>
-            {courseData.fields.informationBlocks.map((blockRef, index) => {
-              const block = findIncludedEntry(courseResponse.includes, blockRef.sys.id);
-              if (!block) return null;
-              
-              const imageAsset = block.fields.image ? 
-                findIncludedAsset(courseResponse.includes, block.fields.image.sys.id) : null;
-              const imageUrl = imageAsset ? 
-                `https:${imageAsset.fields.file.url}` : 
-                'https://placehold.co/600x400';
-              
-              const contentText = block.fields.content?.content
-                ?.map(node => node.content?.map(innerNode => innerNode.value).join(''))
-                ?.join('<br>') || '';
-              
-              const layoutClass = index % 2 === 1 ? 'image-left' : '';
-              
-              return (
-                <div class={`content-block ${layoutClass}`}>
-                  <div class="row align-items-center justify-content-between">
-                    <div class="col-md-7 content-block-text">
-                      <h2>{block.fields.heading}</h2>
-                      <p set:html={contentText}></p>
-                    </div>
-                    <div class="col-md-5 content-block-image">
-                      <img src={imageUrl} class="img-fluid rounded" alt={block.fields.heading}>
-                      {block.fields.buttonText && block.fields.buttonLink && (
-                        <a href={block.fields.buttonLink} target="_blank" class="overlap-btn">
-                          {block.fields.buttonText}
-                        </a>
-                      )}
-                    </div>
+ 
+<!-- Information Blocks Section -->
+{courseData.fields.informationBlocks && courseData.fields.informationBlocks.length > 0 && (
+  <div>
+    {courseData.fields.informationBlocks.map((blockRef, index) => {
+      const block = findIncludedEntry(courseResponse.includes, blockRef.sys.id);
+      if (!block) return null;
+      
+      const imageAsset = block.fields.image ? 
+        findIncludedAsset(courseResponse.includes, block.fields.image.sys.id) : null;
+      const imageUrl = imageAsset ? 
+        `https:${imageAsset.fields.file.url}` : null;
+      
+      const contentText = block.fields.content?.content
+        ?.map(node => node.content?.map(innerNode => innerNode.value).join(''))
+        ?.join('<br>') || '';
+      
+      // Determine layout based on whether image exists
+      const hasImage = !!imageUrl;
+      const layoutClass = hasImage && index % 2 === 1 ? 'image-left' : '';
+      
+      return (
+        <div class={`content-block ${layoutClass} ${!hasImage ? 'no-image' : ''}`}>
+          {hasImage ? (
+            // Layout WITH image
+            <div class="row align-items-center justify-content-between">
+              <div class="col-md-7 content-block-text">
+                <h2>{block.fields.heading}</h2>
+                <p set:html={contentText}></p>
+              </div>
+              <div class="col-md-5 content-block-image">
+                <img src={imageUrl} class="img-fluid rounded" alt={block.fields.heading}>
+                {block.fields.buttonText && block.fields.buttonLink && (
+                  <a href={block.fields.buttonLink} target="_blank" class="overlap-btn">
+                    {block.fields.buttonText}
+                  </a>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Layout WITHOUT image - full width, left-aligned to match
+            <div class="row">
+              <div class="col-md-12 content-block-text">
+                <h2>{block.fields.heading}</h2>
+                <p set:html={contentText}></p>
+                {block.fields.buttonText && block.fields.buttonLink && (
+                  <div class="button-container">
+                    <a href={block.fields.buttonLink} target="_blank" class="overlap-btn position-relative">
+                      {block.fields.buttonText}
+                    </a>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
         
         {/* Staff Section */}
         {courseData.fields.centreStaff && courseData.fields.centreStaff.length > 0 && (
@@ -677,6 +697,27 @@ const pageTitle = isCampusPage
       max-width: 300px;
     }
   }
+  /* ===== NEW STYLES FOR NO-IMAGE BLOCKS (minimal additions) ===== */
+  
+  /* Button container for no-image blocks */
+  .content-block.no-image .button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+
+  /* Make the button position relative when no image */
+  .content-block.no-image .overlap-btn.position-relative {
+    position: relative;
+    bottom: auto;
+    right: auto;
+  }
+
+  /* Optional: Add some padding to no-image blocks if needed */
+  .content-block.no-image {
+    padding: 1rem 0;
+  }
+
 </style>
 
 <script>
