@@ -1,0 +1,96 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StaticPortalCards from '../components/StaticPortalCards.astro';
+---
+
+<Layout title="WaterBear Student Portal">
+    
+    <section class="hero-section">
+        <img src="/img/hn-1536x796.jpg.webp" alt="Hero image">
+    </section>
+    
+    <main class="container my-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4">Welcome to your student portal</h1>
+            
+            </div>
+        
+        <StaticPortalCards />
+    </main>
+</Layout>
+
+<style>
+  /* All existing styles remain the same, no changes needed here */
+  .hero-section {
+    height: 55vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+    main.container {
+    position: relative;
+    z-index: 2;
+    margin-top: -40vh !important;
+  }
+
+  .hero-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  h1, .lead {
+    color: var(--text-color);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .location-prompt {
+    color: var(--accent-yellow);
+    font-weight: 500;
+    text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);
+    font-size: 1.6rem;
+    text-transform: uppercase;
+  }
+
+  .display-4 {
+    font-weight: 700;
+    text-transform: uppercase;
+    min-height: 150px;
+  }
+
+  .form-select {
+    background-color: var(--header-color);
+    color: var(--text-color);
+    border: 2px solid var(--accent-yellow);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+    padding: .5rem;
+  }
+
+  .form-select option {
+    background: var(--header-color);
+    color: var(--text-color);
+  }
+
+  .form-select:focus {
+    background-color: var(--header-color);
+    color: var(--text-color);
+    border-color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(253, 226, 0, 0.25);
+  }
+
+  @media (max-width: 992px) {
+    .location-prompt {
+      font-size: 1.4rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .location-prompt {
+      font-size: 1.2rem;
+    }
+  }
+</style>
