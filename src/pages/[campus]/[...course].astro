@@ -107,11 +107,11 @@ const pageTitle = isCampusPage
     <img src="/img/hn-1536x796.jpg.webp" alt="Hero image" />
   </section>
   
-  <main class="container my-5">
+  <main class="container mb-5">
     {isCampusPage ? (
       // CAMPUS PAGE CONTENT
       <>
-        <div class="text-center mb-5">
+        <div class="text-center">
           <h1 class="display-4">{pageTitle}</h1>
           
           {/* Course Selection - Simple buttons right under the header */}
@@ -167,7 +167,7 @@ const pageTitle = isCampusPage
     ) : courseData ? (
       // COURSE PAGE CONTENT
       <>
-        <div class="text-center mb-5">
+        <div class="text-center">
           <h1 class="display-4">{pageTitle}</h1>
           <p class="course-subtitle">{courseData.fields.courseName}</p>
         </div>
@@ -320,14 +320,15 @@ const pageTitle = isCampusPage
   main.container {
     position: relative;
     z-index: 2;
-    margin-top: -40vh !important;
+    margin-top: -50vh !important;
   }
 
-  .text-center.mb-5 {
-    min-height: 200px; /* Adjust this value as needed */
+  .text-center {
+    min-height: 300px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    padding-top: 20px;
 }
 
   h1 {
@@ -338,13 +339,14 @@ const pageTitle = isCampusPage
   }
 
   .course-subtitle {
-    color: var(--accent-yellow);
-    font-weight: 500;
+    color: var(--text-color);
+    font-weight: 700;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     text-transform: uppercase;
     margin-top: 0.5rem;
     margin-bottom: 1rem;
+    padding-top: 10px;
   }
 
   /* Course selection - simple white outline buttons */
@@ -689,36 +691,127 @@ const pageTitle = isCampusPage
       staggerAmount: 0.07
     };
 
+    // Helper function to check if element is already in viewport
+    function isElementInViewport(element) {
+      const rect = element.getBoundingClientRect();
+      return (
+        rect.top < window.innerHeight &&
+        rect.bottom > 0
+      );
+    }
+
     function applyScrollAnimation(element, index, calculateDelay) {
+      // Check if element is already visible on page load
+      const isAlreadyVisible = isElementInViewport(element);
+      
+      if (isAlreadyVisible) {
+        // Element is already visible - let Astro's view transitions handle it
+        // Don't apply opacity or transform changes
+        return;
+      }
+      
+      // Element is not visible - prepare it for scroll animation
       element.style.opacity = '0';
       element.style.transform = `translateY(${animationConfig.initialY})`;
       
       const delay = calculateDelay(index, animationConfig.staggerAmount);
       
-      inView(element, () => {
+      // Set up the scroll trigger
+      const stopWatching = inView(element, () => {
         animate(element, 
           { opacity: 1, transform: 'translateY(0px)' }, 
           { duration: animationConfig.duration, ease: animationConfig.ease, delay: delay }
         );
+        // Stop watching after animation triggers
+        return stopWatching;
       }, { margin: animationConfig.margin });
     }
 
-    document.querySelectorAll('.portal-card').forEach((el, i) => {
-      applyScrollAnimation(el, i, (index, stagger) => index * stagger);
-    });
+    // Small delay to ensure DOM is fully ready and Astro transitions have started
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.portal-card').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => index * stagger);
+      });
 
-    document.querySelectorAll('.btn-course').forEach((el, i) => {
-      applyScrollAnimation(el, i, (index, stagger) => index * stagger * 0.5);
-    });
+      document.querySelectorAll('.course-btn').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => index * stagger * 0.5);
+      });
 
-    document.querySelectorAll('.content-block').forEach((el, i) => {
-      applyScrollAnimation(el, i, () => 0);
-    });
+      document.querySelectorAll('.content-block').forEach((el, i) => {
+        applyScrollAnimation(el, i, () => 0);
+      });
 
-    document.querySelectorAll('.staff-member').forEach((el, i) => {
-      applyScrollAnimation(el, i, (index, stagger) => (index % 4) * stagger);
+      document.querySelectorAll('.staff-member').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => (index % 4) * stagger);
+      });
     });
   }
 
-  document.addEventListener('astro:page-load', setupPageAnimations);
+  // Alternative: Use a more sophisticated visibility check
+  function setupPageAnimationsAdvanced() {
+    const animationConfig = {
+      initialY: '30px',
+      duration: 0.5,
+      ease: 'ease-out',
+      margin: '50px 0px',
+      staggerAmount: 0.07,
+      visibilityThreshold: 0.1 // 10% of element must be visible
+    };
+
+    function applyScrollAnimation(element, index, calculateDelay) {
+      // Use Intersection Observer to check initial visibility
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          
+          if (entry.isIntersecting && entry.intersectionRatio >= animationConfig.visibilityThreshold) {
+            // Element is already visible - don't animate
+            observer.disconnect();
+          } else {
+            // Element is not visible - set up for animation
+            element.style.opacity = '0';
+            element.style.transform = `translateY(${animationConfig.initialY})`;
+            
+            const delay = calculateDelay(index, animationConfig.staggerAmount);
+            
+            // Disconnect the initial observer
+            observer.disconnect();
+            
+            // Set up the scroll trigger
+            inView(element, () => {
+              animate(element, 
+                { opacity: 1, transform: 'translateY(0px)' }, 
+                { duration: animationConfig.duration, ease: animationConfig.ease, delay: delay }
+              );
+            }, { margin: animationConfig.margin });
+          }
+        },
+        { threshold: animationConfig.visibilityThreshold }
+      );
+      
+      observer.observe(element);
+    }
+
+    // Apply to all animated elements
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.portal-card').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => index * stagger);
+      });
+
+      document.querySelectorAll('.course-btn').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => index * stagger * 0.5);
+      });
+
+      document.querySelectorAll('.content-block').forEach((el, i) => {
+        applyScrollAnimation(el, i, () => 0);
+      });
+
+      document.querySelectorAll('.staff-member').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => (index % 4) * stagger);
+      });
+    });
+  }
+
+  // Use the basic version by default (you can switch to advanced if needed)
+  document.addEventListener('astro:page-load', setupPageAnimationsAdvanced);
 </script>
