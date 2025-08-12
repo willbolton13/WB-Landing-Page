@@ -271,12 +271,13 @@ export function getPlaceholderImageUrl(asset) {
   const baseUrl = asset.fields.file.url;
   const url = baseUrl.startsWith('//') ? `https:${baseUrl}` : baseUrl;
   
+  // Contentful's valid parameters only
   const params = {
-    w: 50,
-    q: 30,
-    fm: 'jpg',
-    fl: 'progressive',
-    blur: 20
+    w: 30,      // Tiny width for fast load
+    q: 20,      // Low quality
+    fm: 'jpg',  // JPEG for smaller size
+    fl: 'progressive'  // Progressive JPEG
+    // REMOVED: blur (not supported by Contentful)
   };
   
   const queryString = Object.entries(params)
@@ -286,6 +287,7 @@ export function getPlaceholderImageUrl(asset) {
   
   return `${url}?${queryString}`;
 }
+
 
 /**
  * Get all hero images from all campuses

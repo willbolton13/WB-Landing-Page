@@ -5,9 +5,10 @@ import Footer from '../components/Footer.astro';
 
 export interface Props {
   title: string;
+  heroImageUrl?: string;
 }
 
-const { title } = Astro.props;
+const { title, heroImageUrl } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -21,6 +22,21 @@ const { title } = Astro.props;
     <!-- Preconnect to Contentful's CDN for faster image loading -->
     <link rel="preconnect" href="https://images.ctfassets.net">
     <link rel="dns-prefetch" href="https://images.ctfassets.net">
+
+{heroImageUrl && (
+  <>
+    <link rel="preload" 
+          as="image" 
+          href={heroImageUrl.replace('w=1920', 'w=768')} 
+          type="image/webp"
+          media="(max-width: 768px)">
+    <link rel="preload" 
+          as="image" 
+          href={heroImageUrl} 
+          type="image/webp"
+          media="(min-width: 769px)">
+  </>
+)}
     
     <!-- Slot for page-specific preload tags (like hero images) -->
     <slot name="head" />
@@ -116,6 +132,21 @@ const { title } = Astro.props;
     z-index: 2;
     margin-top: -150px !important;
   }
+
+  .hero-blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(20px);  /* CSS blur, not URL parameter */
+  transform: scale(1.1);
+  opacity: 0.7;
+  z-index: 2;
+  transition: opacity 0.3s ease-out;
+}
 
   /* Location content animation support
   .location-content {
