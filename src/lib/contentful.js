@@ -470,3 +470,31 @@ export function getContentfulPreconnectTags() {
     <link rel="dns-prefetch" href="https://images.ctfassets.net">
   `.trim();
 }
+
+/**
+ * Generate a low-quality image placeholder URL for blur-up effect
+ * @param {Object} asset - Contentful asset object
+ * @returns {string} - Low quality placeholder URL
+ */
+export function getPlaceholderImageUrl(asset) {
+  if (!asset?.fields?.file?.url) return null;
+  
+  const baseUrl = asset.fields.file.url;
+  const url = baseUrl.startsWith('//') ? `https:${baseUrl}` : baseUrl;
+  
+  // Very low quality, small image for blur placeholder
+  const params = {
+    w: 50,  // Tiny width
+    q: 30,  // Low quality
+    fm: 'jpg',  // JPEG for smaller size
+    fl: 'progressive',  // Progressive JPEG
+    blur: 20  // Some CDNs support blur parameter
+  };
+  
+  const queryString = Object.entries(params)
+    .filter(([_, value]) => value !== undefined)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  
+  return `${url}?${queryString}`;
+}

@@ -5,13 +5,12 @@ import {
   getAllHeroImages,
   getRotatingImage,
   getOptimizedImageUrl,
-  generateSrcSet
+  generateSrcSet,
+  getPlaceholderImageUrl
 } from '../lib/contentful';
 
 // Get all hero images from all campuses
 const allHeroImages = await getAllHeroImages();
-
-
 
 // Select a rotating image for the homepage
 let heroImage = null;
@@ -19,6 +18,7 @@ let heroImageUrl = '/img/hn-1536x796.jpg.webp'; // Fallback
 let heroImageSrcSet = null;
 let heroImageAlt = 'Welcome to WaterBear';
 let heroImageCampus = '';
+let placeholderUrl = null;
 
 if (allHeroImages && allHeroImages.length > 0) {
   // Get rotating image object (changes daily)
@@ -27,11 +27,6 @@ if (allHeroImages && allHeroImages.length > 0) {
     'homepage', // Unique key for homepage
     'daily' // Change daily
   );
-  
-  console.log('Homepage: Selected image data:', {
-    hasSelection: !!selectedImageData,
-    campus: selectedImageData?.campusName
-  });
   
   if (selectedImageData) {
     heroImage = selectedImageData.asset;
@@ -44,32 +39,34 @@ if (allHeroImages && allHeroImages.length > 0) {
       format: 'webp'
     });
     
-    console.log('Homepage: Generated hero URL:', heroImageUrl);
-    
     // Generate srcset for responsive images
     heroImageSrcSet = generateSrcSet(heroImage, [640, 768, 1024, 1366, 1920, 2560]);
+    
+    // Generate placeholder for blur-up effect
+    placeholderUrl = getPlaceholderImageUrl(heroImage);
     
     // Use image description if available
     heroImageAlt = heroImage.fields.description || heroImage.fields.title || `${heroImageCampus} campus`;
   }
-} else {
-  console.log('Homepage: No hero images found, using fallback');
 }
-
-// Generate preload tags for the hero image
-const preloadTags = heroImage ? `
-  <link rel="preload" as="image" type="image/webp" href="${getOptimizedImageUrl(heroImage, { width: 1920, format: 'webp' })}" media="(min-width: 1024px)">
-  <link rel="preload" as="image" type="image/webp" href="${getOptimizedImageUrl(heroImage, { width: 768, format: 'webp' })}" media="(max-width: 1023px)">
-` : '';
 ---
 
 <Layout title="WaterBear Student Portal">
-    <!-- Inject preload tags into head -->
-    <Fragment slot="head" set:html={preloadTags} />
-    
-    <section class="hero-section">
+    <section class="hero-section" data-hero-section>
+        <!-- Black placeholder background -->
+        <div class="hero-placeholder"></div>
+        
+        <!-- Blur placeholder (loads immediately) -->
+        {placeholderUrl && (
+          <div 
+            class="hero-blur"
+            style={`background-image: url('${placeholderUrl}')`}
+          ></div>
+        )}
+        
+        <!-- Main hero image -->
         {heroImage ? (
-            <picture>
+            <picture class="hero-picture">
                 <!-- WebP for modern browsers -->
                 <source
                     type="image/webp"
@@ -84,17 +81,24 @@ const preloadTags = heroImage ? `
                 />
                 <!-- Default img tag -->
                 <img 
+                    class="hero-image"
                     src={heroImageUrl}
                     alt={heroImageAlt}
                     loading="eager"
                     fetchpriority="high"
                     width="1920"
                     height="1080"
+                    onload="this.classList.add('loaded')"
                 />
             </picture>
         ) : (
             <!-- Fallback static image -->
-            <img src={heroImageUrl} alt={heroImageAlt} />
+            <img 
+                class="hero-image"
+                src={heroImageUrl} 
+                alt={heroImageAlt}
+                onload="this.classList.add('loaded')"
+            />
         )}
     </section>
     
@@ -108,31 +112,74 @@ const preloadTags = heroImage ? `
 </Layout>
 
 <style>
-  /* All existing styles remain the same */
+  /* Hero section with blur-up effect */
   .hero-section {
     height: 55vh;
     overflow: hidden;
     position: relative;
     z-index: 1;
+    background: #000; /* Black background */
+  }
+
+  /* Black placeholder - always visible */
+  .hero-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    z-index: 1;
+  }
+
+  /* Blur placeholder - loads immediately */
+  .hero-blur {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(20px);
+    transform: scale(1.1); /* Slightly scale to hide blur edges */
+    opacity: 0.7;
+    z-index: 2;
+    transition: opacity 0.3s ease-out;
+  }
+
+  /* Hide blur when main image loads */
+  .hero-section:has(.hero-image.loaded) .hero-blur {
+    opacity: 0;
+  }
+
+  .hero-picture,
+  .hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+  }
+
+  .hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0;
+    transition: opacity 0.6s ease-out;
+  }
+
+  .hero-image.loaded {
+    opacity: 1;
   }
 
   main.container {
     position: relative;
     z-index: 2;
     margin-top: -40vh !important;
-  }
-
-  .hero-section img,
-  .hero-section picture {
-    width: 100%;
-    height: 100%;
-  }
-
-  .hero-section img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
   }
 
   h1, .lead {
@@ -144,5 +191,18 @@ const preloadTags = heroImage ? `
     font-weight: 700;
     text-transform: uppercase;
     min-height: 150px;
+  }
+
+  /* Fallback for browsers that don't support :has() */
+  @supports not selector(:has(*)) {
+    .hero-blur {
+      animation: fadeOut 0.6s ease-out 0.5s forwards;
+    }
+    
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+      }
+    }
   }
 </style>
