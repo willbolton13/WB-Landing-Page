@@ -3,11 +3,8 @@ import Layout from '../../layouts/Layout.astro';
 import StaticPortalCards from '../../components/StaticPortalCards.astro';
 import { 
   getCampuses,
-  getCampusBySlug,
-  getCoursesByCampus,
-  getCourseBySlug,
-  getCourseWithFullContent,
   getCampusWithHeroImages,
+  getCourseWithFullContent,
   findIncludedEntry,
   findIncludedAsset,
   contentfulClient,
@@ -23,82 +20,108 @@ export async function getStaticPaths() {
   const paths = [];
   
   for (const campus of campuses) {
-    // Add campus landing page path (course is empty array for rest params)
+    // Fetch campus with all needed data ONCE
+    const campusWithFullData = await getCampusWithHeroImages(campus.fields.campusSlug);
+    
+    // Resolve courses if they exist
+    let resolvedCourses = [];
+    if (campusWithFullData.fields.courses && campusWithFullData.fields.courses.length > 0) {
+      // Check if courses are already resolved objects
+      if (campusWithFullData.fields.courses[0]?.fields) {
+        resolvedCourses = campusWithFullData.fields.courses;
+      } else {
+        // Batch fetch all courses at once
+        const courseIds = campusWithFullData.fields.courses.map(c => c.sys.id).join(',');
+        const coursesResponse = await contentfulClient.getEntries({
+          'sys.id[in]': courseIds,
+          content_type: 'location',
+          include: 1
+        });
+        resolvedCourses = coursesResponse.items;
+      }
+      // Sort courses
+      resolvedCourses.sort((a, b) => 
+        (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
+      );
+    }
+    
+    // Resolve custom portal buttons if they exist
+    let customPortalButtons = [];
+    if (campusWithFullData.fields.useCustomButtons && campusWithFullData.fields.customPortalButtons) {
+      // Check if buttons are already resolved
+      if (campusWithFullData.fields.customPortalButtons[0]?.fields) {
+        customPortalButtons = campusWithFullData.fields.customPortalButtons;
+      } else {
+        // Batch fetch buttons
+        const buttonIds = campusWithFullData.fields.customPortalButtons.map(b => b.sys.id).join(',');
+        const buttonsResponse = await contentfulClient.getEntries({
+          'sys.id[in]': buttonIds
+        });
+        customPortalButtons = buttonsResponse.items;
+      }
+    }
+    
+    // Add campus landing page path with all data as props
     paths.push({
       params: { 
         campus: campus.fields.campusSlug,
-        course: undefined // This becomes an empty array for rest params
+        course: undefined
+      },
+      props: {
+        campusData: campusWithFullData,
+        courses: resolvedCourses,
+        customPortalButtons,
+        isCampusPage: true,
+        courseData: null,
+        courseResponse: null
       }
     });
     
-    // Add course paths if this campus has courses
-    if (campus.fields.courses && campus.fields.courses.length > 0) {
-      for (const courseRef of campus.fields.courses) {
-        try {
-          const course = await contentfulClient.getEntry(courseRef.sys.id);
-          paths.push({
-            params: { 
-              campus: campus.fields.campusSlug,
-              course: course.fields.courseSlug // This becomes a single-element array
-            }
-          });
-        } catch (error) {
-          console.error(`Error fetching course ${courseRef.sys.id}:`, error);
+    // Add course paths with their data
+    for (const course of resolvedCourses) {
+      // Fetch full course content
+      const courseResponse = await getCourseWithFullContent(
+        campus.fields.campusSlug, 
+        course.fields.courseSlug
+      );
+      
+      paths.push({
+        params: { 
+          campus: campus.fields.campusSlug,
+          course: course.fields.courseSlug
+        },
+        props: {
+          campusData: campusWithFullData,
+          courses: resolvedCourses,
+          customPortalButtons,
+          isCampusPage: false,
+          courseData: courseResponse?.items?.[0] || null,
+          courseResponse: courseResponse
         }
-      }
+      });
     }
   }
   
   return paths;
 }
 
-const { campus } = Astro.params;
-// For rest params [...course], Astro provides an array
-// Empty array for campus pages, single element for course pages
-const courseSlug = Astro.params.course ? Astro.params.course : undefined;
+// Get all data from props instead of fetching again
+const { 
+  campusData, 
+  courses, 
+  customPortalButtons,
+  isCampusPage,
+  courseData,
+  courseResponse
+} = Astro.props;
 
-// Fetch campus data WITH hero images
-const campusData = await getCampusWithHeroImages(campus);
+// Get params for potential redirects or error handling
+const { campus } = Astro.params;
+const courseSlug = Astro.params.course;
+
+// Redirect if no campus data (shouldn't happen with static generation)
 if (!campusData) {
   return Astro.redirect('/');
-}
-
-// Determine if this is a campus page or course page
-const isCampusPage = !courseSlug || courseSlug.length === 0;
-
-// Get courses for campus page
-let courses = [];
-let courseData = null;
-let courseResponse = null;
-let customPortalButtons = [];
-
-if (isCampusPage) {
-  courses = await getCoursesByCampus(campus);
-  
-  // Check if campus has custom portal buttons
-  if (campusData.fields.useCustomButtons && campusData.fields.customPortalButtons) {
-    // Resolve the custom button references
-    customPortalButtons = await Promise.all(
-      campusData.fields.customPortalButtons.map(buttonRef => 
-        contentfulClient.getEntry(buttonRef.sys.id)
-      )
-    );
-  }
-} else {
-  // Fetch course data for course page
-  courseResponse = await getCourseWithFullContent(campus, courseSlug);
-  if (courseResponse && courseResponse.items && courseResponse.items.length > 0) {
-    courseData = courseResponse.items[0];
-  }
-  
-  // Also get custom buttons for course pages
-  if (campusData.fields.useCustomButtons && campusData.fields.customPortalButtons) {
-    customPortalButtons = await Promise.all(
-      campusData.fields.customPortalButtons.map(buttonRef => 
-        contentfulClient.getEntry(buttonRef.sys.id)
-      )
-    );
-  }
 }
 
 // Set page title based on page type
@@ -123,7 +146,7 @@ if (campusData.fields.heroImagePool && campusData.fields.heroImagePool.length > 
   heroImage = getRotatingImage(
     campusData.fields.heroImagePool, 
     pageKey, 
-    'daily' // Change this to 'weekly' or 'hourly' if desired
+    'daily'
   );
   
   if (heroImage) {

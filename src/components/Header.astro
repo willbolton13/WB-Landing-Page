@@ -1,44 +1,31 @@
 ---
-import { getCampusesWithCourses, contentfulClient } from '../lib/contentful';
+import { getCampusesWithCourses } from '../lib/contentful';
 
-// Get all campuses with their courses
-const campuses = await getCampusesWithCourses();
-campuses.sort((a, b) => (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0));
+// Single API call to get all campuses with resolved courses
+const campusesWithResolvedCourses = await getCampusesWithCourses();
 
-// Resolve course references for each campus
-const campusesWithResolvedCourses = await Promise.all(
-  campuses.map(async (campus) => {
-    if (campus.fields.courses && campus.fields.courses.length > 0) {
-      const resolvedCourses = await Promise.all(
-        campus.fields.courses.map(courseRef => 
-          contentfulClient.getEntry(courseRef.sys.id)
-        )
-      );
-      // Sort courses by displayOrder
-      resolvedCourses.sort((a, b) => 
-        (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
-      );
-      return {
-        ...campus,
-        fields: {
-          ...campus.fields,
-          courses: resolvedCourses
-        }
-      };
-    }
-    return campus;
-  })
+// Sort campuses by display order
+campusesWithResolvedCourses.sort((a, b) => 
+  (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
 );
+
+// Sort courses within each campus (if they're already resolved objects)
+campusesWithResolvedCourses.forEach(campus => {
+  if (campus.fields.courses && campus.fields.courses.length > 0) {
+    campus.fields.courses.sort((a, b) => 
+      (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
+    );
+  }
+});
 
 // Parse current URL to determine campus and course
 const currentPath = Astro.url.pathname;
 const pathParts = currentPath.split('/').filter(Boolean);
-// Only treat first part as campus if it's not the home page
 const isHomePage = currentPath === '/' || pathParts.length === 0;
 const currentCampusSlug = !isHomePage ? pathParts[0] : null;
 const currentCourseSlug = !isHomePage && pathParts.length > 1 ? pathParts[1] : null;
 
-// Find current campus and course names
+// Find current campus and course names (no additional API calls needed)
 let currentCampusName = null;
 let currentCourseName = null;
 
@@ -59,7 +46,7 @@ if (currentCampusSlug) {
 
 <header class="py-3">
     <div class="container d-flex justify-content-between align-items-center">
-        <a href="https://waterbear.org.uk/" target="_blank" rel="noopener noreferrer">
+        <a href="/">
             <img src="/img/white-hori@4x.png" alt="University Logo" style="height: 50px;">
         </a>
         
