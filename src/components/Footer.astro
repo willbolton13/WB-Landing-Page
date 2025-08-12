@@ -1,0 +1,158 @@
+---
+// No props needed for footer
+---
+
+<footer class="site-footer">
+    <div class="container">
+        <a href="#" class="back-to-top">▲ BACK TO TOP</a>
+        
+        <div class="row align-items-start">
+            <div class="col-lg-3 col-md-6 mb-5 d-flex flex-column align-items-center">
+                <ul class="footer-links">
+                    <li><a href="#">Extra Link 1</a></li>
+                    <li><a href="#">Extra Link 2</a></li>
+                    <li><a href="#">Extra Link 3</a></li>
+                    <li><a href="#">Extra Link 4</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-5 col-md-6 mb-4 d-flex flex-column align-items-center">
+                <img src="/img/white-hori@4x.png" alt="WaterBear Logo" class="footer-logo mb-3">
+                <div class="social-icons mb-4">
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+                    <a href="#"><i class="bi bi-youtube"></i></a>
+                    <a href="#"><i class="bi bi-tiktok"></i></a>
+                </div>
+                <div class="contact-info">
+                    <p>
+                        WaterBear Education Ltd, Hanover House,<br>
+                        118 Queens Road, Brighton BN1 3XG, UK
+                    </p>
+                    <p>
+                        Email: <a href="mailto:info@waterbear.org.uk">info@waterbear.org.uk</a><br>
+                        Tel: <a href="tel:+441273726230">+44 (0) 1273 726230</a>
+                    </p>
+                    <p>
+                        WaterBear Sheffield, Unit 4, Gatecrasher,<br>
+                        49 Eyre Lane, Sheffield S1 4RB, UK
+                    </p>
+                    <p>
+                        Email: <a href="mailto:infosheffield@waterbear.org.uk">infosheffield@waterbear.org.uk</a><br>
+                        Tel: <a href="tel:+441143992720">+44 (0) 1143 992720</a>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-12 mb-4 text-center text-lg-start">
+                <h5 class="mb-3" style="font-weight: 600;">Why We're WaterBear...</h5>
+                <ul class="footer-why-list">
+                    <li>- 'Water bear' is the common name for a Tardigrade.</li>
+                    <li>- Tardigrades are micro creatures, found everywhere on earth.</li>
+                    <li>- They are the most resilient creatures known.</li>
+                    <li>- They can survive and adapt to their surroundings, even in outer space.</li>
+                    <li>- Their resilience and ability to adapt and survive inspires us in everything we do. We love them.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+  .site-footer {
+    background-color: var(--accent-red);
+    color: var(--text-color);
+    padding: 5rem 0 2rem 0;
+    position: relative;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .site-footer {
+      text-align: left;
+    }
+  }
+
+  .back-to-top {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--accent-yellow);
+    color: var(--button-text-color);
+    padding: 10px 25px;
+    border-radius: 5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .footer-links, .footer-why-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-top: -10px;
+  }
+
+  .footer-links {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .footer-links {
+      display: block;
+    }
+  }
+
+  .footer-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.3rem;
+    display: inline-block;
+    padding: 0.2rem 0;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .footer-links a:hover {
+    color: var(--button-text-color);
+  }
+
+  .footer-why-list li {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .footer-logo {
+    max-width: 250px;
+  }
+
+  .social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #000;
+    border-radius: 50%;
+    text-decoration: none;
+    margin: 0 5px;
+    color: var(--text-color);
+    font-size: 1rem;
+  }
+
+  .social-icons a i {
+    color: var(--text-color);
+  }
+
+  .contact-info p {
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .contact-info a {
+    color: var(--text-color);
+  }
+</style>

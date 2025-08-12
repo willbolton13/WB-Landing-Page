@@ -1,0 +1,480 @@
+---
+import { getCampusesWithCourses } from '../lib/contentful';
+
+// Single API call to get all campuses with resolved courses
+const campusesWithResolvedCourses = await getCampusesWithCourses();
+
+// Sort campuses by display order
+campusesWithResolvedCourses.sort((a, b) => 
+  (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
+);
+
+// Sort courses within each campus (if they're already resolved objects)
+campusesWithResolvedCourses.forEach(campus => {
+  if (campus.fields.courses && campus.fields.courses.length > 0) {
+    campus.fields.courses.sort((a, b) => 
+      (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
+    );
+  }
+});
+
+// Parse current URL to determine campus and course
+const currentPath = Astro.url.pathname;
+const pathParts = currentPath.split('/').filter(Boolean);
+const isHomePage = currentPath === '/' || pathParts.length === 0;
+const currentCampusSlug = !isHomePage ? pathParts[0] : null;
+const currentCourseSlug = !isHomePage && pathParts.length > 1 ? pathParts[1] : null;
+
+// Find current campus and course names (no additional API calls needed)
+let currentCampusName = null;
+let currentCourseName = null;
+
+if (currentCampusSlug) {
+  const campus = campusesWithResolvedCourses.find(c => c.fields.campusSlug === currentCampusSlug);
+  if (campus) {
+    currentCampusName = campus.fields.campusName;
+    
+    if (currentCourseSlug && campus.fields.courses) {
+      const course = campus.fields.courses.find(c => c.fields.courseSlug === currentCourseSlug);
+      if (course) {
+        currentCourseName = course.fields.courseName;
+      }
+    }
+  }
+}
+---
+
+<header class="py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="/">
+            <img src="/img/white-hori@4x.png" alt="University Logo" style="height: 50px;">
+        </a>
+        
+        <div class="location-status d-none d-md-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt-fill text-warning"></i>
+            {currentCampusName ? (
+                <span>
+                    Campus: <strong class="text-warning">{currentCampusName}</strong>
+                    {currentCourseName && (
+                        <span class="course-indicator"> | {currentCourseName}</span>
+                    )}
+                </span>
+            ) : (
+                <span><strong>Select your campus to get started</strong></span>
+            )}
+        </div>
+        
+        <button 
+            class="location-hamburger-btn d-flex align-items-center gap-2" 
+            type="button" 
+            data-bs-toggle="offcanvas" 
+            data-bs-target="#offcanvasNavbar" 
+            aria-controls="offcanvasNavbar" 
+            aria-label="Toggle navigation"
+        >
+            {currentCampusName ? 'Change' : 'Select'} Campus
+            <i class="bi bi-list fs-5"></i>
+        </button>
+        
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">SELECT YOUR CAMPUS</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            
+            <div class="offcanvas-body location-list">
+                {campusesWithResolvedCourses.map((campus) => {
+                    const campusSlug = campus.fields.campusSlug;
+                    const hasCourses = campus.fields.courses && campus.fields.courses.length > 0;
+                    
+                    return (
+                        <div class="campus-group" data-campus={campusSlug}>
+                            {hasCourses ? (
+                                <>
+                                    <div class="campus-header-wrapper">
+                                        <a 
+                                            href={`/${campusSlug}`}
+                                            class="campus-link"
+                                            data-campus-link={campusSlug}
+                                        >
+                                            {campus.fields.campusName}
+                                        </a>
+                                        <button 
+                                            class="expand-btn"
+                                            data-campus-slug={campusSlug}
+                                            type="button"
+                                            aria-label="Expand courses"
+                                        >
+                                            <i class="bi bi-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                    <div class="course-list" id={`courses-${campusSlug}`}>
+                                        {campus.fields.courses.map((course) => (
+                                            <a 
+                                                href={`/${campusSlug}/${course.fields.courseSlug}`} 
+                                                class="course-item"
+                                                data-course-link={course.fields.courseSlug}
+                                            >
+                                                {course.fields.courseName}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <a 
+                                    href={`/${campusSlug}`} 
+                                    class="campus-header solo"
+                                    data-campus-link={campusSlug}
+                                >
+                                    {campus.fields.campusName}
+                                </a>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            
+            <div class="offcanvas-footer">
+                <div class="extra-links-buttons">
+                    <a href="#" class="btn-extra-link">Extra Link 1</a>
+                    <a href="#" class="btn-extra-link">Extra Link 2</a>
+                    <a href="#" class="btn-extra-link">Extra Link 3</a>
+                    <a href="#" class="btn-extra-link">Extra Link 4</a>
+                </div>
+                <a href="https://login.microsoftonline.com/common/oauth2/v2.0/logout" class="btn-logout">LOG OUT</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<style>
+  header {
+    position: relative;
+    z-index: 10;
+    background-color: var(--header-color);
+  }
+
+  header .container {
+    padding-right: 15px;
+  }
+
+  .location-status {
+    color: var(--text-color);
+    font-size: 0.9rem;
+  }
+
+  .location-status .bi-geo-alt-fill {
+    color: var(--accent-yellow);
+  }
+
+  .location-status .text-warning {
+    color: var(--accent-yellow) !important;
+  }
+
+  .course-indicator {
+    color: var(--text-color);
+    opacity: 0.8;
+  }
+
+  .location-hamburger-btn {
+    background-color: var(--accent-yellow);
+    border: none;
+    color: var(--button-text-color);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .location-hamburger-btn:hover {
+    background-color: var(--text-color);
+    color: var(--button-text-color);
+    transform: scale(1.05);
+  }
+
+  .offcanvas {
+    background-color: var(--accent-yellow);
+    color: var(--button-text-color);
+    transition: transform 0.1s ease-in-out !important;
+  }
+
+  .offcanvas-header {
+    border-bottom: 2px solid var(--button-text-color);
+    padding: 1.5rem;
+  }
+
+  .offcanvas-title {
+    color: var(--button-text-color);
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
+
+  .offcanvas .btn-close {
+    filter: none;
+    opacity: 1;
+    font-size: 1.5rem;
+  }
+
+  .location-list {
+    padding: 2rem 1.5rem;
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Campus group styling */
+  .campus-group {
+    margin-bottom: 1rem;
+  }
+
+  /* Campus header wrapper for split link/button */
+  .campus-header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s ease-in-out;
+  }
+
+  .campus-header-wrapper:hover {
+    border-bottom-color: var(--button-text-color);
+  }
+
+  /* Campus link (clickable name) */
+  .campus-link {
+    flex: 1;
+    padding: 1rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--button-text-color);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .campus-link:hover {
+    transform: translateX(10px);
+    color: var(--button-text-color);
+  }
+
+  /* Expand button (chevron only) */
+  .expand-btn {
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--button-text-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .expand-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+
+  .expand-btn .bi-chevron-down {
+    font-size: 1.5rem;
+    transition: transform 0.2s ease;
+  }
+
+  .expand-btn.expanded .bi-chevron-down {
+    transform: rotate(180deg);
+  }
+
+  /* Solo campus header (no courses) */
+  .campus-header.solo {
+    display: block;
+    width: 100%;
+    padding: 1rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--button-text-color);
+    text-decoration: none;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .campus-header.solo:hover {
+    transform: translateX(10px);
+    border-bottom-color: var(--button-text-color);
+  }
+
+  /* Course list styling */
+  .course-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    padding-left: 2rem;
+  }
+
+  .course-list.expanded {
+    max-height: 500px;
+  }
+
+  .course-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--button-text-color);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .course-item:hover {
+    border-left-color: var(--button-text-color);
+    padding-left: 1.5rem;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  /* Footer section */
+  .offcanvas-footer {
+    padding: 1.5rem;
+    border-top: 2px solid var(--button-text-color);
+    background-color: var(--accent-yellow);
+  }
+
+  .extra-links-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-extra-link {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--button-text-color);
+    background-color: transparent;
+    color: var(--button-text-color);
+    text-align: center;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 5px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-extra-link:hover {
+    background-color: var(--button-text-color);
+    color: var(--accent-yellow);
+  }
+
+  .btn-logout {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--button-text-color);
+    color: var(--accent-yellow);
+    text-align: center;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    border: none;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-logout:hover {
+    background-color: var(--accent-red);
+    color: var(--text-color);
+    transform: scale(1.02);
+  }
+
+  @media (max-width: 768px) {
+    .location-hamburger-btn {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+    }
+    
+    header .container {
+      gap: 0.5rem;
+    }
+    
+    header img {
+      height: 40px !important;
+    }
+
+    .campus-link {
+      font-size: 1.5rem;
+    }
+
+    .course-item {
+      font-size: 1.1rem;
+    }
+
+    .expand-btn .bi-chevron-down {
+      font-size: 1.2rem;
+    }
+  }
+</style>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  function setupOffcanvasNavigation() {
+    const offcanvasElement = document.getElementById('offcanvasNavbar');
+    if (!offcanvasElement || offcanvasElement.dataset.navListenerAttached) {
+      return;
+    }
+    offcanvasElement.dataset.navListenerAttached = 'true';
+
+    const bsOffcanvas = new bootstrap.Offcanvas(offcanvasElement);
+
+    // Setup expand buttons (chevrons only)
+    const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
+    expandButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation(); // Prevent any parent handlers
+        
+        const campusSlug = button.dataset.campusSlug;
+        const courseList = document.getElementById(`courses-${campusSlug}`);
+        
+        // Toggle expanded state
+        button.classList.toggle('expanded');
+        courseList.classList.toggle('expanded');
+        
+        // Optional: Collapse other campus sections
+        expandButtons.forEach(otherButton => {
+          if (otherButton !== button) {
+            otherButton.classList.remove('expanded');
+            const otherSlug = otherButton.dataset.campusSlug;
+            const otherList = document.getElementById(`courses-${otherSlug}`);
+            if (otherList) {
+              otherList.classList.remove('expanded');
+            }
+          }
+        });
+      });
+    });
+
+    // Setup navigation for campus links and course links
+    const navigationLinks = offcanvasElement.querySelectorAll('.campus-link, .campus-header.solo, .course-item');
+    navigationLinks.forEach(link => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        const targetUrl = link.getAttribute('href');
+
+        // Listen for hidden event and navigate
+        offcanvasElement.addEventListener('hidden.bs.offcanvas', () => {
+          navigate(targetUrl);
+        }, { once: true });
+
+        // Close the offcanvas
+        bsOffcanvas.hide();
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupOffcanvasNavigation);
+</script>

@@ -1,0 +1,12 @@
+# netlify.toml
+
+[build]
+  # The command to build your static Astro site
+  command = "npm run build"
+  
+  # The folder where the finished site is placed
+  publish = "dist"
+
+[build.environment]
+  # Tells Netlify to use the same Node.js version you are using
+  NODE_VERSION = "22"
