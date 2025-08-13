@@ -13,6 +13,7 @@ import {
   generateSrcSet,
   getPlaceholderImageUrl
 } from '../../lib/contentful';
+import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
 
 // Generate static paths for all campus and campus/course combinations
 export async function getStaticPaths() {
@@ -174,7 +175,7 @@ if (!heroImageUrl) {
 }
 ---
 
-<Layout title={pageTitle}>
+<Layout title={pageTitle} heroImageUrl={heroImageUrl}>
   <section class="hero-section" data-hero-section>
     <!-- Black placeholder background -->
     <div class="hero-placeholder"></div>
@@ -343,9 +344,9 @@ if (!heroImageUrl) {
               const imageUrl = imageAsset ? 
                 `https:${imageAsset.fields.file.url}?w=1200&q=80` : null;
               
-              const contentText = block.fields.content?.content
-                ?.map(node => node.content?.map(innerNode => innerNode.value).join(''))
-                ?.join('<br>') || '';
+              const contentHtml = block.fields.content 
+                ? documentToHtmlString(block.fields.content)
+                  : '';
               
               // Determine layout based on whether image exists
               const hasImage = !!imageUrl;
@@ -358,7 +359,7 @@ if (!heroImageUrl) {
                     <div class="row align-items-center justify-content-between">
                       <div class="col-md-7 content-block-text">
                         <h2>{block.fields.heading}</h2>
-                        <p set:html={contentText}></p>
+                        <div set:html={contentHtml}></div>
                       </div>
                       <div class="col-md-5 content-block-image">
                         <img src={imageUrl} class="img-fluid rounded" alt={block.fields.heading}>
@@ -374,7 +375,7 @@ if (!heroImageUrl) {
                     <div class="row">
                       <div class="col-md-12 content-block-text">
                         <h2>{block.fields.heading}</h2>
-                        <p set:html={contentText}></p>
+                        <div set:html={contentHtml}></div>
                         {block.fields.buttonText && block.fields.buttonLink && (
                           <div class="button-container">
                             <a href={block.fields.buttonLink} target="_blank" class="overlap-btn position-relative">
