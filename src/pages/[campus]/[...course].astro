@@ -533,13 +533,6 @@ if (!heroImageUrl) {
     padding-top: 20px;
   }
 
-  h1 {
-    color: var(--text-color);
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
   .course-subtitle {
     color: var(--text-color);
     font-weight: 700;
@@ -547,8 +540,6 @@ if (!heroImageUrl) {
     font-size: 1.5rem;
     text-transform: uppercase;
     margin-top: 0.5rem;
-    margin-bottom: 1rem;
-    padding-top: 10px;
   }
 
   /* Course selection - simple white outline buttons */
@@ -602,69 +593,10 @@ if (!heroImageUrl) {
   }
 
   /* Portal card styles (for custom campus buttons) */
-  .portal-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 250px;
-    padding: 20px;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 8px;
-    background-color: var(--accent-yellow);
-    color: var(--button-text-color);
-    transition: all 0.3s ease;
-    position: relative;
-  }
 
   .custom-portal-card {
     /* Custom cards can have different colors - could be set via inline styles if needed */
     background-color: var(--accent-yellow);
-  }
-
-  .portal-card:hover {
-    background-color: var(--text-color);
-    color: var(--button-text-color);
-    transform: scale(1.02);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  }
-
-  .portal-card h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin: 0;
-    color: inherit;
-  }
-
-  .portal-card-subtitle {
-    font-size: 0.9rem;
-    font-weight: 400;
-    text-transform: none;
-    margin: 0;
-    color: inherit;
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    padding: 0 20px;
-    text-align: center;
-  }
-
-
-
-  .portal-card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-
-  .portal-card-icon svg {
-    width: var(--icon-size);
-    height: var(--icon-size);
-    stroke: currentColor;
   }
 
   /* Portal card green variant */
@@ -682,6 +614,13 @@ if (!heroImageUrl) {
   .content-block-text p {
     color: #000;
     text-shadow: none;
+  }
+
+  .content-block-text h2{
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: "futura pt", sans-serif;
   }
 
   @media (min-width: 768px) {
@@ -704,15 +643,15 @@ if (!heroImageUrl) {
     background-color: var(--accent-green);
     color: var(--text-color);
     padding: 10px 25px;
-    border-radius: 5px;
+    border-radius: 2px;
     font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
   }
 
   .overlap-btn:hover {
-    background-color: var(--text-color);
-    color: var(--button-text-color);
+
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     transform: scale(1.05);
   }
 
@@ -723,7 +662,7 @@ if (!heroImageUrl) {
 
   .section-divider {
     height: 3px;
-    background-color: var(--accent-yellow);
+    background-color: var(--button-text-color);
     margin: 2rem 0 3rem 0;
     border-radius: 2px;
   }
@@ -845,6 +784,11 @@ if (!heroImageUrl) {
       width: 100%;
       max-width: 300px;
     }
+  }
+
+    h1, .lead {
+    color: var(--text-color);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
   }
 </style>
 

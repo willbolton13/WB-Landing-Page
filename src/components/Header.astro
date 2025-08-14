@@ -259,6 +259,7 @@ if (currentCampusSlug) {
 
   /* Campus link (clickable name) */
   .campus-link {
+    font-family: 'Futura PT';
     flex: 1;
     padding: 1rem 0;
     font-size: 2rem;
@@ -426,6 +427,7 @@ if (currentCampusSlug) {
 
 <script>
   import { navigate } from 'astro:transitions/client';
+  import { Offcanvas } from 'bootstrap';
 
   function setupOffcanvasNavigation() {
     const offcanvasElement = document.getElementById('offcanvasNavbar');
@@ -434,7 +436,7 @@ if (currentCampusSlug) {
     }
     offcanvasElement.dataset.navListenerAttached = 'true';
 
-    const bsOffcanvas = new bootstrap.Offcanvas(offcanvasElement);
+    const bsOffcanvas = new Offcanvas(offcanvasElement);
 
     // Setup expand buttons (chevrons only)
     const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
