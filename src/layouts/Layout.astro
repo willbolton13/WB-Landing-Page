@@ -172,11 +172,21 @@ const { title, heroImageUrl } = Astro.props;
   /* Base styles */
   body {
     background-color: var(--background-color);
+
   }
 
   /* Animation classes for initial load */
   html {
     scroll-behavior: smooth;
+  }
+
+  .site-footer {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    background-color: var( --footer-color);
+    color: var(--text-color);
+    padding: 5rem 0 2rem 0;
+    position: absolute;
+    text-align: center;
   }
 
     .hero-picture,
@@ -209,7 +219,6 @@ const { title, heroImageUrl } = Astro.props;
   main.container {
     position: relative;
     z-index: 2;
-    margin-top: -150px !important;
   }
 
   .course-selection {
@@ -309,7 +318,7 @@ const { title, heroImageUrl } = Astro.props;
   }
 
   .portal-card-subtitle {
-    font-size: 1rem;
+    font-size: rem;
     font-weight: 400;
     text-transform: none;
     margin: 0;
