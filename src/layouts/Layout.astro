@@ -160,6 +160,7 @@ const { title, heroImageUrl } = Astro.props;
   :root {
     --background-color: #ffffff;
     --header-color: #000000;
+    --footer-color: #000000;
     --text-color: #ffffff;
     --accent-yellow: #F6DD0D;
     --button-text-color: #000000;
@@ -254,6 +255,14 @@ const { title, heroImageUrl } = Astro.props;
     position: relative;
   }
 
+  .portal-card h3 {
+    font-family: "Futura PT", sans-serif;
+    font-size: 2rem;
+    text-transform: uppercase;
+    margin: 0;
+    color: inherit;
+  }
+
   .portal-card:hover {
     background-color: var(--text-color);
     color: var(--button-text-color);
@@ -299,16 +308,8 @@ const { title, heroImageUrl } = Astro.props;
     stroke: currentColor;
   }
 
-  .portal-card h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin: 0;
-    color: inherit;
-  }
-
   .portal-card-subtitle {
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 400;
     text-transform: none;
     margin: 0;
