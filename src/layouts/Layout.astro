@@ -17,7 +17,7 @@ const { title, heroImageUrl } = Astro.props;
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" viewport-fit=cover">
     <title>{title}</title>
     <ViewTransitions />
     
@@ -105,18 +105,35 @@ const { title, heroImageUrl } = Astro.props;
         font-weight: 700;
       }
 
+      .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .main-content {
+        flex: 1 0 auto;
+      }
+
+      .site-footer {
+        flex-shrink: 0;
+        /* your existing footer styles */
+      }
+
     </style>
     
 </head>
 
 <body>
-    <Header transition:name="header" transition:persist />
-    
-    <div transition:name="main-content">
-        <slot />
-    </div>
+    <div class="page-wrapper">
+        <Header transition:name="header" transition:persist />
+        
+        <div transition:name="main-content" class="main-content">
+            <slot />
+        </div>
 
-    <Footer transition:name="footer" transition:persist />
+        <Footer transition:name="footer" transition:persist />
+    </div>
     
     <!-- Bootstrap JS -->
     <script> import "bootstrap/dist/js/bootstrap.bundle.min.js"; </script>
@@ -172,7 +189,9 @@ const { title, heroImageUrl } = Astro.props;
   /* Base styles */
   body {
     background-color: var(--background-color);
-
+    min-height: 100dvh; /* Instead of 100vh */
+    display: flex;
+    flex-direction: column;
   }
 
   /* Animation classes for initial load */
