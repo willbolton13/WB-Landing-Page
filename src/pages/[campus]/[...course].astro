@@ -404,7 +404,7 @@ if (!heroImageUrl) {
                 const photoAsset = staff.fields.photo ? 
                   findIncludedAsset(courseResponse.includes, staff.fields.photo.sys.id) : null;
                 const photoUrl = photoAsset ? 
-                  `https:${photoAsset.fields.file.url}?w=500&h=500&fit=crop&f=face&q=85` : 
+                  `https:${photoAsset.fields.file.url}?w=700&h=700&fit=crop&f=face&q=60` : 
                   `https://placehold.co/300x300/DE0029/FFFFFF?text=${encodeURIComponent(staff.fields.fullName.charAt(0))}`;
                 
                 return (
