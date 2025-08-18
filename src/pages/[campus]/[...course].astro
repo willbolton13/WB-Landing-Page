@@ -404,7 +404,7 @@ if (!heroImageUrl) {
                 const photoAsset = staff.fields.photo ? 
                   findIncludedAsset(courseResponse.includes, staff.fields.photo.sys.id) : null;
                 const photoUrl = photoAsset ? 
-                  `https:${photoAsset.fields.file.url}?w=500&h=500&fit=crop&f=face&q=85` : 
+                  `https:${photoAsset.fields.file.url}?w=700&h=700&fit=crop&f=face&q=60` : 
                   `https://placehold.co/300x300/DE0029/FFFFFF?text=${encodeURIComponent(staff.fields.fullName.charAt(0))}`;
                 
                 return (
@@ -495,25 +495,6 @@ if (!heroImageUrl) {
     }
   }
 
-  .hero-picture,
-  .hero-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 3;
-  }
-
-  .hero-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    opacity: 0;
-    transition: opacity 0.6s ease-out;
-  }
-
   .hero-image.loaded {
     opacity: 1;
   }
@@ -533,13 +514,6 @@ if (!heroImageUrl) {
     padding-top: 20px;
   }
 
-  h1 {
-    color: var(--text-color);
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
   .course-subtitle {
     color: var(--text-color);
     font-weight: 700;
@@ -547,8 +521,6 @@ if (!heroImageUrl) {
     font-size: 1.5rem;
     text-transform: uppercase;
     margin-top: 0.5rem;
-    margin-bottom: 1rem;
-    padding-top: 10px;
   }
 
   /* Course selection - simple white outline buttons */
@@ -557,8 +529,9 @@ if (!heroImageUrl) {
   }
 
   .course-prompt {
+    font-family: "jost", sans-serif;
     color: var(--text-color);
-    font-size: 1.1rem;
+    font-size: 1.6rem;
     font-weight: 500;
     margin-top: 0.5rem;
     margin-bottom: 1rem;
@@ -574,17 +547,15 @@ if (!heroImageUrl) {
 
   .course-btn {
     padding: 0.75rem 2rem;
-    background-color: transparent;
-    border: 4px solid var(--text-color);
+    background-color: var(--button-text-color);
     color: var(--text-color);
     text-decoration: none;
     font-weight: 700;
-    font-size: 1.2rem;
-    border-radius: 8px;
+    font-size: 1.6rem;
+    border-radius: 3px;
     text-transform: uppercase;
     transition: all 0.2s ease;
-    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    box-shadow: 2px 4px 4px rgba(0, 0, 0, 0.7);
     display: inline-block;
   }
 
@@ -602,63 +573,10 @@ if (!heroImageUrl) {
   }
 
   /* Portal card styles (for custom campus buttons) */
-  .portal-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 250px;
-    padding: 20px;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 8px;
-    background-color: var(--accent-yellow);
-    color: var(--button-text-color);
-    transition: all 0.3s ease;
-    position: relative;
-  }
 
   .custom-portal-card {
     /* Custom cards can have different colors - could be set via inline styles if needed */
     background-color: var(--accent-yellow);
-  }
-
-  .portal-card:hover {
-    background-color: var(--text-color);
-    color: var(--button-text-color);
-    transform: scale(1.02);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  }
-
-  .portal-card h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin: 0;
-    color: inherit;
-  }
-
-  .portal-card-subtitle {
-    font-size: 0.9rem;
-    font-weight: 400;
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-  }
-
-  .portal-card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-
-  .portal-card-icon svg {
-    width: var(--icon-size);
-    height: var(--icon-size);
-    stroke: currentColor;
   }
 
   /* Portal card green variant */
@@ -676,6 +594,13 @@ if (!heroImageUrl) {
   .content-block-text p {
     color: #000;
     text-shadow: none;
+  }
+
+  .content-block-text h2{
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: "Futura pt", sans-serif;
   }
 
   @media (min-width: 768px) {
@@ -698,15 +623,15 @@ if (!heroImageUrl) {
     background-color: var(--accent-green);
     color: var(--text-color);
     padding: 10px 25px;
-    border-radius: 5px;
+    border-radius: 2px;
     font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
   }
 
   .overlap-btn:hover {
-    background-color: var(--text-color);
-    color: var(--button-text-color);
+
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     transform: scale(1.05);
   }
 
@@ -717,7 +642,7 @@ if (!heroImageUrl) {
 
   .section-divider {
     height: 3px;
-    background-color: var(--accent-yellow);
+    background-color: var(--button-text-color);
     margin: 2rem 0 3rem 0;
     border-radius: 2px;
   }
@@ -839,6 +764,11 @@ if (!heroImageUrl) {
       width: 100%;
       max-width: 300px;
     }
+  }
+
+    h1, .lead {
+    color: var(--text-color);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
   }
 </style>
 

@@ -9,10 +9,10 @@
         <div class="row align-items-start">
             <div class="col-lg-3 col-md-6 mb-5 d-flex flex-column align-items-center">
                 <ul class="footer-links">
-                    <li><a href="#">Extra Link 1</a></li>
-                    <li><a href="#">Extra Link 2</a></li>
-                    <li><a href="#">Extra Link 3</a></li>
-                    <li><a href="#">Extra Link 4</a></li>
+                    <li><a href="https://myfalmouth.falmouth.ac.uk/" class="btn-extra-link">MyFalmouth</a></li>
+                    <li><a href="https://waterbear.instructure.com/courses/374" class="btn-extra-link">Wellbeing</a></li>
+                    <li></li><a href=https://waterbear.instructure.com/courses/485#" class="btn-extra-link">Opportunities</a></li>
+                    <li><a href="https://waterbear.org.uk/" class="btn-extra-link">WaterBear</a></li>
                 </ul>
             </div>
             
@@ -46,7 +46,7 @@
             </div>
             
             <div class="col-lg-4 col-md-12 mb-4 text-center text-lg-start">
-                <h5 class="mb-3" style="font-weight: 600;">Why We're WaterBear...</h5>
+                <h5 class="mb-3 whywaterbear">Why We're WaterBear...</h5>
                 <ul class="footer-why-list">
                     <li>- 'Water bear' is the common name for a Tardigrade.</li>
                     <li>- Tardigrades are micro creatures, found everywhere on earth.</li>
@@ -60,18 +60,18 @@
 </footer>
 
 <style>
-  .site-footer {
-    background-color: var(--accent-red);
-    color: var(--text-color);
-    padding: 5rem 0 2rem 0;
-    position: relative;
-    text-align: center;
-  }
 
   @media (min-width: 768px) {
     .site-footer {
       text-align: left;
     }
+  }
+  .whywaterbear {
+    font-family: "Futura PT", sans-serif;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
   }
 
   .back-to-top {
@@ -82,7 +82,7 @@
     background-color: var(--accent-yellow);
     color: var(--button-text-color);
     padding: 10px 25px;
-    border-radius: 5px;
+    border-radius: 3px;
     font-weight: 700;
     text-transform: uppercase;
     text-decoration: none;
@@ -97,6 +97,7 @@
   }
 
   .footer-links {
+    text-transform: uppercase;
     display: none;
   }
 
@@ -117,10 +118,11 @@
   }
 
   .footer-links a:hover {
-    color: var(--button-text-color);
+    color: var(--accent-yellow);
   }
 
   .footer-why-list li {
+    font-family: jost, sans-serif;
     font-size: 0.85rem;
     line-height: 1.5;
   }
