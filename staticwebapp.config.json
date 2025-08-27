@@ -16,8 +16,8 @@
       "azureActiveDirectory": {
         "registration": {
           "openIdIssuer": "https://login.microsoftonline.com/a59521c6-1c6e-46ee-8213-3bb9f8d48fe7/v2.0",
-          "clientIdSettingName": "08487d10-526e-4f93-8f70-24def3abfde8",
-          "clientSecretSettingName": "AZURE_AUTH_SECRET"
+          "clientIdSettingName": "LANDINGPAGE_AUTH_CLIENT_ID",
+          "clientSecretSettingName": "LANDINGPAGE_AUTH_SECRET"
         }
       }
     }
