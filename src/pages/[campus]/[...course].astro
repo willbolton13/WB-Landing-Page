@@ -275,13 +275,7 @@ if (!heroImageUrl) {
           // Default static portal cards
           <StaticPortalCards />
         )}
-        
-        {/* If no courses, show a message */}
-        {(!courses || courses.length === 0) && (
-          <div class="alert alert-info mt-5 text-center">
-            <p class="mb-0">No courses are currently available for this campus.</p>
-          </div>
-        )}
+      
       </>
     ) : courseData ? (
       // COURSE PAGE CONTENT
