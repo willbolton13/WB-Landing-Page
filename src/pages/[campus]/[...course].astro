@@ -318,7 +318,7 @@ if (!heroImageUrl) {
               if (!button) return null;
               
               return (
-                <div class="col-lg-6 col-md-6">
+                <div class="portal-cards-container col-lg-6 col-md-6">
                   <a href={button.fields.link} target="_blank" class="portal-card portal-card-green">
                     <div class="portal-card-icon">
                       <i data-lucide={button.fields.icon || 'square'}></i>
@@ -571,20 +571,6 @@ if (!heroImageUrl) {
     max-width: 600px;
     margin: 3rem auto;
   }
-
-  /* Portal card styles (for custom campus buttons) */
-
-  .custom-portal-card {
-    /* Custom cards can have different colors - could be set via inline styles if needed */
-    background-color: var(--accent-yellow);
-  }
-
-  /* Portal card green variant */
-  .portal-card-green {
-    background-color: var(--accent-green);
-    color: var(--text-color);
-  }
-
   /* Content blocks */
   .content-block {
     margin-bottom: 3rem;
