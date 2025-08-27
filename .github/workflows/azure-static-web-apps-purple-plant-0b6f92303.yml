@@ -1,5 +1,9 @@
 name: Azure Static Web Apps CI/CD
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -8,13 +12,11 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
-  repository_dispatch:
-    types: [contentful-update]
   workflow_dispatch: 
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name == 'push' || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     permissions:
