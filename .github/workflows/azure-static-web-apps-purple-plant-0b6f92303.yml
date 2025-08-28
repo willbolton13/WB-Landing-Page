@@ -8,9 +8,15 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
-  repository_dispatch:
-    types: [contentful-update]
-  workflow_dispatch: 
+  # COMMENTED OUT - Now handled by deployment-gate.yml
+  # repository_dispatch:
+  #   types: [contentful-update]
+  workflow_dispatch:
+    inputs:
+      trigger_source:
+        description: 'Source of the trigger'
+        required: false
+        default: 'manual'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,7 +24,8 @@ concurrency:
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name == 'push' || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    # UPDATED condition - removed repository_dispatch
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     permissions:
@@ -66,7 +73,3 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           action: "close"
-
-
-
-

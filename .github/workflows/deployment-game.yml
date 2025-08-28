@@ -1,0 +1,78 @@
+name: Deployment Gate
+
+on:
+  repository_dispatch:
+    types: [contentful-update]
+
+jobs:
+  check_and_trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check last deployment time
+        id: check_time
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Configuration
+            const MINIMUM_MINUTES_BETWEEN_DEPLOYS = 10; // Adjust this value
+            const WORKFLOW_FILE = 'azure-static-web-apps-purple-plant-0b6f92303.yml';
+            
+            try {
+              // Get the last successful deployment
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: WORKFLOW_FILE,
+                status: 'success', // Only check successful runs
+                per_page: 1
+              });
+              
+              if (runs.workflow_runs.length > 0) {
+                const lastRun = new Date(runs.workflow_runs[0].created_at);
+                const now = new Date();
+                const diffMinutes = (now - lastRun) / 1000 / 60;
+                
+                console.log(`Last deployment: ${lastRun.toISOString()}`);
+                console.log(`Time since last deployment: ${diffMinutes.toFixed(2)} minutes`);
+                
+                if (diffMinutes < MINIMUM_MINUTES_BETWEEN_DEPLOYS) {
+                  const waitTime = MINIMUM_MINUTES_BETWEEN_DEPLOYS - diffMinutes;
+                  console.log(`⏳ Too soon! Wait ${waitTime.toFixed(2)} more minutes.`);
+                  core.setOutput('should_deploy', 'false');
+                  core.setOutput('wait_time', waitTime.toFixed(2));
+                  return;
+                }
+              }
+              
+              console.log('✅ Sufficient time has passed. Proceeding with deployment.');
+              core.setOutput('should_deploy', 'true');
+              
+            } catch (error) {
+              // If there's an error checking, proceed with deployment
+              console.log('Error checking last run, proceeding with deployment:', error);
+              core.setOutput('should_deploy', 'true');
+            }
+
+      - name: Trigger deployment workflow
+        if: steps.check_time.outputs.should_deploy == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'azure-static-web-apps-purple-plant-0b6f92303.yml',
+              ref: 'main',
+              inputs: {
+                trigger_source: 'contentful-gated'
+              }
+            });
+            
+            console.log('🚀 Deployment workflow triggered successfully!');
+
+      - name: Log skip reason
+        if: steps.check_time.outputs.should_deploy == 'false'
+        run: |
+          echo "⏭️ Skipping deployment - only ${{ steps.check_time.outputs.wait_time }} minutes until next allowed deployment"
+          echo "This prevents too frequent rebuilds when multiple content updates occur"
