@@ -14,7 +14,7 @@ jobs:
         with:
           script: |
             // Configuration
-            const MINIMUM_MINUTES_BETWEEN_DEPLOYS = 10; // Adjust this value
+            const MINIMUM_MINUTES_BETWEEN_DEPLOYS = 5; // Adjust this value
             const WORKFLOW_FILE = 'azure-static-web-apps-purple-plant-0b6f92303.yml';
             
             try {
@@ -57,7 +57,7 @@ jobs:
         if: steps.check_time.outputs.should_deploy == 'true'
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.WORKFLOW_TRIGGER_TOKEN }}
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
