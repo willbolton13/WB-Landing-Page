@@ -95,6 +95,8 @@ const { title, heroImageUrl } = Astro.props;
       h1, .display-4 {
         font-family: 'Futura PT', system-ui, -apple-system, sans-serif;
         font-weight: 800;
+        text-transform: uppercase;
+        font-size: clamp(2rem, 4vw + 0.5vh, 5rem);
       }
       
       h2, h3 {
@@ -247,10 +249,6 @@ const { title, heroImageUrl } = Astro.props;
   .text-center {
   font-family: 'Futura PT';
    min-height: 150px; text-align: center;
-  }
-  .display-4 {
-    font-weight: 800;
-    text-transform: uppercase;
   }
 
   .hero-blur {
