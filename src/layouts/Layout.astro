@@ -91,14 +91,15 @@ const { title, heroImageUrl } = Astro.props;
         font-family: 'Jost', system-ui, -apple-system, sans-serif;
       }
       
-      /* Ensure headings use the right weights */
+      /* Ensure headings use the right weights
       h1, .display-4 {
         font-family: 'Futura PT', system-ui, -apple-system, sans-serif;
         font-weight: 800;
         text-transform: uppercase;
         font-size: clamp(2rem, 4vw + 0.5vh, 5rem);
       }
-      
+       */
+
       h2, h3 {
         font-weight: 700;
       }
@@ -232,6 +233,93 @@ const { title, heroImageUrl } = Astro.props;
     transition: opacity 0.6s ease-out;
 
   }
+
+  /* Hero Text Classes */
+.hero-title {
+  font-family: 'Futura PT', system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  color: var(--text-color);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Size variants */
+.hero-title--xl {
+  /* Homepage - biggest impact */
+  font-size: clamp(3rem, 8vw + 1vh, 8rem); 
+  letter-spacing: -0.03em;
+  line-height: 0.85;
+}
+
+.hero-title--lg {
+  /* Campus pages */
+  font-size: clamp(2.5rem, 6vw + 0.5vh, 6rem);
+}
+
+.hero-title--md {
+  /* Course pages */
+  font-size: clamp(2rem, 5vw + 0.5vh, 5rem);
+}
+
+.hero-title br {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hero-title br {
+    display: block;
+  }
+}
+
+.hero-subtitle {
+  font-family: 'Jost', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--text-color);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+  margin-top: 1rem;
+  opacity: 0;
+  animation: heroFadeIn 0.8s ease-out 0.3s forwards;
+}
+
+.hero-subtitle--lg {
+  font-size: clamp(1.5rem, 2.5vw, 2.5rem);
+}
+
+.hero-subtitle--md {
+  font-size: clamp(1.2rem, 2vw, 2rem);
+}
+
+/* Optional: Add animation */
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-title {
+  animation: heroFadeIn 0.8s ease-out;
+}
+
+/* Optional: Gradient text for homepage */
+.hero-title--gradient {
+  background: linear-gradient(180deg, 
+    var(--text-color) 0%, 
+    var(--text-color) 60%, 
+    var(--accent-yellow) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none; /* Remove shadow for gradient */
+}
 
   .offcanvas {
     transition: transform 0.2s ease-in-out !important;
