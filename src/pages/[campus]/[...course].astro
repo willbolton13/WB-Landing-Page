@@ -752,7 +752,6 @@ if (!heroImageUrl) {
   }
 </style>
 
-<!-- Keep your existing script section as-is -->
 <script>
   import { animate, inView } from "motion";
 
@@ -813,6 +812,34 @@ if (!heroImageUrl) {
       });
     });
   }
+  
+  // Parallax effect for hero title
+  function setupParallax() {
+    const heroTitle = document.querySelector('.hero-title');
+    if (!heroTitle) return;
+    
+    let ticking = false;
+    function updateParallax() {
+      const scrolled = window.pageYOffset;
+      const rate = scrolled * -0.3; // Negative for upward movement
+      
+      if (scrolled < 600) { // Only apply for first 600px of scroll
+        heroTitle.style.transform = `translateY(${rate}px)`;
+        heroTitle.style.opacity = Math.max(0.3, 1 - (scrolled / 800)); // Fade but keep minimum opacity
+      }
+      ticking = false;
+    }
+    
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateParallax);
+        ticking = true;
+      }
+    });
+  }
 
-  document.addEventListener('astro:page-load', setupPageAnimationsAdvanced);
+document.addEventListener('astro:page-load', () => {
+  setupPageAnimationsAdvanced();
+  setupParallax(); // Add this
+});
 </script>

@@ -344,16 +344,16 @@ const { title, heroImageUrl } = Astro.props;
 
 :root {
   --portal-card-height: 180px;
-  --portal-icon-size: 60px;
+  --portal-icon-size: 50px;
   --portal-h3-size: 1.5rem;
   --portal-subtitle-size: 1rem;
-  --portal-padding: 15px;
+  --portal-padding: 0px;
 }
 
 @media (min-width: 768px) {
   :root {
     --portal-card-height: 225px;
-    --portal-icon-size: 55px;
+    --portal-icon-size: 60px;
     --portal-h3-size: 1.6rem;
     --portal-subtitle-size: 0.95rem;
     --portal-padding: 0px;
@@ -395,6 +395,7 @@ const { title, heroImageUrl } = Astro.props;
     text-transform: uppercase;
     margin: 0;
     color: inherit;
+    line-height: 100%;
   }
 
   .portal-card-icon {
@@ -431,6 +432,7 @@ const { title, heroImageUrl } = Astro.props;
     right: 0;
     padding: 0 20px;
     text-align: center;
+    line-height: 100%;
   }
 
     /* Portal card variants */
