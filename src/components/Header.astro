@@ -135,6 +135,9 @@ if (currentCampusSlug) {
             </div>
             
             <div class="offcanvas-footer">
+              <div class="btn-extra link ms-account-button">
+                <a href="https://m365.cloud.microsoft/apps/" target=“_blank” class="btn-extra-link">WaterBear Microsoft Account</a>
+                </div>
                 <div class="extra-links-buttons">
                     <a href="https://myfalmouth.falmouth.ac.uk/" class="btn-extra-link">MyFalmouth</a>
                     <a href="https://waterbear.instructure.com/courses/374" class="btn-extra-link">Wellbeing</a>
@@ -148,6 +151,15 @@ if (currentCampusSlug) {
 </header>
 
 <style>
+  .btn-extra.ms-account-button{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-weight: 900;
+  }
 
   .lucide.bi-chevron-down  {
     width: 3rem;
