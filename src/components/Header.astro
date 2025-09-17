@@ -72,17 +72,19 @@ if (currentCampusSlug) {
             aria-controls="offcanvasNavbar" 
             aria-label="Toggle navigation"
         >
-            {currentCampusName ? 'Change' : 'Select'} Campus
+            Menu
              <i data-lucide="menu"></i>
         </button>
         
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
             <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">SELECT YOUR CAMPUS</h5>
+                <!--<h5 class="offcanvas-title" id="offcanvasNavbarLabel">NAVIGATION</h5>-->
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             
             <div class="offcanvas-body location-list">
+                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">CAMPUS SELECTION</h5>
+                <!-- Campuses Section -->
                 {campusesWithResolvedCourses.map((campus) => {
                     const campusSlug = campus.fields.campusSlug;
                     const hasCourses = campus.fields.courses && campus.fields.courses.length > 0;
@@ -94,7 +96,7 @@ if (currentCampusSlug) {
                                     <div class="campus-header-wrapper">
                                         <a 
                                             href={`/${campusSlug}`}
-                                            class="campus-link"
+                                            class="campus-header"
                                             data-campus-link={campusSlug}
                                         >
                                             {campus.fields.campusName}
@@ -123,7 +125,7 @@ if (currentCampusSlug) {
                             ) : (
                                 <a 
                                     href={`/${campusSlug}`} 
-                                    class="campus-header solo"
+                                    class="campus-header campus-header--solo"
                                     data-campus-link={campusSlug}
                                 >
                                     {campus.fields.campusName}
@@ -132,35 +134,53 @@ if (currentCampusSlug) {
                         </div>
                     );
                 })}
+                <!--
+
+                <div class="section-divider"></div>
+                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">OTHER LINKS</h5>
+
+                <div class="campus-group">
+                    <div class="campus-header-wrapper">
+                        <div class="campus-header campus-header--static">
+                            RESOURCES
+                        </div>
+                        <button 
+                            class="expand-btn"
+                            data-campus-slug="student-resources"
+                            type="button"
+                            aria-label="Expand resources"
+                        >
+                           <i class="bi-chevron-down" data-lucide="chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="course-list" id="courses-student-resources">
+                        <a 
+                            href="/student-services" 
+                            class="course-item"
+                        >
+                            Student Services
+                        </a>
+                        <a 
+                            href="/artist-development" 
+                            class="course-item"
+                        >
+                            Artist Development
+                        </a>
+                    </div>
+                </div> -->
             </div>
             
             <div class="offcanvas-footer">
-              <div class="btn-extra link ms-account-button">
-                <a href="https://m365.cloud.microsoft/apps/" target=“_blank” class="btn-extra-link">WaterBear Microsoft Account</a>
+                <div class="footer-buttons">
+                    <a href="https://m365.cloud.microsoft/apps/" target="_blank" class="btn-footer-half">MS ACCOUNT</a>
+                    <a href="https://login.microsoftonline.com/common/oauth2/v2.0/logout" class="btn-footer-half btn-logout">LOG OUT</a>
                 </div>
-                <div class="extra-links-buttons">
-                    <a href="https://myfalmouth.falmouth.ac.uk/" class="btn-extra-link">MyFalmouth</a>
-                    <a href="https://waterbear.instructure.com/courses/374" class="btn-extra-link">Wellbeing</a>
-                    <a href=https://waterbear.instructure.com/courses/485#" class="btn-extra-link">Opportunities</a>
-                    <a href="https://waterbear.org.uk/" class="btn-extra-link">WaterBear</a>
-                </div>
-                <a href="https://login.microsoftonline.com/common/oauth2/v2.0/logout" class="btn-logout">LOG OUT</a>
             </div>
         </div>
     </div>
 </header>
 
 <style>
-  .btn-extra.ms-account-button{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    font-weight: 900;
-  }
-
   .lucide.bi-chevron-down  {
     width: 3rem;
     height: 3rem;
@@ -241,17 +261,17 @@ if (currentCampusSlug) {
   }
 
   .location-list {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1.5rem;
     flex-grow: 1;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 
   /* Campus group styling */
   .campus-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
   }
 
   /* Campus header wrapper for split link/button */
@@ -268,22 +288,49 @@ if (currentCampusSlug) {
     border-bottom-color: var(--button-text-color);
   }
 
-  /* Campus link (clickable name) */
-  .campus-link {
+  /* Unified campus header styles */
+  .campus-header {
     font-family: 'Futura PT';
-    flex: 1;
-    padding: 1rem 0;
-    font-size: 2rem;
+    display: block;
+    padding: 0.75rem 0;
+    font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+
     font-weight: 700;
     color: var(--button-text-color);
     text-decoration: none;
     text-transform: uppercase;
-    transition: transform 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
   }
 
-  .campus-link:hover {
+  /* When in wrapper with chevron */
+  .campus-header-wrapper .campus-header {
+    flex: 1;
+    width: auto;
+  }
+
+  /* Solo campus (no chevron) */
+  .campus-header--solo {
+    width: 100%;
+    border-bottom: 2px solid transparent;
+  }
+
+  /* Static section (not clickable) */
+  .campus-header--static {
+    cursor: default;
+  }
+
+  /* Hover states */
+  .campus-header:not(.campus-header--static):hover {
     transform: translateX(10px);
     color: var(--button-text-color);
+  }
+
+  .campus-header--solo:hover {
+    border-bottom-color: var(--button-text-color);
+  }
+
+  .campus-header--static:hover {
+    transform: none;
   }
 
   /* Expand button (chevron only) */
@@ -311,26 +358,6 @@ if (currentCampusSlug) {
     transform: rotate(180deg);
   }
 
-  /* Solo campus header (no courses) */
-  .campus-header.solo {
-    font-family: 'Futura PT';
-    display: block;
-    width: 100%;
-    padding: 1rem 0;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--button-text-color);
-    text-decoration: none;
-    text-transform: uppercase;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .campus-header.solo:hover {
-    transform: translateX(10px);
-    border-bottom-color: var(--button-text-color);
-  }
-
   /* Course list styling */
   .course-list {
     max-height: 0;
@@ -345,8 +372,8 @@ if (currentCampusSlug) {
 
   .course-item {
     display: block;
-    padding: 0.75rem 1rem;
-    font-size: 1.3rem;
+    padding: 0.5rem 1rem;
+    font-size: clamp(1.1rem, 2.5vw, 1.2rem);
     font-weight: 600;
     color: var(--button-text-color);
     text-decoration: none;
@@ -360,6 +387,11 @@ if (currentCampusSlug) {
     background-color: rgba(0, 0, 0, 0.03);
   }
 
+  /* Section divider */
+  .section-divider {
+    margin: 2rem 0;
+  }
+
   /* Footer section */
   .offcanvas-footer {
     padding: 1.5rem;
@@ -367,50 +399,39 @@ if (currentCampusSlug) {
     background-color: var(--accent-yellow);
   }
 
-  .extra-links-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+  .footer-buttons {
+    display: flex;
+    gap: 1rem;
   }
 
-  .btn-extra-link {
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--button-text-color);
+  .btn-footer-half {
+    flex: 1;
+    padding: 1rem;
     background-color: transparent;
+    border: 2px solid var(--button-text-color);
     color: var(--button-text-color);
     text-align: center;
     text-decoration: none;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 1rem;
     border-radius: 5px;
     transition: all 0.2s ease-in-out;
   }
 
-  .btn-extra-link:hover {
+  .btn-footer-half:hover {
+    background-color: var(--button-text-color);
+    color: var(--accent-yellow);
+    transform: scale(1.02);
+  }
+
+  .btn-footer-half.btn-logout {
     background-color: var(--button-text-color);
     color: var(--accent-yellow);
   }
 
-  .btn-logout {
-    display: block;
-    width: 100%;
-    padding: 1rem;
-    background-color: var(--button-text-color);
-    color: var(--accent-yellow);
-    text-align: center;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 1.1rem;
-    border-radius: 5px;
-    border: none;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .btn-logout:hover {
+  .btn-footer-half.btn-logout:hover {
     background-color: var(--accent-red);
     color: var(--text-color);
-    transform: scale(1.02);
   }
 
   @media (max-width: 768px) {
@@ -427,16 +448,9 @@ if (currentCampusSlug) {
       height: 40px !important;
     }
 
-    .campus-link {
-      font-size: 1.5rem;
-    }
-
-    .campus-header.solo {
-      font-size: 1.5rem;
-    }
-
     .course-item {
-      font-size: 1.1rem;
+      font-size: 1rem;
+      padding: 0.4rem 0.8rem;
     }
   }
 </style>
@@ -454,12 +468,12 @@ if (currentCampusSlug) {
 
     const bsOffcanvas = new Offcanvas(offcanvasElement);
 
-    // Setup expand buttons (chevrons only)
+    // Setup expand buttons for all expandable sections
     const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
     expandButtons.forEach(button => {
       button.addEventListener('click', (event) => {
         event.preventDefault();
-        event.stopPropagation(); // Prevent any parent handlers
+        event.stopPropagation();
         
         const campusSlug = button.dataset.campusSlug;
         const courseList = document.getElementById(`courses-${campusSlug}`);
@@ -468,7 +482,7 @@ if (currentCampusSlug) {
         button.classList.toggle('expanded');
         courseList.classList.toggle('expanded');
         
-        // Optional: Collapse other campus sections
+        // Optional: Collapse other sections
         expandButtons.forEach(otherButton => {
           if (otherButton !== button) {
             otherButton.classList.remove('expanded');
@@ -482,8 +496,8 @@ if (currentCampusSlug) {
       });
     });
 
-    // Setup navigation for campus links and course links
-    const navigationLinks = offcanvasElement.querySelectorAll('.campus-link, .campus-header.solo, .course-item');
+    // Setup navigation for all clickable links
+    const navigationLinks = offcanvasElement.querySelectorAll('.campus-header:not(.campus-header--static), .course-item');
     navigationLinks.forEach(link => {
       link.addEventListener('click', (event) => {
         event.preventDefault();
