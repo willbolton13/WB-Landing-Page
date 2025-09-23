@@ -234,7 +234,7 @@ if (currentCampusSlug) {
   .offcanvas {
     background-color: var(--accent-yellow);
     color: var(--button-text-color);
-    transition: transform 0.1s ease-in-out !important;
+    /*transition: transform 0.1s ease-in-out !important;*/
   }
 
   .offcanvas-header {
@@ -457,7 +457,6 @@ if (currentCampusSlug) {
 
 <script>
   import { navigate } from 'astro:transitions/client';
-  import { Offcanvas } from 'bootstrap';
 
   function setupOffcanvasNavigation() {
     const offcanvasElement = document.getElementById('offcanvasNavbar');
@@ -466,7 +465,24 @@ if (currentCampusSlug) {
     }
     offcanvasElement.dataset.navListenerAttached = 'true';
 
-    const bsOffcanvas = new Offcanvas(offcanvasElement);
+    // Manual close function that bypasses Bootstrap
+    function closeOffcanvasManually() {
+      // Remove show class from offcanvas
+      offcanvasElement.classList.remove('show');
+      offcanvasElement.removeAttribute('aria-modal');
+      offcanvasElement.removeAttribute('role');
+      offcanvasElement.setAttribute('aria-hidden', 'true');
+      
+      // Remove ALL backdrops (in case multiple got created)
+      document.querySelectorAll('.offcanvas-backdrop').forEach(backdrop => {
+        backdrop.remove();
+      });
+      
+      // Reset body
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
+    }
 
     // Setup expand buttons for all expandable sections
     const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
@@ -502,15 +518,29 @@ if (currentCampusSlug) {
       link.addEventListener('click', (event) => {
         event.preventDefault();
         const targetUrl = link.getAttribute('href');
-
-        // Listen for hidden event and navigate
-        offcanvasElement.addEventListener('hidden.bs.offcanvas', () => {
+        
+        // Manually close the offcanvas
+        closeOffcanvasManually();
+        
+        // Navigate after a brief delay to ensure cleanup
+        setTimeout(() => {
           navigate(targetUrl);
-        }, { once: true });
-
-        // Close the offcanvas
-        bsOffcanvas.hide();
+        }, 150);
       });
+    });
+    
+    // Override backdrop clicks to ensure proper cleanup
+    document.addEventListener('click', (event) => {
+      if (event.target.classList.contains('offcanvas-backdrop')) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeOffcanvasManually();
+      }
+    });
+    
+    // Clean up any stray backdrops on page load
+    document.querySelectorAll('.offcanvas-backdrop').forEach(backdrop => {
+      backdrop.remove();
     });
   }
 
