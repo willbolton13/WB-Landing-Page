@@ -77,6 +77,13 @@ const heroImageUrl = '/img/events-hero.webp';
       </section>
     )}
     
+    {/* Upcoming Events */}
+    <section class="upcoming-events-section">
+      <div class="section-header">
+        <h2>Upcoming Events</h2>
+        <span class="event-count">{upcomingEvents.length + allFeaturedEvents.length - pastEvents.length}</span>
+      </div>
+
     {/* Category Filter */}
     {categories.length > 0 && upcomingEvents.length > 0 && (
       <div class="event-filters">
@@ -91,12 +98,7 @@ const heroImageUrl = '/img/events-hero.webp';
       </div>
     )}
     
-    {/* Upcoming Events */}
-    <section class="upcoming-events-section">
-      <div class="section-header">
-        <h2>Upcoming Events</h2>
-        <span class="event-count">{upcomingEvents.length} events</span>
-      </div>
+
       
       {upcomingEvents.length > 0 ? (
         <div class="events-grid" id="upcoming-events">
@@ -140,11 +142,11 @@ const heroImageUrl = '/img/events-hero.webp';
 
 <style>
   .events-hero {
-    height: 40vh;
+    height: 50vh;
   }
 
   .hero-section {
-    height: 40vh;
+    height: 50vh;
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -211,13 +213,20 @@ const heroImageUrl = '/img/events-hero.webp';
     margin-bottom: 4rem;
   }
 
+  .featured-event-section {
+    position: relative;
+    margin-top: -40px;
+  }
+
   .section-header {
+    background: var(--text-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 2rem;
     margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 3px solid var(--accent-yellow);
+    padding: 1rem;
+    border: #000  solid .3rem;
   }
 
   .section-header h2 {
@@ -229,28 +238,30 @@ const heroImageUrl = '/img/events-hero.webp';
   }
 
   .event-count {
-    color: #666;
-    font-size: 1rem;
+    color: var(--accent-yellow);
+    font-size: 2rem;
+    font-weight: 900;
+    text-transform: uppercase;
   }
 
   /* Filter buttons */
   .event-filters {
-    margin-top: -20px !important;
+    margin-top: -40px !important;
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
     margin-bottom: 3rem;
     padding: 1.5rem;
-    border: solid .3rem #000000;
-    background: #ffffff
+    /*border: solid .3rem #000000;*/
+    background: #000 
   }
 
   .filter-btn {
+    border: solid;
     padding: 8px 20px;
     background: white;
-    color: #333;
-    border: 2px solid #ddd;
+    color: #000000;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.9rem;
@@ -333,7 +344,6 @@ const heroImageUrl = '/img/events-hero.webp';
   }
 
   .past-events-list {
-    padding-top: 2rem;
   }
 
   h1 {

@@ -191,9 +191,57 @@ const mapUrl = hasGeolocation
 )}
 
 {variant === 'featured' && (
+  
   <div class="event-featured-container">
     <div class={`event-featured ${categoryClass}`} data-event-id={event.sys.id}>
-      <div class="row align-items-center">
+      <div class="row align-items-stretch">
+        
+        {/* Content section */}
+        <div class="col-md-6">
+          <div class="event-featured-content">
+            {event.fields.eventCategory && (
+              <div class={`event-category-label ${categoryClass}`}>
+                {event.fields.eventCategory.replace('-', ' ')}
+              </div>
+            )}
+            <h2 class="event-featured-title">{event.fields.eventTitle}</h2>
+            
+            <div class="event-featured-meta">
+              <div class="meta-item">
+                <i data-lucide="calendar"></i>
+                {dayOfWeek}, {dateDisplay}
+              </div>
+              <div class="meta-item">
+                <i data-lucide="clock"></i>
+                {timeDisplay}
+              </div>
+              {event.fields.eventLocation && (
+                <div class="meta-item">
+                  <i data-lucide="map-pin"></i>
+                  {mapUrl ? (
+                    <a href={mapUrl} target="_blank" class="location-link">
+                      {event.fields.eventLocation}
+                      <i data-lucide="external-link"></i>
+                    </a>
+                  ) : (
+                    <span>{event.fields.eventLocation}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {event.fields.shortDescription && (
+              <p class="event-featured-description">{event.fields.shortDescription}</p>
+            )}
+            
+            {event.fields.ticketLink && (
+              <a href={event.fields.ticketLink} target="_blank" class="event-ticket-btn event-ticket-btn-featured">
+                GET TICKETS
+              </a>
+            )}
+          </div>
+        </div>
+
         {/* Image section with flip capability */}
         <div class="col-md-6">
           <div class="featured-flip-container">
@@ -230,52 +278,6 @@ const mapUrl = hasGeolocation
             )}
           </div>
         </div>
-        
-        {/* Content section */}
-        <div class="col-md-6">
-          <div class="event-featured-content">
-            {event.fields.eventCategory && (
-              <span class={`event-category-label ${categoryClass}`}>
-                {event.fields.eventCategory.replace('-', ' ')}
-              </span>
-            )}
-            <h2 class="event-featured-title">{event.fields.eventTitle}</h2>
-            
-            <div class="event-featured-meta">
-              <div class="meta-item">
-                <i data-lucide="calendar"></i>
-                {dayOfWeek}, {dateDisplay}
-              </div>
-              <div class="meta-item">
-                <i data-lucide="clock"></i>
-                {timeDisplay}
-              </div>
-              {event.fields.eventLocation && (
-                <div class="meta-item">
-                  <i data-lucide="map-pin"></i>
-                  {mapUrl ? (
-                    <a href={mapUrl} target="_blank" class="location-link">
-                      {event.fields.eventLocation}
-                      <i data-lucide="external-link"></i>
-                    </a>
-                  ) : (
-                    <span>{event.fields.eventLocation}</span>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {event.fields.shortDescription && (
-              <p class="event-featured-description">{event.fields.shortDescription}</p>
-            )}
-            
-            {event.fields.ticketLink && (
-              <a href={event.fields.ticketLink} target="_blank" class="btn btn-primary btn-lg">
-                GET TICKETS
-              </a>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -294,7 +296,7 @@ const mapUrl = hasGeolocation
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: transform 0.6s;
     transform-style: preserve-3d;
-    height: 400px; /* Fixed height instead of min-height */
+    min-height: 500px; /* Fixed height instead of min-height */
   }
 
   .event-card.flipped {
@@ -461,6 +463,10 @@ const mapUrl = hasGeolocation
     text-transform: uppercase;
   }
 
+  .event-ticket-btn-featured {
+    margin-top: 40px;
+  }
+
   .event-ticket-btn:hover {
     background: var(--button-text-color);
     color: var(--accent-yellow);
@@ -479,8 +485,8 @@ const mapUrl = hasGeolocation
   }
 
   .event-flip-btn:hover {
-    background: #c0392b;
-    transform: scale(1.05);
+    background: var(--brand-black);
+    color: white;
   }
 
   /* Card back styling */
@@ -501,7 +507,7 @@ const mapUrl = hasGeolocation
   }
 
   .card-back-btn:hover {
-    background: var(--accent-green);
+    background: var(--brand-white);
   }
 
   .card-back-content {
@@ -545,7 +551,7 @@ const mapUrl = hasGeolocation
   }
 
   .card-back-description::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-green);
+    background: var(--brand-white);
   }
 
   .card-back-description p {
@@ -685,12 +691,17 @@ const mapUrl = hasGeolocation
     text-transform: uppercase;
   }
 
+  .event-featured-content {
+    padding: 20px;
+
+  }
+
   .featured-flip-btn {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    background: var(--accent-yellow);
-    color: var(--button-text-color);
+    background: var(--accent-red);
+    color: var(--brand-white);
     border: none;
     padding: 10px 20px;
     font-weight: 700;
@@ -699,7 +710,7 @@ const mapUrl = hasGeolocation
   }
 
   .featured-flip-btn:hover {
-    background: var(--accent-green);
+    background: var(--brand-black);
     color: white;
   }
 
@@ -719,7 +730,7 @@ const mapUrl = hasGeolocation
   }
 
   .featured-back-btn:hover {
-    background: var(--accent-green);
+    background: var(--brand-white);
   }
 
   .featured-back-content {
