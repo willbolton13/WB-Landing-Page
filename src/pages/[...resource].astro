@@ -1,0 +1,380 @@
+---
+// pages/[...resource].astro
+import Layout from '../layouts/Layout.astro';
+import ContentRenderer from '../components/ContentRenderer.astro';
+import { 
+  getResources,
+  getResourceWithFullContent,
+  processEventList,
+  findIncludedEntry,
+  getRotatingImage,
+  getOptimizedImageUrl,
+  generateSrcSet,
+  getPlaceholderImageUrl
+} from '../lib/contentful';
+
+// Generate static paths for all resources
+export async function getStaticPaths() {
+  const resources = await getResources();
+  const paths = [];
+  
+  for (const resource of resources) {
+    const resourceResponse = await getResourceWithFullContent(resource.fields.resourceSlug);
+    const resourceData = resourceResponse?.items?.[0] || resource;
+    
+    // Pre-fetch event data for any event lists
+    const eventListsData = {};
+    if (resourceData.fields.pageContent) {
+      for (const contentRef of resourceData.fields.pageContent) {
+        const content = findIncludedEntry(resourceResponse?.includes, contentRef.sys.id) || contentRef;
+        
+        // Check if it's an event list
+        if (content?.sys?.contentType?.sys?.id === 'eventList') {
+          const events = await processEventList(content);
+          eventListsData[content.sys.id] = events;
+        }
+      }
+    }
+    
+    paths.push({
+      params: { 
+        resource: resource.fields.resourceSlug
+      },
+      props: {
+        resourceData,
+        resourceResponse,
+        resourceSlug: resource.fields.resourceSlug,
+        eventListsData
+      }
+    });
+  }
+  
+  return paths;
+}
+
+// Get data from props
+const { resourceData, resourceResponse, resourceSlug, eventListsData } = Astro.props;
+
+if (!resourceData) {
+  return Astro.redirect('/');
+}
+
+// Set page title
+const pageTitle = resourceData.fields.pageTitle || resourceData.fields.resourceName;
+
+// Get page content - now directly from pageContent field
+const pageContent = resourceData.fields.pageContent || [];
+
+// Map and enhance content items with their resolved data
+const contentItems = pageContent
+  .map(contentRef => {
+    const item = findIncludedEntry(resourceResponse?.includes, contentRef.sys.id) || contentRef;
+    // Contentful includes the content type in sys.contentType.sys.id
+    return item;
+  })
+  .filter(item => item?.fields);
+
+console.log(`Resource ${resourceSlug} has ${contentItems.length} content items`);
+
+// ============= HERO IMAGE SELECTION =============
+let heroImage = null;
+let heroImageUrl = null;
+let heroImageSrcSet = null;
+let heroImageAlt = 'Resource hero image';
+let placeholderUrl = null;
+
+if (resourceData.fields.heroImagePool && resourceData.fields.heroImagePool.length > 0) {
+  heroImage = getRotatingImage(
+    resourceData.fields.heroImagePool, 
+    resourceSlug, 
+    'daily'
+  );
+  
+  if (heroImage) {
+    heroImageUrl = getOptimizedImageUrl(heroImage, { 
+      width: 1920, 
+      quality: 85,
+      format: 'webp'
+    });
+    
+    heroImageSrcSet = generateSrcSet(heroImage, [640, 768, 1024, 1366, 1920, 2560]);
+    placeholderUrl = getPlaceholderImageUrl(heroImage);
+    heroImageAlt = heroImage.fields.description || heroImage.fields.title || heroImageAlt;
+  }
+}
+
+if (!heroImageUrl) {
+  heroImageUrl = '/img/hn-1536x796.jpg.webp';
+}
+
+// Group consecutive staff members for grid display
+const processedContent = [];
+let staffGroup = [];
+
+contentItems.forEach((item, i) => {
+  const isStaff = item?.sys?.contentType?.sys?.id === 'staffMember';
+  const nextIsStaff = contentItems[i + 1]?.sys?.contentType?.sys?.id === 'staffMember';
+  
+  if (isStaff) {
+    staffGroup.push(item);
+    // If next item is not staff, flush the group
+    if (!nextIsStaff) {
+      processedContent.push({
+        type: 'staffGroup',
+        items: staffGroup
+      });
+      staffGroup = [];
+    }
+  } else {
+    processedContent.push({
+      type: 'single',
+      item: item
+    });
+  }
+});
+---
+
+<Layout title={pageTitle} heroImageUrl={heroImageUrl}>
+  <section class="hero-section" data-hero-section>
+    <div class="hero-placeholder"></div>
+    
+    {placeholderUrl && (
+      <div 
+        class="hero-blur"
+        style={`background-image: url('${placeholderUrl}')`}
+      ></div>
+    )}
+    
+    {heroImage ? (
+      <picture class="hero-picture">
+        <source
+          type="image/webp"
+          srcset={heroImageSrcSet}
+          sizes="100vw"
+        />
+        <source
+          type="image/jpeg"
+          srcset={generateSrcSet(heroImage, [640, 768, 1024, 1366, 1920, 2560])}
+          sizes="100vw"
+        />
+        <img 
+          class="hero-image"
+          src={heroImageUrl}
+          alt={heroImageAlt}
+          loading="eager"
+          fetchpriority="high"
+          width="1920"
+          height="1080"
+          onload="this.classList.add('loaded')"
+        />
+      </picture>
+    ) : (
+      <img 
+        class="hero-image"
+        src={heroImageUrl} 
+        alt={heroImageAlt}
+        onload="this.classList.add('loaded')"
+      />
+    )}
+  </section>
+  
+  <main class="container mb-5">
+    <div class="text-center page-header">
+      <h1 class="hero-title hero-title--lg">{pageTitle}</h1>
+      {resourceData.fields.subtitle && (
+        <p class="resource-subtitle">{resourceData.fields.subtitle}</p>
+      )}
+    </div>
+    
+    {/* Render all content items */}
+    {processedContent.map((content, index) => {
+      if (content.type === 'staffGroup') {
+        // Render staff members as a grid
+        return (
+          <div class="staff-section">
+            <div class="row">
+              {content.items.map(staff => (
+                <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+                  <ContentRenderer 
+                    item={staff}
+                    includes={resourceResponse?.includes}
+                    index={index}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      } else {
+        // Render single content item
+        const item = content.item;
+        const contentType = item?.sys?.contentType?.sys?.id;
+        
+        // Pass event data if it's an event list
+        const eventData = contentType === 'eventList' ? eventListsData[item.sys.id] : null;
+        
+        return (
+          <ContentRenderer 
+            item={item}
+            includes={resourceResponse?.includes}
+            index={index}
+            eventData={eventData}
+          />
+        );
+      }
+    })}
+  </main>
+</Layout>
+
+<style>
+  .hero-section {
+    height: 55vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    background: #000;
+  }
+
+  .hero-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    z-index: 1;
+  }
+
+  .hero-blur {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(20px);
+    transform: scale(1.1);
+    opacity: 0.7;
+    z-index: 2;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .hero-section:has(.hero-image.loaded) .hero-blur {
+    opacity: 0;
+  }
+
+  @supports not selector(:has(*)) {
+    .hero-blur {
+      animation: fadeOut 0.6s ease-out 0.5s forwards;
+    }
+    
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+      }
+    }
+  }
+
+  .hero-image.loaded {
+    opacity: 1;
+  }
+
+  main.container {
+    position: relative;
+    z-index: 2;
+    margin-top: -50vh !important;
+  }
+
+  .page-header {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 20px;
+    margin-bottom: 3rem;
+  }
+
+  .resource-subtitle {
+    color: var(--text-color);
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    font-size: 1.3rem;
+    margin-top: 0.5rem;
+  }
+
+  h1 {
+    color: var(--text-color);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Staff grid wrapper */
+  .staff-section {
+    margin-bottom: 3rem;
+  }
+</style>
+
+<script>
+  import { animate, inView } from "motion";
+
+  function setupPageAnimations() {
+    const animationConfig = {
+      initialY: '30px',
+      duration: 0.5,
+      ease: 'ease-out',
+      margin: '50px 0px',
+      staggerAmount: 0.07,
+      visibilityThreshold: 0.1
+    };
+
+    function applyScrollAnimation(element, index, calculateDelay) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          
+          if (entry.isIntersecting && entry.intersectionRatio >= animationConfig.visibilityThreshold) {
+            observer.disconnect();
+          } else {
+            element.style.opacity = '0';
+            element.style.transform = `translateY(${animationConfig.initialY})`;
+            
+            const delay = calculateDelay(index, animationConfig.staggerAmount);
+            
+            observer.disconnect();
+            
+            inView(element, () => {
+              animate(element, 
+                { opacity: 1, transform: 'translateY(0px)' }, 
+                { duration: animationConfig.duration, ease: animationConfig.ease, delay: delay }
+              );
+            }, { margin: animationConfig.margin });
+          }
+        },
+        { threshold: animationConfig.visibilityThreshold }
+      );
+      
+      observer.observe(element);
+    }
+
+    requestAnimationFrame(() => {
+      // Animate content items
+      document.querySelectorAll('.content-item').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => index * stagger * 0.5);
+      });
+
+      // Animate cards
+      document.querySelectorAll('.portal-card').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => index * stagger);
+      });
+
+      // Animate staff members
+      document.querySelectorAll('.staff-member').forEach((el, i) => {
+        applyScrollAnimation(el, i, (index, stagger) => (index % 4) * stagger);
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    setupPageAnimations();
+  });
+</script>
