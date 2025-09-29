@@ -1,0 +1,463 @@
+---
+// components/ContentRenderer.astro
+import StaticPortalCards from './StaticPortalCards.astro';
+import EventCard from './EventCard.astro';
+import { 
+  findIncludedEntry, 
+  findIncludedAsset
+} from '../lib/contentful';
+import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
+
+export interface Props {
+  item: any;
+  includes: any;
+  index: number;
+  eventData?: any; // Pre-fetched events for event lists
+}
+
+const { item, includes, index, eventData } = Astro.props;
+
+// Determine content type
+const contentType = item?.sys?.contentType?.sys?.id || 'unknown';
+
+console.log(`Content item ${index} - Type: ${contentType}`, item.fields);
+---
+
+<div class={`content-item content-type-${contentType}`} data-content-index={index}>
+  
+  {/* Button Group */}
+  {contentType === 'buttonGroup' && (
+    <div class="button-group-section">
+      {(() => {
+        const columns = item.fields.columnsPerRow || 3;
+        const style = item.fields.buttonStyle || 'Yellow Portal Cards';
+        const buttons = item.fields.buttons || [];
+        
+        const styleClass = {
+          'Yellow Portal Cards': '',
+          'Green Action Buttons': 'portal-card-green',
+          'Red Accent Buttons': 'portal-card-red'
+        }[style] || '';
+        
+        const getColClass = () => {
+          switch(columns) {
+            case 2: return 'col-lg-6';
+            case 4: return 'col-lg-3';
+            default: return 'col-lg-4';
+          }
+        };
+        
+        const colClass = getColClass();
+        
+        return (
+          <>
+            {item.fields.groupName && (
+              <h2 class="button-group-title">{item.fields.groupName}</h2>
+            )}
+            
+            <div class="row g-4 justify-content-center mb-4">
+              {buttons.map(buttonRef => {
+                const button = findIncludedEntry(includes, buttonRef.sys.id) || buttonRef;
+                if (!button?.fields) return null;
+                
+                return (
+                  <div class={`${colClass} col-md-6`}>
+                    <a href={button.fields.link} target="_blank" class={`portal-card ${styleClass}`}>
+                      <div class="portal-card-icon">
+                        <i data-lucide={button.fields.icon || 'square'}></i>
+                      </div>
+                      <h3>{button.fields.buttonText}</h3>
+                      {button.fields.buttonSubtitle && (
+                        <p class="portal-card-subtitle">{button.fields.buttonSubtitle}</p>
+                      )}
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        );
+      })()}
+    </div>
+  )}
+
+  {/* Info Block */}
+  {contentType === 'infoBlock' && (
+    <div class="info-block-section">
+      {(() => {
+        const imageAsset = item.fields.image ? 
+          findIncludedAsset(includes, item.fields.image.sys.id) : null;
+        const imageUrl = imageAsset ? 
+          `https:${imageAsset.fields.file.url}?w=1200&q=80` : null;
+        
+        const contentHtml = item.fields.content 
+          ? documentToHtmlString(item.fields.content) : '';
+        
+        const hasImage = !!imageUrl;
+        // Alternate image position for even indexed items
+        const imageOnLeft = hasImage && index % 2 === 1;
+        
+        // Get background color
+        const bgColor = item.fields.backgroundColor || 'None';
+        const bgClass = bgColor !== 'None' ? `bg-${bgColor.toLowerCase()}` : '';
+        
+        return (
+          <div class={`content-block ${imageOnLeft ? 'image-left' : ''} ${!hasImage ? 'no-image' : ''} ${bgClass}`}>
+            {hasImage ? (
+              <div class="row align-items-center justify-content-between">
+                <div class="col-md-7 content-block-text">
+                  <h3>{item.fields.heading}</h3>
+                  <div set:html={contentHtml}></div>
+                </div>
+                <div class="col-md-5 content-block-image">
+                  <img src={imageUrl} class="img-fluid rounded" alt={item.fields.heading}>
+                  {item.fields.buttonText && item.fields.buttonLink && (
+                    <a href={item.fields.buttonLink} target="_blank" class="overlap-btn">
+                      {item.fields.buttonText}
+                    </a>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div class="row">
+                <div class="col-md-12 content-block-text">
+                  <h3>{item.fields.heading}</h3>
+                  <div set:html={contentHtml}></div>
+                  {item.fields.buttonText && item.fields.buttonLink && (
+                    <div class="button-container">
+                      <a href={item.fields.buttonLink} target="_blank" class="overlap-btn position-relative">
+                        {item.fields.buttonText}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+    </div>
+  )}
+
+  {/* Text Block */}
+  {contentType === 'textBlock' && (
+    <div class="text-content-section">
+      {(() => {
+        const contentHtml = item.fields.content 
+          ? documentToHtmlString(item.fields.content) : '';
+        const textAlign = item.fields.textAlign || 'left';
+        const bgColor = item.fields.backgroundColor || 'None';
+        
+        const bgClass = bgColor !== 'None' ? `bg-${bgColor.toLowerCase()}` : '';
+        
+        return (
+          <div class={`text-content text-${textAlign} ${bgClass}`}>
+            {item.fields.heading && (
+              <h3 class="text-section-heading">{item.fields.heading}</h3>
+            )}
+            <div set:html={contentHtml}></div>
+          </div>
+        );
+      })()}
+    </div>
+  )}
+
+  {/* Staff Member - Handle multiple staff in a grid */}
+  {contentType === 'staffMember' && (
+    <div class="staff-section">
+      <div class="row">
+        <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+          <div class="staff-member">
+            {(() => {
+              const photoAsset = item.fields.photo ? 
+                findIncludedAsset(includes, item.fields.photo.sys.id) : null;
+              const photoUrl = photoAsset ? 
+                `https:${photoAsset.fields.file.url}?w=1000&h=1000&fit=crop&f=face&q=50` : 
+                `https://placehold.co/300x300/DE0029/FFFFFF?text=${encodeURIComponent(item.fields.fullName.charAt(0))}`;
+              
+              return (
+                <>
+                  <div class="staff-photo">
+                    <img src={photoUrl} alt={item.fields.fullName} class="img-fluid">
+                  </div>
+                  <div class="staff-info">
+                    <h4 class="staff-name">{item.fields.fullName}</h4>
+                    <p class="staff-title">{item.fields.jobTitle}</p>
+                    {item.fields.staffEmail && (
+                      <a href={`mailto:${item.fields.staffEmail}`} class="staff-email">
+                        {item.fields.staffEmail}
+                      </a>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* Event List */}
+  {contentType === 'eventList' && (
+    <div class="event-list-section">
+      {(() => {
+        // Use pre-fetched events if available
+        const events = eventData || [];
+        
+        return (
+          <>
+            {item.fields.listName && (
+              <h2 class="section-title">{item.fields.listName}</h2>
+            )}
+            
+            <div class="row">
+              {events.slice(0, item.fields.maxEvents || 6).map(event => (
+                <div class="col-md-4 mb-4">
+                  <EventCard event={event} variant="card" />
+                </div>
+              ))}
+            </div>
+            
+            {events.length === 0 && (
+              <p class="no-events-message">No upcoming events at this time.</p>
+            )}
+          </>
+        );
+      })()}
+    </div>
+  )}
+
+  {/* Unknown content type fallback */}
+  {contentType === 'unknown' && (
+    <div class="unknown-content">
+      <p>Unknown content type: {contentType}</p>
+    </div>
+  )}
+</div>
+
+<style>
+  .content-item {
+    margin-bottom: 3rem;
+  }
+
+  /* Button group styling */
+  .button-group-title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    color: #000;
+  }
+
+  .portal-card-red {
+    background-color: var(--accent-red) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Info blocks */
+  .content-block {
+    margin-bottom: 2rem;
+  }
+
+  .content-block-text h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: "Futura pt", sans-serif;
+    color: #000;
+    margin-bottom: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .content-block.image-left .content-block-text {
+      order: 2;
+    }
+    .content-block.image-left .content-block-image {
+      order: 1;
+    }
+  }
+
+  .content-block-image {
+    position: relative;
+  }
+
+  .overlap-btn {
+    position: absolute;
+    bottom: -10px;
+    right: 20px;
+    background-color: var(--accent-green);
+    color: var(--text-color);
+    padding: 10px 25px;
+    border-radius: 2px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .overlap-btn:hover {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    transform: scale(1.05);
+  }
+
+  .content-block.no-image .button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+
+  .content-block.no-image .overlap-btn.position-relative {
+    position: relative;
+    bottom: auto;
+    right: auto;
+  }
+
+  /* Staff section */
+  .staff-member {
+    text-align: center;
+    padding: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .staff-member:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+
+  .staff-photo {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1rem auto;
+    overflow: hidden;
+    background-color: var(--accent-red);
+  }
+
+  .staff-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .staff-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: #000;
+    text-transform: uppercase;
+  }
+
+  .staff-title {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+
+  .staff-email {
+    font-size: 0.9rem;
+    color: var(--accent-red);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* Text section */
+  .text-content-section {
+    padding: 2rem 0;
+  }
+
+  .text-section-heading {
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+    color: #000;
+  }
+
+  .text-content.text-center {
+    text-align: center;
+  }
+
+  .text-content.text-right {
+    text-align: right;
+  }
+
+  /* Background colors with proper text contrast */
+  .bg-red {
+    background-color: #DE0029;
+    color: white;
+    padding: 2rem;
+  }
+
+  .bg-yellow {
+    background-color: #F6DD0D;
+    color: #000;
+    padding: 2rem;
+  }
+
+  .bg-green {
+    background-color: #6D9D7E;
+    color: white;
+    padding: 2rem;
+  }
+
+  .bg-white {
+    background-color: #FFFFFF;
+    color: #000;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .bg-black {
+    background-color: #000000;
+    color: white;
+    padding: 2rem;
+  }
+
+  /* Override heading colors for backgrounds */
+  .bg-red h3,
+  .bg-green h3,
+  .bg-black h3 {
+    color: white;
+  }
+
+  .bg-yellow h3,
+  .bg-white h3 {
+    color: #000;
+  }
+
+  /* Info blocks with backgrounds */
+  .content-block.bg-red,
+  .content-block.bg-yellow,
+  .content-block.bg-green,
+  .content-block.bg-white,
+  .content-block.bg-black {
+    padding: 2rem;
+  }
+
+  .content-block.bg-red .content-block-text h3,
+  .content-block.bg-green .content-block-text h3,
+  .content-block.bg-black .content-block-text h3 {
+    color: white;
+  }
+
+  .content-block.bg-yellow .content-block-text h3,
+  .content-block.bg-white .content-block-text h3 {
+    color: #000;
+  }
+
+  /* Events */
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+    margin-bottom: 1.5rem;
+  }
+
+  .no-events-message {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 3rem 0;
+  }
+</style>
