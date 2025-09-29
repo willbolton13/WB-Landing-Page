@@ -1,0 +1,837 @@
+---
+// components/EventCard.astro
+import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
+
+export interface Props {
+  event: any;
+  variant?: 'card' | 'list' | 'featured' | 'past';
+  showDescription?: boolean;
+}
+
+const { event, variant = 'card', showDescription = false } = Astro.props;
+
+// Format date and time
+const eventDate = new Date(event.fields.eventDate);
+const eventEndDate = event.fields.eventEndDate ? new Date(event.fields.eventEndDate) : null;
+
+const formatDate = (date: Date) => {
+  const options: Intl.DateTimeFormatOptions = { 
+    month: 'short', 
+    day: 'numeric' 
+  };
+  return date.toLocaleDateString('en-GB', options).toUpperCase();
+};
+
+const formatTime = (date: Date, end?: Date | null) => {
+  const startTime = date.toLocaleTimeString('en-GB', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: false 
+  });
+  
+  if (end) {
+    const endTime = end.toLocaleTimeString('en-GB', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    });
+    return `${startTime} - ${endTime}`;
+  }
+  
+  return startTime;
+};
+
+const dateDisplay = formatDate(eventDate);
+const [month, day] = dateDisplay.split(' ');
+const dayOfWeek = eventDate.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
+const timeDisplay = formatTime(eventDate, eventEndDate);
+
+// Category styling
+const categoryColors: Record<string, string> = {
+  'club-night': 'category-club',
+  'workshop': 'category-workshop',
+  'performance': 'category-performance',
+  'exhibition': 'category-exhibition',
+  'meeting': 'category-meeting',
+  'test-category': 'category-default'
+};
+
+const categoryClass = categoryColors[event.fields.eventCategory] || 'category-default';
+
+// Image URL
+const imageUrl = event.fields.eventImage?.fields?.file?.url 
+  ? `https:${event.fields.eventImage.fields.file.url}?w=800&h=600&fit=fill&f=faces`
+  : '/img/event-placeholder.jpg';
+
+// Process full description if it exists
+let fullDescriptionHtml = '';
+if (event.fields.fullDescription) {
+  if (typeof event.fields.fullDescription === 'string') {
+    fullDescriptionHtml = event.fields.fullDescription;
+  } else {
+    fullDescriptionHtml = documentToHtmlString(event.fields.fullDescription);
+  }
+}
+
+// Process geolocation data
+const hasGeolocation = event.fields.eventLocationGeo?.lat && event.fields.eventLocationGeo?.lon;
+const mapUrl = hasGeolocation 
+  ? `https://www.google.com/maps?q=${event.fields.eventLocationGeo.lat},${event.fields.eventLocationGeo.lon}`
+  : null;
+---
+
+{variant === 'card' && (
+  <div class="event-card-container">
+    <div class={`event-card ${categoryClass}`} data-event-id={event.sys.id}>
+      {/* Front of card */}
+      <div class="card-face card-front">
+        <div class="event-date-badge">
+          <div class="date-month">{month}</div>
+          <div class="date-day">{day}</div>
+          <div class="date-weekday">{dayOfWeek}</div>
+        </div>
+        
+        <div class="event-image">
+          <img src={imageUrl} alt={event.fields.eventTitle} />
+          {event.fields.eventCategory && (
+            <span class={`event-category-badge ${categoryClass}`}>
+              {event.fields.eventCategory.replace('-', ' ')}
+            </span>
+          )}
+        </div>
+        
+        <div class="event-content">
+          <h3 class="event-title">{event.fields.eventTitle}</h3>
+          
+          <div class="event-meta">
+            <div class="event-time">
+              <i data-lucide="clock"></i>
+              <span>{timeDisplay}</span>
+            </div>
+            {event.fields.eventLocation && (
+              <div class="event-location">
+                <i data-lucide="map-pin"></i>
+                {mapUrl ? (
+                  <a href={mapUrl} target="_blank" class="location-link" title="View on map">
+                    {event.fields.eventLocation}
+                    <i data-lucide="external-link"></i>
+                  </a>
+                ) : (
+                  <span>{event.fields.eventLocation}</span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {showDescription && event.fields.shortDescription && (
+            <p class="event-description">{event.fields.shortDescription}</p>
+          )}
+          
+          <div class="event-actions">
+            {event.fields.ticketLink && (
+              <a href={event.fields.ticketLink} target="_blank" class="event-ticket-btn">
+                GET TICKETS
+              </a>
+            )}
+            
+            {fullDescriptionHtml && (
+              <button 
+                class="event-flip-btn"
+                onclick={`window.flipEventCard('${event.sys.id}')`}
+                type="button"
+                aria-label="More information"
+              >
+                MORE INFO
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Back of card */}
+      {fullDescriptionHtml && (
+        <div class="card-face card-back">
+          <button class="card-back-btn" onclick={`window.flipEventCard('${event.sys.id}')`}>
+            <i data-lucide="arrow-left"></i> BACK
+          </button>
+          
+          <div class="card-back-content">
+            <h3>{event.fields.eventTitle}</h3>
+            
+            <div class="card-back-description" set:html={fullDescriptionHtml}></div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+{variant === 'past' && (
+  <div class={`event-past-item ${categoryClass}`} data-event-id={event.sys.id}>
+    <div class="event-past-date">
+      <div class="date-display">
+        <span class="date-number">{day}</span>
+        <span class="date-month">{month}</span>
+      </div>
+    </div>
+    
+    <div class="event-past-content">
+      <h4 class="event-title">{event.fields.eventTitle}</h4>
+      <div class="event-meta">
+        <span class="event-time">{timeDisplay}</span>
+        {event.fields.eventLocation && (
+          <span class="event-location">• {event.fields.eventLocation}</span>
+        )}
+        {event.fields.eventCategory && (
+          <span class="event-category">• {event.fields.eventCategory.replace('-', ' ')}</span>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+{variant === 'featured' && (
+  <div class="event-featured-container">
+    <div class={`event-featured ${categoryClass}`} data-event-id={event.sys.id}>
+      <div class="row align-items-center">
+        {/* Image section with flip capability */}
+        <div class="col-md-6">
+          <div class="featured-flip-container">
+            {/* Front - Image */}
+            <div class="featured-face featured-front">
+              <div class="event-featured-image">
+                <img src={imageUrl} alt={event.fields.eventTitle} class="img-fluid" />
+                <div class="event-date-overlay">
+                  <div class="date-large">{day}</div>
+                  <div class="month-large">{month}</div>
+                </div>
+                {fullDescriptionHtml && (
+                  <button 
+                    class="featured-flip-btn"
+                    onclick={`window.flipFeaturedCard('${event.sys.id}')`}
+                    type="button"
+                  >
+                    MORE INFO
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* Back - Full description */}
+            {fullDescriptionHtml && (
+              <div class="featured-face featured-back">
+                <button class="featured-back-btn" onclick={`window.flipFeaturedCard('${event.sys.id}')`}>
+                  <i data-lucide="arrow-left"></i> BACK
+                </button>
+                <div class="featured-back-content">
+                  <div class="featured-back-description" set:html={fullDescriptionHtml}></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Content section */}
+        <div class="col-md-6">
+          <div class="event-featured-content">
+            {event.fields.eventCategory && (
+              <span class={`event-category-label ${categoryClass}`}>
+                {event.fields.eventCategory.replace('-', ' ')}
+              </span>
+            )}
+            <h2 class="event-featured-title">{event.fields.eventTitle}</h2>
+            
+            <div class="event-featured-meta">
+              <div class="meta-item">
+                <i data-lucide="calendar"></i>
+                {dayOfWeek}, {dateDisplay}
+              </div>
+              <div class="meta-item">
+                <i data-lucide="clock"></i>
+                {timeDisplay}
+              </div>
+              {event.fields.eventLocation && (
+                <div class="meta-item">
+                  <i data-lucide="map-pin"></i>
+                  {mapUrl ? (
+                    <a href={mapUrl} target="_blank" class="location-link">
+                      {event.fields.eventLocation}
+                      <i data-lucide="external-link"></i>
+                    </a>
+                  ) : (
+                    <span>{event.fields.eventLocation}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {event.fields.shortDescription && (
+              <p class="event-featured-description">{event.fields.shortDescription}</p>
+            )}
+            
+            {event.fields.ticketLink && (
+              <a href={event.fields.ticketLink} target="_blank" class="btn btn-primary btn-lg">
+                GET TICKETS
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+<style>
+  /* Card variant - Flip card implementation */
+  .event-card-container {
+    perspective: 1000px;
+    height: 100%;
+  }
+
+  .event-card {
+    position: relative;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    height: 400px; /* Fixed height instead of min-height */
+  }
+
+  .event-card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-front {
+    z-index: 2;
+    transform: rotateY(0deg);
+  }
+
+  .card-back {
+    transform: rotateY(180deg);
+    background: var(--brand-black);
+    color: var(--brand-white);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden; /* Prevent overflow on the card itself */
+  }
+
+  /* Date badge */
+  .event-date-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--accent-red);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    z-index: 2;
+    min-width: 60px;
+  }
+
+  .date-month {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .date-day {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .date-weekday {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Image section */
+  .event-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+  }
+
+  .event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .event-category-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    padding: 5px 12px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  /* Content section */
+  .event-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .event-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+  }
+
+  .event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .event-meta > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .event-meta i {
+    width: 16px;
+    height: 16px;
+  }
+
+  .location-link {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s ease;
+  }
+
+  .location-link:hover {
+    color: var(--accent-red);
+  }
+
+  .location-link i[data-lucide="external-link"] {
+    width: 12px;
+    height: 12px;
+    opacity: 0.6;
+  }
+
+  .event-description {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 15px 0;
+    flex: 1;
+  }
+
+  /* Action buttons */
+  .event-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  .event-ticket-btn {
+    display: inline-block;
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    padding: 10px 25px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .event-ticket-btn:hover {
+    background: var(--button-text-color);
+    color: var(--accent-yellow);
+    transform: scale(1.05);
+  }
+
+  .event-flip-btn {
+    background: var(--accent-red);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .event-flip-btn:hover {
+    background: #c0392b;
+    transform: scale(1.05);
+  }
+
+  /* Card back styling */
+  .card-back-btn {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 20px 20px 0 20px; /* Adjusted margin */
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    align-self: flex-start;
+    flex-shrink: 0; /* Prevent button from shrinking */
+  }
+
+  .card-back-btn:hover {
+    background: var(--accent-green);
+  }
+
+  .card-back-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent content container from overflowing */
+    min-height: 0; /* Important for flexbox overflow */
+  }
+
+  .card-back-content h3 {
+    color: var(--accent-yellow);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    flex-shrink: 0; /* Keep title fixed */
+  }
+
+  .card-back-description {
+    color: #ddd;
+    line-height: 1.6;
+    flex: 1;
+    overflow-y: auto; /* Enable scrolling here */
+    padding-right: 10px; /* Add some padding for scrollbar */
+  }
+
+  /* Custom scrollbar for better visibility */
+  .card-back-description::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .card-back-description::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .card-back-description::-webkit-scrollbar-thumb {
+    background: var(--accent-yellow);
+    border-radius: 4px;
+  }
+
+  .card-back-description::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-green);
+  }
+
+  .card-back-description p {
+    margin-bottom: 1rem;
+  }
+
+  .card-back-description ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  /* Past events variant - Simple list, no interaction */
+  .event-past-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+  }
+
+  .event-past-item:hover {
+    background: #f9f9f9;
+    opacity: 0.85;
+  }
+
+  .event-past-date {
+    margin-right: 20px;
+  }
+
+  .date-display {
+    text-align: center;
+    background: #999;
+    color: white;
+    padding: 8px 12px;
+  }
+
+  .date-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .event-past-content {
+    flex: 1;
+  }
+
+  .event-past-content .event-title {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+    color: #666;
+  }
+
+  .event-past-content .event-meta {
+    color: #999;
+    font-size: 0.85rem;
+  }
+
+  .event-category {
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Featured variant styling */
+  .event-featured-container {
+    margin: 2rem 0;
+  }
+
+  .featured-flip-container {
+    position: relative;
+    height: 400px;
+    perspective: 1000px;
+  }
+
+  .featured-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    transition: transform 0.6s;
+  }
+
+  .featured-front {
+    z-index: 2;
+    transform: rotateY(0deg);
+  }
+
+  .featured-flip-container.flipped .featured-front {
+    transform: rotateY(-180deg);
+  }
+
+  .featured-back {
+    transform: rotateY(180deg);
+    background: var(--brand-black);
+    color: var(--brand-white);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .featured-flip-container.flipped .featured-back {
+    transform: rotateY(0deg);
+  }
+
+  .event-featured-image {
+    position: relative;
+    height: 100%;
+  }
+
+  .event-featured-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .event-date-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: var(--accent-red);
+    color: white;
+    padding: 15px;
+    text-align: center;
+  }
+
+  .date-large {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .month-large {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .featured-flip-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+
+  .featured-flip-btn:hover {
+    background: var(--accent-green);
+    color: white;
+  }
+
+  .featured-back-btn {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    align-self: flex-start;
+  }
+
+  .featured-back-btn:hover {
+    background: var(--accent-green);
+  }
+
+  .featured-back-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .featured-back-description {
+    color: #ddd;
+    line-height: 1.6;
+    overflow-y: auto;
+    max-height: 100%;
+  }
+
+  .featured-back-description p {
+    margin-bottom: 1rem;
+  }
+
+  .event-category-label {
+    display: inline-block;
+    padding: 5px 15px;
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+  }
+
+  .event-featured-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .event-featured-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #666;
+  }
+
+  .event-featured-description {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 25px;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .event-card {
+      height: 450px; /* Slightly taller on mobile for better readability */
+    }
+    
+    .featured-flip-container {
+      height: 300px;
+      margin-bottom: 20px;
+    }
+    
+    .card-back-content {
+      padding: 15px; /* Reduced padding on mobile */
+    }
+    
+    .card-back-description {
+      font-size: 0.95rem; /* Slightly smaller text on mobile */
+    }
+  }
+</style>
+
+<script>
+  declare global {
+    interface Window {
+      flipEventCard: (eventId: string) => void;
+      flipFeaturedCard: (eventId: string) => void;
+    }
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    // Card flip function
+    window.flipEventCard = function(eventId: string) {
+      const card = document.querySelector(`[data-event-id="${eventId}"]`);
+      if (card) {
+        card.classList.toggle('flipped');
+      }
+    };
+    
+    // Featured card flip function
+    window.flipFeaturedCard = function(eventId: string) {
+      const container = document.querySelector(`[data-event-id="${eventId}"] .featured-flip-container`);
+      if (container) {
+        container.classList.toggle('flipped');
+      }
+    };
+    
+    // Recreate lucide icons after flips
+    const observer = new MutationObserver(() => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+    
+    // Observe all flip containers
+    document.querySelectorAll('.event-card, .featured-flip-container').forEach(el => {
+      observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+  });
+</script>
