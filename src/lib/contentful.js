@@ -318,3 +318,167 @@ export async function getAllHeroImages() {
   
   return allImages;
 }
+
+// ============= RESOURCE FUNCTIONS =============
+
+/**
+ * Get all resources
+ */
+export async function getResources() {
+  const entries = await contentfulClient.getEntries({
+    content_type: 'resource',
+    order: 'fields.displayOrder',
+    include: 1,
+  });
+  return entries.items;
+}
+
+/**
+ * Get a specific resource by slug with full content
+ */
+export async function getResourceWithFullContent(resourceSlug) {
+  const entries = await contentfulClient.getEntries({
+    content_type: 'resource',
+    'fields.resourceSlug': resourceSlug,
+    include: 10,
+  });
+  
+  return entries.items.length > 0 ? entries : null;
+}
+
+// ============= EVENT FUNCTIONS =============
+
+/**
+ * Get upcoming events with filters
+ */
+export async function getUpcomingEvents(options = {}) {
+  const now = new Date().toISOString();
+  
+  const query = {
+    content_type: 'event',
+    'fields.eventDate[gte]': now,
+    order: 'fields.eventDate',
+    limit: options.limit || 10,
+    include: 2,
+  };
+  
+  if (options.category) {
+    query['fields.eventCategory'] = options.category;
+  }
+  
+  if (options.featuredOnly) {
+    query['fields.featured'] = true;
+  }
+  
+  const entries = await contentfulClient.getEntries(query);
+  return entries.items;
+}
+
+/**
+ * Get past events
+ */
+export async function getPastEvents(options = {}) {
+  const now = new Date().toISOString();
+  
+  const query = {
+    content_type: 'event',
+    'fields.eventDate[lt]': now,
+    order: '-fields.eventDate',
+    limit: options.limit || 20,
+    include: 2,
+  };
+  
+  if (options.category) {
+    query['fields.eventCategory'] = options.category;
+  }
+  
+  const entries = await contentfulClient.getEntries(query);
+  return entries.items;
+}
+
+/**
+ * Get featured events
+ */
+export async function getFeaturedEvents(limit = 3) {
+  const now = new Date().toISOString();
+  
+  const entries = await contentfulClient.getEntries({
+    content_type: 'event',
+    'fields.featured': true,
+    'fields.eventDate[gte]': now,
+    order: 'fields.eventDate',
+    limit: limit,
+    include: 2,
+  });
+  
+  return entries.items;
+}
+
+/**
+ * Get event categories
+ */
+export async function getEventCategories() {
+  const entries = await contentfulClient.getEntries({
+    content_type: 'event',
+    select: 'fields.eventCategory',
+    limit: 1000,
+  });
+  
+  const categories = new Set();
+  entries.items.forEach(event => {
+    if (event.fields.eventCategory) {
+      categories.add(event.fields.eventCategory);
+    }
+  });
+  
+  return Array.from(categories).sort();
+}
+
+/**
+ * Process an Event List content item
+ */
+export async function processEventList(eventList) {
+  const filters = {
+    limit: eventList.fields.maxEvents || 6
+  };
+  
+  // Add category filter if specified
+  if (eventList.fields.eventCategory && eventList.fields.eventCategory !== 'All Events') {
+    filters.category = eventList.fields.eventCategory.toLowerCase().replace(' ', '-');
+  }
+  
+  // Add featured filter if checked
+  if (eventList.fields.showOnlyFeatured) {
+    filters.featuredOnly = true;
+  }
+  
+  // Get events using existing function
+  const events = await getUpcomingEvents(filters);
+  
+  return events;
+}
+
+// ============= NAVIGATION HELPER =============
+
+/**
+ * Get all navigation content (campuses and resources)
+ */
+export async function getNavigationContent() {
+  const [campusesResponse, resourcesResponse] = await Promise.all([
+    contentfulClient.getEntries({
+      content_type: 'campus',
+      include: 2,
+      order: 'fields.displayOrder',
+    }),
+    contentfulClient.getEntries({
+      content_type: 'resource',
+      order: 'fields.displayOrder',
+      include: 1,
+    })
+  ]);
+  
+  return {
+    campuses: campusesResponse.items,
+    resources: resourcesResponse.items
+  };
+}
