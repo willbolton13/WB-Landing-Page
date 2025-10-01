@@ -482,3 +482,92 @@ export async function getNavigationContent() {
     resources: resourcesResponse.items
   };
 }
+
+// ============= MENTOR FUNCTIONS =============
+
+/**
+ * Get all mentors
+ */
+export async function getMentors(options = {}) {
+  const query = {
+    content_type: 'mentor',
+    include: 2,
+    limit: options.limit || 100,
+  };
+  
+  // Filter by campus if specified
+  if (options.campus && options.campus !== 'All') {
+    query['fields.campus'] = options.campus;
+  }
+  
+  // Filter by categories if specified
+  if (options.categories && options.categories.length > 0) {
+    // This will match mentors that have ANY of the specified categories
+    query['fields.mentorCategories[in]'] = options.categories.join(',');
+  }
+  
+  const entries = await contentfulClient.getEntries(query);
+  
+  // Sort alphabetically by name
+  return entries.items.sort((a, b) => {
+    const nameA = a.fields.mentorName.toLowerCase();
+    const nameB = b.fields.mentorName.toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+}
+
+/**
+ * Get unique mentor categories from all mentors
+ */
+export async function getMentorCategories() {
+  const entries = await contentfulClient.getEntries({
+    content_type: 'mentor',
+    select: 'fields.mentorCategories',
+    limit: 1000,
+  });
+  
+  const categories = new Set();
+  entries.items.forEach(mentor => {
+    if (mentor.fields.mentorCategories) {
+      mentor.fields.mentorCategories.forEach(cat => categories.add(cat));
+    }
+  });
+  
+  return Array.from(categories).sort();
+}
+
+/**
+ * Process a Mentor List content item
+ */
+export async function processMentorList(mentorList) {
+  const filters = {};
+  
+  // Add campus filter if specified
+  if (mentorList.fields.filterCampus) {
+    filters.campus = mentorList.fields.filterCampus;
+  }
+  
+  // Add category filter if specified
+  if (mentorList.fields.filterCategories && mentorList.fields.filterCategories.length > 0) {
+    filters.categories = mentorList.fields.filterCategories;
+  }
+  
+  // Get mentors using the filters
+  const mentors = await getMentors(filters);
+  
+  return mentors;
+}
+
+/**
+ * Get mentor by slug (for potential individual mentor pages)
+ */
+export async function getMentorBySlug(mentorSlug) {
+  const entries = await contentfulClient.getEntries({
+    content_type: 'mentor',
+    'fields.mentorSlug': mentorSlug,
+    include: 2,
+    limit: 1
+  });
+  
+  return entries.items[0] || null;
+}

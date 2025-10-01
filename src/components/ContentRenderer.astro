@@ -2,6 +2,7 @@
 // components/ContentRenderer.astro
 import StaticPortalCards from './StaticPortalCards.astro';
 import EventCard from './EventCard.astro';
+import MentorCard from '../components/MentorCard.astro';
 import { 
   findIncludedEntry, 
   findIncludedAsset
@@ -13,12 +14,16 @@ export interface Props {
   includes: any;
   index: number;
   eventData?: any; // Pre-fetched events for event lists
+  mentorData?: any; // Pre-fetched mentors for mentor lists
 }
 
-const { item, includes, index, eventData } = Astro.props;
+const { item, includes, index, eventData, mentorData } = Astro.props;
 
 // Determine content type
 const contentType = item?.sys?.contentType?.sys?.id || 'unknown';
+
+const mentorCategories = mentorData ? 
+  [...new Set(mentorData.flatMap(m => m.fields.mentorCategories || []))].sort() : [];
 
 console.log(`Content item ${index} - Type: ${contentType}`, item.fields);
 ---
@@ -234,6 +239,50 @@ console.log(`Content item ${index} - Type: ${contentType}`, item.fields);
       <p>Unknown content type: {contentType}</p>
     </div>
   )}
+
+  {/* Mentor List */}
+{contentType === 'mentorList' && (
+  <div class="mentor-list-section">
+    {(() => {
+      // Use pre-fetched mentors if available
+      const mentors = mentorData || [];
+      
+      return (
+        <>
+          {item.fields.listName && (
+            <h2 class="section-title">{item.fields.listName}</h2>
+          )}
+          
+          {/* Category Filter Buttons - Multi-select */}
+          {mentorCategories.length > 0 && mentors.length > 0 && (
+            <div class="mentor-filters">
+              <button class="mentor-filter-btn active" data-mentor-category="all">
+                All Mentors
+              </button>
+              {mentorCategories.map(category => (
+                <button class="mentor-filter-btn" data-mentor-category={category}>
+                  {category}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          <div class="row mentor-grid">
+            {mentors.map(mentor => (
+              <div class="col-lg-4 col-md-6 mb-4">
+                <MentorCard mentor={mentor} variant="card" />
+              </div>
+            ))}
+          </div>
+          
+          {mentors.length === 0 && (
+            <p class="no-mentors-message">No mentors available at this time.</p>
+          )}
+        </>
+      );
+    })()}
+  </div>
+)}
 </div>
 
 <style>
@@ -460,4 +509,121 @@ console.log(`Content item ${index} - Type: ${contentType}`, item.fields);
     font-style: italic;
     padding: 3rem 0;
   }
+
+/* Mentor section */
+  .mentor-list-section {
+    margin-bottom: 3rem;
+  }
+  
+  /* Mentor filter buttons - matching event filter style */
+  .mentor-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 3rem;
+    padding: 1.5rem;
+    background: #000;
+  }
+
+  .mentor-filter-btn {
+    border: solid;
+    padding: 8px 20px;
+    background: white;
+    color: #000000;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mentor-filter-btn:hover {
+    border-color: var(--accent-yellow);
+    transform: translateY(-2px);
+  }
+
+  .mentor-filter-btn.active {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    border-color: var(--accent-yellow);
+  }
+  
+  .no-mentors-message {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 3rem 0;
+  }
+
+  @media (max-width: 768px) {
+    .mentor-filters {
+      padding: 1rem;
+    }
+    
+    .mentor-filter-btn {
+      font-size: 0.8rem;
+      padding: 6px 15px;
+    }
+  }
 </style>
+
+<script>
+  import { animate } from "motion";
+
+  // Setup mentor filter buttons (multi-select toggle)
+  function setupMentorFilters() {
+    const filterButtons = document.querySelectorAll('.mentor-filter-btn');
+    const selectedCategories = new Set<string>();
+    
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const category = button.dataset.mentorCategory;
+        
+        if (category === 'all') {
+          // Clear all selections and select only "All"
+          selectedCategories.clear();
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+        } else {
+          // Toggle individual category
+          const allBtn = document.querySelector('.mentor-filter-btn[data-mentor-category="all"]');
+          
+          if (button.classList.contains('active')) {
+            // Deselecting
+            button.classList.remove('active');
+            selectedCategories.delete(category);
+            
+            // If no categories selected, activate "All"
+            if (selectedCategories.size === 0) {
+              allBtn?.classList.add('active');
+            }
+          } else {
+            // Selecting
+            button.classList.add('active');
+            selectedCategories.add(category);
+            allBtn?.classList.remove('active');
+          }
+        }
+        
+        // Apply filters
+        if (typeof window.filterMentors === 'function') {
+          window.filterMentors(selectedCategories);
+        }
+        
+        // Animate visible cards
+        const visibleCards = document.querySelectorAll('.mentor-card-container:not(.hidden)');
+        visibleCards.forEach((card, i) => {
+          animate(card, 
+            { opacity: [0, 1], scale: [0.95, 1] }, 
+            { duration: 0.3, delay: i * 0.02 }
+          );
+        });
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    setupMentorFilters();
+  });
+</script>

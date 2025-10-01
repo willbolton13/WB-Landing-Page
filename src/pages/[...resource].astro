@@ -2,6 +2,7 @@
 // pages/[...resource].astro
 import Layout from '../layouts/Layout.astro';
 import ContentRenderer from '../components/ContentRenderer.astro';
+import MentorCard from '../components/MentorCard.astro';
 import { 
   getResources,
   getResourceWithFullContent,
@@ -10,7 +11,8 @@ import {
   getRotatingImage,
   getOptimizedImageUrl,
   generateSrcSet,
-  getPlaceholderImageUrl
+  getPlaceholderImageUrl,
+  processMentorList
 } from '../lib/contentful';
 
 // Generate static paths for all resources
@@ -35,6 +37,20 @@ export async function getStaticPaths() {
         }
       }
     }
+    // Pre-fetch mentor data for any mentor lists
+        const mentorListsData = {};
+    if (resourceData.fields.pageContent) {
+      for (const contentRef of resourceData.fields.pageContent) {
+        const content = findIncludedEntry(resourceResponse?.includes, contentRef.sys.id) || contentRef;
+        
+        // Check if it's a mentor list
+        if (content?.sys?.contentType?.sys?.id === 'mentorList') {
+          const mentors = await processMentorList(content);
+          mentorListsData[content.sys.id] = mentors;
+        }
+      }
+    }
+
     
     paths.push({
       params: { 
@@ -44,7 +60,8 @@ export async function getStaticPaths() {
         resourceData,
         resourceResponse,
         resourceSlug: resource.fields.resourceSlug,
-        eventListsData
+        eventListsData,
+        mentorListsData
       }
     });
   }
@@ -53,7 +70,7 @@ export async function getStaticPaths() {
 }
 
 // Get data from props
-const { resourceData, resourceResponse, resourceSlug, eventListsData } = Astro.props;
+const { resourceData, resourceResponse, resourceSlug, eventListsData, mentorListsData } = Astro.props;
 
 if (!resourceData) {
   return Astro.redirect('/');
@@ -212,6 +229,7 @@ contentItems.forEach((item, i) => {
         
         // Pass event data if it's an event list
         const eventData = contentType === 'eventList' ? eventListsData[item.sys.id] : null;
+        const mentorData = contentType === 'mentorList' ? mentorListsData[item.sys.id] : null;
         
         return (
           <ContentRenderer 
@@ -219,6 +237,7 @@ contentItems.forEach((item, i) => {
             includes={resourceResponse?.includes}
             index={index}
             eventData={eventData}
+            mentorData={mentorData}
           />
         );
       }

@@ -1,0 +1,478 @@
+---
+// components/MentorCard.astro
+import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
+
+export interface Props {
+  mentor: any;
+  variant?: 'card' | 'list';
+  showDescription?: boolean;
+}
+
+const { mentor, variant = 'card', showDescription = false } = Astro.props;
+
+let shortBioHtml = '';
+if (mentor.fields.shortBio) {
+  if (typeof mentor.fields.shortBio === 'string') {
+    shortBioHtml = mentor.fields.shortBio;
+  } else {
+    shortBioHtml = documentToHtmlString(mentor.fields.shortBio);
+  }
+}
+
+let fullBioHtml = '';
+if (mentor.fields.fullBio) {
+  if (typeof mentor.fields.fullBio === 'string') {
+    fullBioHtml = mentor.fields.fullBio;
+  } else {
+    fullBioHtml = documentToHtmlString(mentor.fields.fullBio);
+  }
+}
+
+// Image URL with face focus for rectangular aspect
+const imageUrl = mentor.fields.mentorPhoto?.fields?.file?.url 
+  ? `https:${mentor.fields.mentorPhoto.fields.file.url}?w=800&h=900&fit=crop&f=face&q=80`
+                                                            
+  : '/img/mentor-placeholder.jpg';
+
+// Campus badge color
+let campusBadgeClass;
+
+if (mentor.fields.campus === 'Brighton') {
+  campusBadgeClass = 'badge-brighton';
+} else if (mentor.fields.campus === 'Visiting Faculty') {
+  campusBadgeClass = 'badge-visiting';
+} else {
+  campusBadgeClass = 'badge-sheffield';
+}
+
+// Create data attributes for filtering
+const mentorCategories = mentor.fields.mentorCategories || [];
+const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, '-');
+---
+
+{variant === 'card' && (
+  <div class="mentor-card-container">
+    <div class="mentor-card" data-mentor-id={mentor.sys.id} data-mentor-categories={categoriesString}>
+      {/* Front of card */}
+      <div class="card-face card-front">
+        {/* Campus badge - top left */}
+        {mentor.fields.campus && (
+          <div class={`campus-badge ${campusBadgeClass}`}>
+            {mentor.fields.campus}
+          </div>
+        )}
+        
+        <div class="mentor-image">
+          <img src={imageUrl} alt={mentor.fields.mentorName} />
+          {/* Category badges - bottom right */}
+          {mentorCategories.length > 0 && (
+            <div class="category-badges">
+              {mentorCategories.slice(0, 2).map(category => (
+                <span class="mentor-category-badge">
+                  {category}
+                </span>
+              ))}
+              {mentorCategories.length > 2 && (
+                <span class="mentor-category-badge">+{mentorCategories.length - 2}</span>
+              )}
+            </div>
+          )}
+        </div>
+        
+        <div class="mentor-content">
+          <h3 class="mentor-name">{mentor.fields.mentorName}</h3>
+          
+          {shortBioHtml && (
+            <div class="card-front-bio" set:html={shortBioHtml}></div>
+          )}
+          
+          <div class="mentor-actions">
+            {mentor.fields.bookingLink && (
+              <a href={mentor.fields.bookingLink} class="mentor-book-btn">
+                BOOK MENTOR
+              </a>
+            )}
+            
+            {fullBioHtml && (
+              <button 
+                class="mentor-flip-btn"
+                onclick={`window.flipMentorCard('${mentor.sys.id}')`}
+                type="button"
+                aria-label="More information"
+              >
+                MORE INFO
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Back of card */}
+      {fullBioHtml && (
+        <div class="card-face card-back">
+          <button class="card-back-btn" onclick={`window.flipMentorCard('${mentor.sys.id}')`}>
+            <i data-lucide="arrow-left"></i> BACK
+          </button>
+          
+          <div class="card-back-content">
+            <h3>{mentor.fields.mentorName}</h3>
+            
+            {mentorCategories.length > 0 && (
+              <div class="mentor-specialties">
+                <strong>Specialties:</strong> {mentorCategories.join(', ')}
+              </div>
+            )}
+            
+            <div class="card-back-bio" set:html={fullBioHtml}></div>
+            
+            {mentor.fields.bookingLink && (
+              <a href={mentor.fields.bookingLink} class="mentor-book-btn-back">
+                BOOK THIS MENTOR
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+<style>
+  /* Card container and base */
+  .mentor-card-container {
+    perspective: 1000px;
+    height: 100%;
+  }
+
+  .mentor-card {
+    position: relative;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    min-height: 520px;
+  }
+
+  .mentor-card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-front {
+    z-index: 2;
+    transform: rotateY(0deg);
+  }
+
+  .card-back {
+    transform: rotateY(180deg);
+    background: var(--brand-black);
+    color: var(--brand-white);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Campus badge */
+  .campus-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 5px 12px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    z-index: 2;
+  }
+
+  .badge-brighton {
+    background: var(--accent-green);
+  }
+
+  .badge-sheffield {
+    background: var(--accent-red);
+  }
+  
+  .badge-visiting {
+    background: var(--accent-yellow);
+  }
+
+  /* Image section */
+  .mentor-image {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+  }
+
+  .mentor-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* Category badges */
+  .category-badges {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 60%;
+  }
+
+  .mentor-category-badge {
+    padding: 5px 10px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  /* Content section */
+  .mentor-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mentor-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+
+  /* Action buttons */
+  .mentor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  .mentor-book-btn {
+    display: inline-block;
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    padding: 10px 25px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .mentor-book-btn:hover {
+    background: var(--button-text-color);
+    color: var(--accent-yellow);
+    transform: scale(1.05);
+  }
+
+  .mentor-flip-btn {
+    background: var(--accent-red);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .mentor-flip-btn:hover {
+    background: var(--brand-black);
+    color: white;
+  }
+
+  /* Card back styling */
+  .card-back-btn {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 20px 20px 0 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    align-self: flex-start;
+    flex-shrink: 0;
+  }
+
+  .card-back-btn:hover {
+    background: var(--brand-white);
+  }
+
+  .card-back-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .card-back-content h3 {
+    color: var(--accent-yellow);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+  }
+
+  .mentor-specialties {
+    color: var(--accent-yellow);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+  }
+
+  .card-back-bio {
+    font-size: .2rem;
+    color: #ddd;
+    line-height: 1.6;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 15px;
+  }
+
+.card-front-bio {
+    font-size: 0.9rem;
+    line-height: 0.9;
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 10px;
+    padding-right: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* Scrollbar styling */
+  .card-back-bio::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .card-back-bio::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .card-back-bio::-webkit-scrollbar-thumb {
+    background: var(--accent-yellow);
+    border-radius: 4px;
+  }
+
+  .card-back-bio::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-white);
+  }
+
+  .mentor-book-btn-back {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .mentor-book-btn-back:hover {
+    background: var(--brand-white);
+    color: var(--button-text-color);
+  }
+
+  /* Hidden state for filtering */
+  .mentor-card-container.hidden {
+    display: none;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .mentor-card {
+      min-height: 480px;
+    }
+    
+    .mentor-image {
+      height: 220px;
+    }
+    
+    .card-back-content {
+      padding: 15px;
+    }
+  }
+</style>
+
+<script>
+  declare global {
+    interface Window {
+      flipMentorCard: (mentorId: string) => void;
+      filterMentors: (selectedCategories: Set<string>) => void;
+    }
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    // Card flip function
+    window.flipMentorCard = function(mentorId: string) {
+      const card = document.querySelector(`[data-mentor-id="${mentorId}"]`);
+      if (card) {
+        card.classList.toggle('flipped');
+      }
+    };
+    
+    // Mentor filtering function
+    window.filterMentors = function(selectedCategories: Set<string>) {
+      const mentorContainers = document.querySelectorAll('.mentor-card-container');
+      
+      mentorContainers.forEach(container => {
+        const card = container.querySelector('.mentor-card');
+        const mentorCategories = card?.getAttribute('data-mentor-categories')?.split(',') || [];
+        
+        if (selectedCategories.size === 0) {
+          // Show all if no filters
+          container.classList.remove('hidden');
+        } else {
+          // Check if mentor has any selected categories
+          const hasCategory = mentorCategories.some(cat => 
+            Array.from(selectedCategories).some(selected => 
+              cat.includes(selected.toLowerCase().replace(/ /g, '-'))
+            )
+          );
+          
+          if (hasCategory) {
+            container.classList.remove('hidden');
+          } else {
+            container.classList.add('hidden');
+          }
+        }
+      });
+    };
+    
+    // Recreate lucide icons after flips
+    const observer = new MutationObserver(() => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+    
+    // Observe all mentor cards
+    document.querySelectorAll('.mentor-card').forEach(el => {
+      observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+  });
+</script>
