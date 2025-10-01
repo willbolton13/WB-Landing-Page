@@ -119,7 +119,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
             
             {mentorCategories.length > 0 && (
               <div class="mentor-specialties">
-                <strong>Specialties:</strong> {mentorCategories.join(', ')}
+                <strong>Specialties: </strong> {mentorCategories.join(', ')}
               </div>
             )}
             
@@ -138,6 +138,10 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
 )}
 
 <style>
+
+    .mentor-grid-item:has(.mentor-card-container.hidden) {
+  display: none;
+}
   /* Card container and base */
   .mentor-card-container {
     perspective: 1000px;
@@ -265,10 +269,11 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
   }
 
   .mentor-book-btn {
+    font-size: 0.9rem;
     display: inline-block;
     background: var(--accent-yellow);
     color: var(--button-text-color);
-    padding: 10px 25px;
+    padding: 10px 10px;
     font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
@@ -282,14 +287,16 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
   }
 
   .mentor-flip-btn {
+    font-size: 0.9rem;
     background: var(--accent-red);
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 10px 10px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     text-transform: uppercase;
+    margin-left: auto;
   }
 
   .mentor-flip-btn:hover {
@@ -344,9 +351,9 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
   }
 
   .card-back-bio {
-    font-size: .2rem;
+    font-size: 1rem;
     color: #ddd;
-    line-height: 1.6;
+    line-height: 1.1;
     flex: 1;
     overflow-y: auto;
     padding-right: 10px;
