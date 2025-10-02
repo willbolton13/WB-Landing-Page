@@ -25,7 +25,7 @@ const contentType = item?.sys?.contentType?.sys?.id || 'unknown';
 const mentorCategories = mentorData ? 
   [...new Set(mentorData.flatMap(m => m.fields.mentorCategories || []))].sort() : [];
 
-console.log(`Content item ${index} - Type: ${contentType}`, item.fields);
+// console.log(`Content item ${index} - Type: ${contentType}`, item.fields);
 ---
 
 <div class={`content-item content-type-${contentType}`} data-content-index={index}>

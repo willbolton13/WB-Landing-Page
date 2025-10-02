@@ -67,13 +67,13 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
           {/* Category badges - bottom right */}
           {mentorCategories.length > 0 && (
             <div class="category-badges">
-              {mentorCategories.slice(0, 2).map(category => (
+              {mentorCategories.slice(0, 3).map(category => (
                 <span class="mentor-category-badge">
                   {category}
                 </span>
               ))}
-              {mentorCategories.length > 2 && (
-                <span class="mentor-category-badge">+{mentorCategories.length - 2}</span>
+              {mentorCategories.length > 3 && (
+                <span class="mentor-category-badge">+{mentorCategories.length - 3}</span>
               )}
             </div>
           )}
@@ -138,10 +138,6 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
 )}
 
 <style>
-
-    .mentor-grid-item:has(.mentor-card-container.hidden) {
-  display: none;
-}
   /* Card container and base */
   .mentor-card-container {
     perspective: 1000px;
