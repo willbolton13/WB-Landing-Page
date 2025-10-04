@@ -25,6 +25,52 @@ const contentType = item?.sys?.contentType?.sys?.id || 'unknown';
 const mentorCategories = mentorData ? 
   [...new Set(mentorData.flatMap(m => m.fields.mentorCategories || []))].sort() : [];
 
+// Event-related data processing
+let filteredEventData = eventData || [];
+let availableCategories = [];
+let featuredEvent = null;
+let regularEvents = [];
+
+if (contentType === 'eventList' && eventData) {
+  // Pre-filter events by eventCategories if specified in EventList config
+  const configCategories = item.fields.eventCategories || [];
+  
+  if (configCategories.length > 0) {
+    // Filter events to only those matching the configured categories
+    filteredEventData = eventData.filter(event => 
+      configCategories.includes(event.fields.eventCategory)
+    );
+  } else {
+    filteredEventData = eventData;
+  }
+  
+  // Extract unique categories from the filtered events for filter buttons
+  availableCategories = [...new Set(filteredEventData.map(e => e.fields.eventCategory).filter(Boolean))].sort();
+  
+  // Find featured event from filtered data
+  const now = new Date();
+  const upcomingFeatured = filteredEventData
+    .filter(event => {
+      const eventDate = new Date(event.fields.eventDate);
+      const isFeatured = event.fields.isFeatured === true || 
+                        event.fields.featured === true;
+      return eventDate >= now && isFeatured;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.fields.eventDate).getTime();
+      const dateB = new Date(b.fields.eventDate).getTime();
+      return dateA - dateB;
+    });
+  
+  if (upcomingFeatured.length > 0) {
+    featuredEvent = upcomingFeatured[0];
+    // Remove featured event from regular events list
+    regularEvents = filteredEventData.filter(event => event.sys.id !== featuredEvent.sys.id);
+  } else {
+    regularEvents = filteredEventData;
+  }
+}
+
 // console.log(`Content item ${index} - Type: ${contentType}`, item.fields);
 ---
 
@@ -207,8 +253,9 @@ const mentorCategories = mentorData ?
   {contentType === 'eventList' && (
     <div class="event-list-section">
       {(() => {
-        // Use pre-fetched events if available
-        const events = eventData || [];
+        const events = filteredEventData;
+        const showOnlyFeatured = item.fields.showOnlyFeatured === true;
+        const maxEvents = item.fields.maxEvents || 12;
         
         return (
           <>
@@ -216,15 +263,50 @@ const mentorCategories = mentorData ?
               <h2 class="section-title">{item.fields.listName}</h2>
             )}
             
-            <div class="row">
-              {events.slice(0, item.fields.maxEvents || 6).map(event => (
-                <div class="col-md-4 mb-4">
-                  <EventCard event={event} variant="card" />
-                </div>
-              ))}
-            </div>
+            {/* SHOW ONLY FEATURED MODE - Just the big featured card */}
+            {showOnlyFeatured && featuredEvent && (
+              <div class="featured-event-wrapper">
+                <EventCard event={featuredEvent} variant="featured" />
+              </div>
+            )}
             
-            {events.length === 0 && (
+            {showOnlyFeatured && !featuredEvent && (
+              <p class="no-events-message">No featured event available at this time.</p>
+            )}
+            
+            {/* DEFAULT MODE - Show all upcoming events in grid */}
+            {!showOnlyFeatured && events.length > 0 && (
+              <>
+                <div class="upcoming-section-header">
+                  <h3>Upcoming Events</h3>
+                  <span class="event-count">{events.length}</span>
+                </div>
+                
+                {/* Category Filter Buttons - only show if multiple categories available */}
+                {availableCategories.length > 1 && (
+                  <div class="event-filters">
+                    <button class="event-filter-btn active" data-event-category="all">
+                      All Events
+                    </button>
+                    {availableCategories.map(category => (
+                      <button class="event-filter-btn" data-event-category={category}>
+                        {category.replace('-', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                <div class="row event-grid">
+                  {events.slice(0, maxEvents).map(event => (
+                    <div class="col-lg-4 col-md-6 mb-4 event-grid-item" data-event-category={event.fields.eventCategory}>
+                      <EventCard event={event} variant="card" showDescription={true} />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+            
+            {!showOnlyFeatured && events.length === 0 && (
               <p class="no-events-message">No upcoming events at this time.</p>
             )}
           </>
@@ -241,48 +323,47 @@ const mentorCategories = mentorData ?
   )}
 
   {/* Mentor List */}
-{contentType === 'mentorList' && (
-  <div class="mentor-list-section">
-    {(() => {
-      // Use pre-fetched mentors if available
-      const mentors = mentorData || [];
-      
-      return (
-        <>
-          {item.fields.listName && (
-            <h2 class="section-title">{item.fields.listName}</h2>
-          )}
-          
-          {/* Category Filter Buttons - Multi-select */}
-          {mentorCategories.length > 0 && mentors.length > 0 && (
-            <div class="mentor-filters">
-              <button class="mentor-filter-btn active" data-mentor-category="all">
-                All Mentors
-              </button>
-              {mentorCategories.map(category => (
-                <button class="mentor-filter-btn" data-mentor-category={category}>
-                  {category}
+  {contentType === 'mentorList' && (
+    <div class="mentor-list-section">
+      {(() => {
+        const mentors = mentorData || [];
+        
+        return (
+          <>
+            {item.fields.listName && (
+              <h2 class="section-title">{item.fields.listName}</h2>
+            )}
+            
+            {/* Category Filter Buttons - Multi-select */}
+            {mentorCategories.length > 0 && mentors.length > 0 && (
+              <div class="mentor-filters">
+                <button class="mentor-filter-btn active" data-mentor-category="all">
+                  All Mentors
                 </button>
+                {mentorCategories.map(category => (
+                  <button class="mentor-filter-btn" data-mentor-category={category}>
+                    {category}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            <div class="row mentor-grid">
+              {mentors.map(mentor => (
+                <div class="col-xl-4 col-lg-4 col-md-6 mb-4 mentor-grid-item">
+                  <MentorCard mentor={mentor} variant="card" />
+                </div>
               ))}
             </div>
-          )}
-          
-          <div class="row mentor-grid">
-            {mentors.map(mentor => (
-              <div class="col-xl-4 col-lg-4 col-md-6 mb-4 mentor-grid-item">
-                <MentorCard mentor={mentor} variant="card" />
-              </div>
-            ))}
-          </div>
-          
-          {mentors.length === 0 && (
-            <p class="no-mentors-message">No mentors available at this time.</p>
-          )}
-        </>
-      );
-    })()}
-  </div>
-)}
+            
+            {mentors.length === 0 && (
+              <p class="no-mentors-message">No mentors available at this time.</p>
+            )}
+          </>
+        );
+      })()}
+    </div>
+  )}
 </div>
 
 <style>
@@ -510,7 +591,98 @@ const mentorCategories = mentorData ?
     padding: 3rem 0;
   }
 
-/* Mentor section */
+  /* Event list section */
+  .event-list-section {
+    margin-bottom: 3rem;
+  }
+
+  .featured-event-wrapper {
+    margin-bottom: 3rem;
+  }
+
+  .featured-section-header {
+    background: var(--text-color);
+    padding: 1rem;
+    border: #000 solid 0.3rem;
+    margin-bottom: 2rem;
+  }
+
+  .featured-section-header h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+    margin: 0;
+  }
+
+  .upcoming-section-header {
+    background: var(--text-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: #000 solid 0.3rem;
+    margin-bottom: 2rem;
+  }
+
+  .upcoming-section-header h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+    margin: 0;
+  }
+
+  .event-count {
+    color: var(--accent-yellow);
+    font-size: 2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  /* Event filter buttons */
+  .event-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 3rem;
+    padding: 1.5rem;
+    background: #000;
+  }
+
+  .event-filter-btn {
+    border: solid;
+    padding: 8px 20px;
+    background: white;
+    color: #000000;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .event-filter-btn:hover {
+    border-color: var(--accent-yellow);
+    transform: translateY(-2px);
+  }
+
+  .event-filter-btn.active {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    border-color: var(--accent-yellow);
+  }
+
+  .event-grid-item {
+    transition: all 0.3s ease;
+  }
+
+  .event-grid-item.hidden {
+    display: none !important;
+  }
+
+  /* Mentor section */
   .mentor-list-section {
     margin-bottom: 3rem;
   }
@@ -557,19 +729,21 @@ const mentorCategories = mentorData ?
   }
 
   @media (max-width: 768px) {
-    .mentor-filters {
+    .mentor-filters,
+    .event-filters {
       padding: 1rem;
     }
     
-    .mentor-filter-btn {
+    .mentor-filter-btn,
+    .event-filter-btn {
       font-size: 0.8rem;
       padding: 6px 15px;
     }
   }
 
   .mentor-grid-item:has(.mentor-card-container.hidden) {
-  display: none;
-}
+    display: none;
+  }
 </style>
 
 <script>
@@ -585,37 +759,30 @@ const mentorCategories = mentorData ?
         const category = button.dataset.mentorCategory;
         
         if (category === 'all') {
-          // Clear all selections and select only "All"
           selectedCategories.clear();
           filterButtons.forEach(btn => btn.classList.remove('active'));
           button.classList.add('active');
         } else {
-          // Toggle individual category
           const allBtn = document.querySelector('.mentor-filter-btn[data-mentor-category="all"]');
           
           if (button.classList.contains('active')) {
-            // Deselecting
             button.classList.remove('active');
             selectedCategories.delete(category);
             
-            // If no categories selected, activate "All"
             if (selectedCategories.size === 0) {
               allBtn?.classList.add('active');
             }
           } else {
-            // Selecting
             button.classList.add('active');
             selectedCategories.add(category);
             allBtn?.classList.remove('active');
           }
         }
         
-        // Apply filters
         if (typeof window.filterMentors === 'function') {
           window.filterMentors(selectedCategories);
         }
         
-        // Animate visible cards
         const visibleCards = document.querySelectorAll('.mentor-card-container:not(.hidden)');
         visibleCards.forEach((card, i) => {
           animate(card, 
@@ -627,7 +794,44 @@ const mentorCategories = mentorData ?
     });
   }
 
+  // Setup event filter buttons (single-select)
+  function setupEventFilters() {
+    const filterButtons = document.querySelectorAll('.event-filter-btn');
+    const eventItems = document.querySelectorAll('.event-grid-item');
+    
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active from all buttons
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        const category = button.dataset.eventCategory;
+        
+        // Filter event items
+        eventItems.forEach(item => {
+          const itemCategory = item.getAttribute('data-event-category');
+          
+          if (category === 'all' || itemCategory === category) {
+            item.classList.remove('hidden');
+            item.style.display = '';
+            const container = item.querySelector('.event-card-container');
+            if (container) {
+              animate(container, 
+                { opacity: [0, 1], scale: [0.95, 1] }, 
+                { duration: 0.3 }
+              );
+            }
+          } else {
+            item.classList.add('hidden');
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+  }
+
   document.addEventListener('astro:page-load', () => {
     setupMentorFilters();
+    setupEventFilters();
   });
 </script>

@@ -81,7 +81,7 @@ const mapUrl = hasGeolocation
 ---
 
 {variant === 'card' && (
-  <div class="event-card-container">
+  <div class="event-card-container" data-event-category={event.fields.eventCategory}>
     <div class={`event-card ${categoryClass}`} data-event-id={event.sys.id}>
       {/* Front of card */}
       <div class="card-face card-front">
@@ -296,7 +296,7 @@ const mapUrl = hasGeolocation
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: transform 0.6s;
     transform-style: preserve-3d;
-    min-height: 500px; /* Fixed height instead of min-height */
+    min-height: 500px;
   }
 
   .event-card.flipped {
@@ -324,7 +324,7 @@ const mapUrl = hasGeolocation
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: hidden; /* Prevent overflow on the card itself */
+    overflow: hidden;
   }
 
   /* Date badge */
@@ -497,13 +497,13 @@ const mapUrl = hasGeolocation
     padding: 10px 20px;
     font-weight: 600;
     cursor: pointer;
-    margin: 20px 20px 0 20px; /* Adjusted margin */
+    margin: 20px 20px 0 20px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     text-transform: uppercase;
     align-self: flex-start;
-    flex-shrink: 0; /* Prevent button from shrinking */
+    flex-shrink: 0;
   }
 
   .card-back-btn:hover {
@@ -515,8 +515,8 @@ const mapUrl = hasGeolocation
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent content container from overflowing */
-    min-height: 0; /* Important for flexbox overflow */
+    overflow: hidden;
+    min-height: 0;
   }
 
   .card-back-content h3 {
@@ -525,18 +525,18 @@ const mapUrl = hasGeolocation
     font-weight: 700;
     text-transform: uppercase;
     margin-bottom: 20px;
-    flex-shrink: 0; /* Keep title fixed */
+    flex-shrink: 0;
   }
 
   .card-back-description {
     color: #ddd;
     line-height: 1.6;
     flex: 1;
-    overflow-y: auto; /* Enable scrolling here */
-    padding-right: 10px; /* Add some padding for scrollbar */
+    overflow-y: auto;
+    padding-right: 10px;
   }
 
-  /* Custom scrollbar for better visibility */
+  /* Custom scrollbar */
   .card-back-description::-webkit-scrollbar {
     width: 8px;
   }
@@ -563,7 +563,12 @@ const mapUrl = hasGeolocation
     padding-left: 1.5rem;
   }
 
-  /* Past events variant - Simple list, no interaction */
+  /* Hidden state for filtering */
+  .event-card-container.hidden {
+    display: none;
+  }
+
+  /* Past events variant */
   .event-past-item {
     display: flex;
     align-items: center;
@@ -617,7 +622,7 @@ const mapUrl = hasGeolocation
     font-weight: 600;
   }
 
-  /* Featured variant styling */
+  /* Featured variant */
   .event-featured-container {
     margin: 2rem 0;
   }
@@ -693,7 +698,6 @@ const mapUrl = hasGeolocation
 
   .event-featured-content {
     padding: 20px;
-
   }
 
   .featured-flip-btn {
@@ -790,7 +794,7 @@ const mapUrl = hasGeolocation
   /* Mobile responsiveness */
   @media (max-width: 768px) {
     .event-card {
-      height: 450px; /* Slightly taller on mobile for better readability */
+      height: 450px;
     }
     
     .featured-flip-container {
@@ -799,11 +803,11 @@ const mapUrl = hasGeolocation
     }
     
     .card-back-content {
-      padding: 15px; /* Reduced padding on mobile */
+      padding: 15px;
     }
     
     .card-back-description {
-      font-size: 0.95rem; /* Slightly smaller text on mobile */
+      font-size: 0.95rem;
     }
   }
 </style>

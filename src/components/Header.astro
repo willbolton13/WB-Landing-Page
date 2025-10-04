@@ -19,25 +19,24 @@ campusesWithResolvedCourses.forEach(campus => {
   }
 });
 
-// Sort resources by display order
-resources.sort((a, b) => 
-  (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
-);
+// Filter resources to only those with displayOnMenu = true, then sort
+const menuResources = resources
+  .filter(resource => resource.fields.displayOnMenu === true)
+  .sort((a, b) => (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0));
 
 // Parse current URL to determine campus, course, or resource
 const currentPath = Astro.url.pathname;
 const pathParts = currentPath.split('/').filter(Boolean);
 const isHomePage = currentPath === '/' || pathParts.length === 0;
-const isEventsPage = currentPath === '/events';
-const currentCampusSlug = !isHomePage && !isEventsPage ? pathParts[0] : null;
-const currentCourseSlug = !isHomePage && !isEventsPage && pathParts.length > 1 ? pathParts[1] : null;
+const currentCampusSlug = !isHomePage ? pathParts[0] : null;
+const currentCourseSlug = !isHomePage && pathParts.length > 1 ? pathParts[1] : null;
 
 // Find current campus, course, or resource names
 let currentCampusName = null;
 let currentCourseName = null;
 let currentResourceName = null;
 
-if (currentCampusSlug && !isEventsPage) {
+if (currentCampusSlug) {
   // Check if it's a campus
   const campus = campusesWithResolvedCourses.find(c => c.fields.campusSlug === currentCampusSlug);
   if (campus) {
@@ -50,7 +49,7 @@ if (currentCampusSlug && !isEventsPage) {
       }
     }
   } else {
-    // Check if it's a resource
+    // Check if it's a resource (check all resources, not just menu ones)
     const resource = resources.find(r => r.fields.resourceSlug === currentCampusSlug);
     if (resource) {
       currentResourceName = resource.fields.resourceName;
@@ -77,10 +76,6 @@ if (currentCampusSlug && !isEventsPage) {
             ) : currentResourceName ? (
                 <span>
                     <strong class="text-warning">{currentResourceName}</strong>
-                </span>
-            ) : isEventsPage ? (
-                <span>
-                    <strong class="text-warning">Events</strong>
                 </span>
             ) : (
                 <span><strong>Select your campus to get started</strong></span>
@@ -157,33 +152,24 @@ if (currentCampusSlug && !isEventsPage) {
                     );
                 })}
 
-                {/* Other Links Section - Resources and Events */}
-                {(resources.length > 0 || true) && (
+                {/* Other Links Section - Resources only */}
+                {menuResources.length > 0 && (
                     <>
                         <div class="section-divider"></div>
                         <h5 class="offcanvas-title" id="offcanvasNavbarLabel">OTHER LINKS</h5>
+                        
+                        {/* Individual Resource Links */}
+                        {menuResources.map((resource) => (
+                            <a 
+                                href={`/${resource.fields.resourceSlug}`} 
+                                class="campus-header campus-header--solo"
+                                data-resource-link={resource.fields.resourceSlug}
+                            >
+                                {resource.fields.resourceName.toUpperCase()}
+                            </a>
+                        ))}
                     </>
                 )}
-
-                {/* Individual Resource Links */}
-                {resources.map((resource) => (
-                    <a 
-                        href={`/${resource.fields.resourceSlug}`} 
-                        class="campus-header campus-header--solo"
-                        data-resource-link={resource.fields.resourceSlug}
-                    >
-                        {resource.fields.resourceName.toUpperCase()}
-                    </a>
-                ))}
-
-                {/* Events - static link */}
-                <a 
-                    href="/events" 
-                    class="campus-header campus-header--solo"
-                    data-static-link="events"
-                >
-                    EVENTS
-                </a>
             </div>
             
             <div class="offcanvas-footer">
@@ -474,7 +460,6 @@ if (currentCampusSlug && !isEventsPage) {
 
 <script>
   import { navigate } from 'astro:transitions/client';
-  import { Offcanvas } from 'bootstrap';
 
   function setupOffcanvasNavigation() {
     const offcanvasElement = document.getElementById('offcanvasNavbar');
@@ -483,7 +468,41 @@ if (currentCampusSlug && !isEventsPage) {
     }
     offcanvasElement.dataset.navListenerAttached = 'true';
 
-    const bsOffcanvas = new Offcanvas(offcanvasElement);
+    // Manual close function that bypasses Bootstrap
+    function closeOffcanvasManually() {
+      // Remove show class from offcanvas
+      offcanvasElement.classList.remove('show');
+      offcanvasElement.removeAttribute('aria-modal');
+      offcanvasElement.removeAttribute('role');
+      offcanvasElement.setAttribute('aria-hidden', 'true');
+      
+      // Remove ALL backdrops (in case multiple got created)
+      document.querySelectorAll('.offcanvas-backdrop').forEach(backdrop => {
+        backdrop.remove();
+      });
+      
+      // Reset body
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
+    }
+    
+    // Instant hide for navigation - no animation
+    function hideOffcanvasForNavigation() {
+      const backdrop = document.querySelector('.offcanvas-backdrop');
+      
+      // Instantly hide both elements
+      offcanvasElement.style.display = 'none';
+      if (backdrop) {
+        backdrop.style.display = 'none';
+      }
+      
+      // Clean up properly after navigation
+      setTimeout(() => {
+        closeOffcanvasManually();
+        offcanvasElement.style.display = '';
+      }, 100);
+    }
 
     // Setup expand buttons for all expandable sections
     const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
@@ -519,15 +538,27 @@ if (currentCampusSlug && !isEventsPage) {
       link.addEventListener('click', (event) => {
         event.preventDefault();
         const targetUrl = link.getAttribute('href');
-
-        // Listen for hidden event and navigate
-        offcanvasElement.addEventListener('hidden.bs.offcanvas', () => {
-          navigate(targetUrl);
-        }, { once: true });
-
-        // Close the offcanvas
-        bsOffcanvas.hide();
+        
+        // Instantly hide offcanvas and backdrop
+        hideOffcanvasForNavigation();
+        
+        // Navigate immediately
+        navigate(targetUrl);
       });
+    });
+    
+    // Override backdrop clicks to ensure proper cleanup
+    document.addEventListener('click', (event) => {
+      if (event.target.classList.contains('offcanvas-backdrop')) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeOffcanvasManually();
+      }
+    });
+    
+    // Clean up any stray backdrops on page load
+    document.querySelectorAll('.offcanvas-backdrop').forEach(backdrop => {
+      backdrop.remove();
     });
   }
 
