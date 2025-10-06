@@ -1,0 +1,548 @@
+---
+// components/MentorCard.astro
+import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
+
+export interface Props {
+  mentor: any;
+  variant?: 'card' | 'list';
+  showDescription?: boolean;
+}
+
+const { mentor, variant = 'card', showDescription = false } = Astro.props;
+
+let shortBioHtml = '';
+if (mentor.fields.shortBio) {
+  if (typeof mentor.fields.shortBio === 'string') {
+    shortBioHtml = mentor.fields.shortBio;
+  } else {
+    shortBioHtml = documentToHtmlString(mentor.fields.shortBio);
+  }
+}
+
+let fullBioHtml = '';
+if (mentor.fields.fullBio) {
+  if (typeof mentor.fields.fullBio === 'string') {
+    fullBioHtml = mentor.fields.fullBio;
+  } else {
+    fullBioHtml = documentToHtmlString(mentor.fields.fullBio);
+  }
+}
+
+// Get focus setting from Contentful field, default to 'face' if not set
+const imageFocus = mentor.fields.imageFocus || 'face';
+
+// Image URL with Contentful's focus parameter - using correct aspect ratio
+// The f parameter works with fit=thumb for focus area selection
+const imageUrl = mentor.fields.mentorPhoto?.fields?.file?.url 
+  ? `https:${mentor.fields.mentorPhoto.fields.file.url}?w=600&h=400&fit=thumb&f=${imageFocus}&q=80`
+  : '/img/mentor-placeholder.jpg';
+
+// Campus badge color
+let campusBadgeClass;
+
+if (mentor.fields.campus === 'Brighton') {
+  campusBadgeClass = 'badge-brighton';
+} else if (mentor.fields.campus === 'Visiting Faculty') {
+  campusBadgeClass = 'badge-visiting';
+} else {
+  campusBadgeClass = 'badge-sheffield';
+}
+
+// Create data attributes for filtering
+const mentorCategories = mentor.fields.mentorCategories || [];
+const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, '-');
+---
+
+{variant === 'card' && (
+  <div class="mentor-card-container">
+    <div class="mentor-card" data-mentor-id={mentor.sys.id} data-mentor-categories={categoriesString}>
+      {/* Front of card */}
+      <div class="card-face card-front">
+        {/* Campus badge - top left */}
+        {mentor.fields.campus && (
+          <div class={`campus-badge ${campusBadgeClass}`}>
+            {mentor.fields.campus}
+          </div>
+        )}
+        
+        <div class="mentor-image">
+          <img src={imageUrl} alt={mentor.fields.mentorName} loading="lazy" />
+          {/* Category badges - bottom right */}
+          {mentorCategories.length > 0 && (
+            <div class="category-badges">
+              {mentorCategories.slice(0, 3).map(category => (
+                <span class="mentor-category-badge">
+                  {category}
+                </span>
+              ))}
+              {mentorCategories.length > 3 && (
+                <span class="mentor-category-badge">+{mentorCategories.length - 3}</span>
+              )}
+            </div>
+          )}
+        </div>
+        
+        <div class="mentor-content">
+          <h3 class="mentor-name">{mentor.fields.mentorName}</h3>
+          
+          <div class="bio-wrapper">
+            {shortBioHtml && (
+              <div class="card-front-bio" set:html={shortBioHtml}></div>
+            )}
+            {!shortBioHtml && (
+              <div class="card-front-bio"></div>
+            )}
+          </div>
+          
+          <div class="mentor-actions">
+            {mentor.fields.bookingLink && (
+              <a href={mentor.fields.bookingLink} class="mentor-book-btn">
+                BOOK MENTOR
+              </a>
+            )}
+            
+            {fullBioHtml && (
+              <button 
+                class="mentor-flip-btn"
+                onclick={`window.flipMentorCard('${mentor.sys.id}')`}
+                type="button"
+                aria-label="More information"
+              >
+                MORE INFO
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Back of card */}
+      {fullBioHtml && (
+        <div class="card-face card-back">
+          <button class="card-back-btn" onclick={`window.flipMentorCard('${mentor.sys.id}')`}>
+            <i data-lucide="arrow-left"></i> BACK
+          </button>
+          
+          <div class="card-back-content">
+            <h3>{mentor.fields.mentorName}</h3>
+            
+            {mentorCategories.length > 0 && (
+              <div class="mentor-specialties">
+                <strong>Specialties: </strong> {mentorCategories.join(', ')}
+              </div>
+            )}
+            
+            <div class="card-back-bio" set:html={fullBioHtml}></div>
+            
+            {mentor.fields.bookingLink && (
+              <a href={mentor.fields.bookingLink} class="mentor-book-btn-back">
+                BOOK THIS MENTOR
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+<style>
+  /* Card container and base - Original sizing preserved */
+  .mentor-card-container {
+    perspective: 1000px;
+    height: 100%;
+  }
+
+  .mentor-card {
+    position: relative;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    height: 100%;
+    min-height: 580px;
+  }
+
+  .mentor-card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent content from escaping card bounds */
+  }
+
+  .card-front {
+    z-index: 2;
+    transform: rotateY(0deg);
+  }
+
+  .card-back {
+    transform: rotateY(180deg);
+    background: var(--brand-black);
+    color: var(--brand-white);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Campus badge */
+  .campus-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 5px 12px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    z-index: 2;
+  }
+
+  .badge-brighton {
+    background: var(--accent-green);
+  }
+
+  .badge-sheffield {
+    background: var(--accent-red);
+  }
+  
+  .badge-visiting {
+    background: var(--accent-yellow);
+  }
+
+  /* Image section - Fixed height with proper aspect ratio */
+  .mentor-image {
+    position: relative;
+    width: 100%;
+    height: 250px; 
+    overflow: hidden;
+    background: #f0f0f0;
+    flex-shrink: 0; 
+  }
+
+  .mentor-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+    filter: grayscale(100%);
+  }
+
+  /* Category badges */
+  .category-badges {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 60%;
+  }
+
+  .mentor-category-badge {
+    padding: 5px 10px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  /* Content section */
+  .mentor-content {
+    padding: 15px 20px 20px 20px; /* Reduced top padding */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .mentor-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 5px; /* Reduced margin */
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .bio-wrapper {
+    /* --- THIS IS THE CORE FIX --- */
+    flex: 1; /* CHANGED: This allows the bio wrapper to grow and fill the available space. */
+    margin-bottom: 10px;
+    overflow-y: auto; /* MOVED: Scrolling is now handled by this container. */
+    min-height: 0; /* ADDED: A crucial flexbox property to prevent overflow issues. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-yellow) rgba(0, 0, 0, 0.1);
+  }
+
+    /* Scrollbar styling for bio wrapper */
+  .bio-wrapper::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .bio-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .bio-wrapper::-webkit-scrollbar-thumb {
+    background: var(--accent-yellow);
+    border-radius: 4px;
+  }
+
+  .bio-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-red);
+  }
+
+  .card-front-bio {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding-right: 10px;
+    margin-top: 5px;
+    overflow-y: scroll;
+    overflow-x: hidden; 
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-yellow) rgba(0, 0, 0, 0.1);
+  }
+
+  /* Action buttons */
+  .mentor-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-top: auto; /* Push to bottom but respect content above */
+  }
+
+  .mentor-book-btn {
+    font-size: 0.9rem;
+    display: inline-block;
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    padding: 10px 10px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .mentor-book-btn:hover {
+    background: var(--button-text-color);
+    color: var(--accent-yellow);
+    transform: scale(1.05);
+  }
+
+  .mentor-flip-btn {
+    font-size: 0.9rem;
+    background: var(--accent-red);
+    color: white;
+    border: none;
+    padding: 10px 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+
+  .mentor-flip-btn:hover {
+    background: var(--brand-black);
+    color: white;
+  }
+
+  /* Card back styling */
+  .card-back-btn {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 20px 20px 0 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    align-self: flex-start;
+    flex-shrink: 0;
+  }
+
+  .card-back-btn:hover {
+    background: var(--brand-white);
+  }
+
+  .card-back-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .card-back-content h3 {
+    color: var(--accent-yellow);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+  }
+
+  .mentor-specialties {
+    color: var(--accent-yellow);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+  }
+
+  .card-back-bio {
+    font-size: 1rem;
+    color: #ddd;
+    line-height: 1.5;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+    margin-bottom: 15px;
+    min-height: 0;
+  }
+
+  /* Scrollbar styling */
+  .card-back-bio::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .card-back-bio::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .card-back-bio::-webkit-scrollbar-thumb {
+    background: var(--accent-yellow);
+    border-radius: 4px;
+  }
+
+  .card-back-bio::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-white);
+  }
+
+  .mentor-book-btn-back {
+    background: var(--accent-yellow);
+    color: var(--button-text-color);
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+
+  .mentor-book-btn-back:hover {
+    background: var(--brand-white);
+    color: var(--button-text-color);
+  }
+
+  /* Hidden state for filtering */
+  .mentor-card-container.hidden {
+    display: none;
+  }
+
+  /* Mobile responsiveness - Keep original responsive behavior */
+  @media (max-width: 768px) {
+    .mentor-card {
+    }
+    
+    .mentor-image {
+      height: 260px;
+    }
+    
+    .card-front-bio {
+
+    }
+    
+    .card-back-bio {
+      max-height: 200px; /* Limit back bio height on mobile too */
+    }
+    
+    .card-back-content {
+      padding: 15px;
+    }
+    
+    .mentor-content {
+      padding: 10px 15px 15px 15px; /* Even less padding on mobile */
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .mentor-image {
+      height: 230px;
+    }
+  }
+</style>
+
+<script>
+  declare global {
+    interface Window {
+      flipMentorCard: (mentorId: string) => void;
+      filterMentors: (selectedCategories: Set<string>) => void;
+    }
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    // Card flip function
+    window.flipMentorCard = function(mentorId: string) {
+      const card = document.querySelector(`[data-mentor-id="${mentorId}"]`);
+      if (card) {
+        card.classList.toggle('flipped');
+      }
+    };
+    
+    // Mentor filtering function
+    window.filterMentors = function(selectedCategories: Set<string>) {
+      const mentorContainers = document.querySelectorAll('.mentor-card-container');
+      
+      mentorContainers.forEach(container => {
+        const card = container.querySelector('.mentor-card');
+        const mentorCategories = card?.getAttribute('data-mentor-categories')?.split(',') || [];
+        
+        if (selectedCategories.size === 0) {
+          // Show all if no filters
+          container.classList.remove('hidden');
+        } else {
+          // Check if mentor has any selected categories
+          const hasCategory = mentorCategories.some(cat => 
+            Array.from(selectedCategories).some(selected => 
+              cat.includes(selected.toLowerCase().replace(/ /g, '-'))
+            )
+          );
+          
+          if (hasCategory) {
+            container.classList.remove('hidden');
+          } else {
+            container.classList.add('hidden');
+          }
+        }
+      });
+    };
+    
+    // Recreate lucide icons after flips
+    const observer = new MutationObserver(() => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+    
+    // Observe all mentor cards
+    document.querySelectorAll('.mentor-card').forEach(el => {
+      observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+  });
+</script>

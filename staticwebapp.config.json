@@ -9,6 +9,10 @@
     "401": {
       "statusCode": 302,
       "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer"
+    },
+    "404": {
+      "statusCode": 404,
+      "rewrite": "/404.html"
     }
   },
   "auth": {

@@ -1,15 +1,16 @@
 ---
-import { getCampusesWithCourses } from '../lib/contentful';
+import { getNavigationContent } from '../lib/contentful';
 
-// Single API call to get all campuses with resolved courses
-const campusesWithResolvedCourses = await getCampusesWithCourses();
+// Single API call to get all navigation content
+const navigationData = await getNavigationContent();
+const { campuses: campusesWithResolvedCourses, resources } = navigationData;
 
 // Sort campuses by display order
 campusesWithResolvedCourses.sort((a, b) => 
   (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0)
 );
 
-// Sort courses within each campus (if they're already resolved objects)
+// Sort courses within each campus
 campusesWithResolvedCourses.forEach(campus => {
   if (campus.fields.courses && campus.fields.courses.length > 0) {
     campus.fields.courses.sort((a, b) => 
@@ -18,18 +19,25 @@ campusesWithResolvedCourses.forEach(campus => {
   }
 });
 
-// Parse current URL to determine campus and course
+// Filter resources to only those with displayOnMenu = true, then sort
+const menuResources = resources
+  .filter(resource => resource.fields.displayOnMenu === true)
+  .sort((a, b) => (a.fields.displayOrder || 0) - (b.fields.displayOrder || 0));
+
+// Parse current URL to determine campus, course, or resource
 const currentPath = Astro.url.pathname;
 const pathParts = currentPath.split('/').filter(Boolean);
 const isHomePage = currentPath === '/' || pathParts.length === 0;
 const currentCampusSlug = !isHomePage ? pathParts[0] : null;
 const currentCourseSlug = !isHomePage && pathParts.length > 1 ? pathParts[1] : null;
 
-// Find current campus and course names (no additional API calls needed)
+// Find current campus, course, or resource names
 let currentCampusName = null;
 let currentCourseName = null;
+let currentResourceName = null;
 
 if (currentCampusSlug) {
+  // Check if it's a campus
   const campus = campusesWithResolvedCourses.find(c => c.fields.campusSlug === currentCampusSlug);
   if (campus) {
     currentCampusName = campus.fields.campusName;
@@ -39,6 +47,12 @@ if (currentCampusSlug) {
       if (course) {
         currentCourseName = course.fields.courseName;
       }
+    }
+  } else {
+    // Check if it's a resource (check all resources, not just menu ones)
+    const resource = resources.find(r => r.fields.resourceSlug === currentCampusSlug);
+    if (resource) {
+      currentResourceName = resource.fields.resourceName;
     }
   }
 }
@@ -59,6 +73,10 @@ if (currentCampusSlug) {
                         <span class="course-indicator"> | {currentCourseName}</span>
                     )}
                 </span>
+            ) : currentResourceName ? (
+                <span>
+                    <strong class="text-warning">{currentResourceName}</strong>
+                </span>
             ) : (
                 <span><strong>Select your campus to get started</strong></span>
             )}
@@ -78,7 +96,6 @@ if (currentCampusSlug) {
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
             <div class="offcanvas-header">
                 <img src="/img/Logo-bear-black.png" alt="University Logo" style="height: 25px;">
-                <!--<h5 class="offcanvas-title" id="offcanvasNavbarLabel">NAVIGATION</h5>-->
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             
@@ -134,40 +151,25 @@ if (currentCampusSlug) {
                         </div>
                     );
                 })}
-                <!--
 
-                <div class="section-divider"></div>
-                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">OTHER LINKS</h5>
-
-                <div class="campus-group">
-                    <div class="campus-header-wrapper">
-                        <div class="campus-header campus-header--static">
-                            RESOURCES
-                        </div>
-                        <button 
-                            class="expand-btn"
-                            data-campus-slug="student-resources"
-                            type="button"
-                            aria-label="Expand resources"
-                        >
-                           <i class="bi-chevron-down" data-lucide="chevron-down"></i>
-                        </button>
-                    </div>
-                    <div class="course-list" id="courses-student-resources">
-                        <a 
-                            href="/student-services" 
-                            class="course-item"
-                        >
-                            Student Services
-                        </a>
-                        <a 
-                            href="/artist-development" 
-                            class="course-item"
-                        >
-                            Artist Development
-                        </a>
-                    </div>
-                </div> -->
+                {/* Other Links Section - Resources only */}
+                {menuResources.length > 0 && (
+                    <>
+                        <div class="section-divider"></div>
+                        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">OTHER LINKS</h5>
+                        
+                        {/* Individual Resource Links */}
+                        {menuResources.map((resource) => (
+                            <a 
+                                href={`/${resource.fields.resourceSlug}`} 
+                                class="campus-header campus-header--solo"
+                                data-resource-link={resource.fields.resourceSlug}
+                            >
+                                {resource.fields.resourceName.toUpperCase()}
+                            </a>
+                        ))}
+                    </>
+                )}
             </div>
             
             <div class="offcanvas-footer">
@@ -234,7 +236,7 @@ if (currentCampusSlug) {
   .offcanvas {
     background-color: var(--accent-yellow);
     color: var(--button-text-color);
-    /*transition: transform 0.1s ease-in-out !important;*/
+    transition: transform 0.1s ease-in-out !important;
   }
 
   .offcanvas-header {
@@ -271,7 +273,6 @@ if (currentCampusSlug) {
 
   /* Campus group styling */
   .campus-group {
-    margin-bottom: 0.5rem;
   }
 
   /* Campus header wrapper for split link/button */
@@ -292,9 +293,8 @@ if (currentCampusSlug) {
   .campus-header {
     font-family: 'Futura PT';
     display: block;
-    padding: 0.75rem 0;
+    padding: 0.25rem 0;
     font-size: clamp(1.3rem, 3.5vw, 1.8rem);
-
     font-weight: 700;
     color: var(--button-text-color);
     text-decoration: none;
@@ -310,6 +310,7 @@ if (currentCampusSlug) {
 
   /* Solo campus (no chevron) */
   .campus-header--solo {
+    margin-top: 1rem;
     width: 100%;
     border-bottom: 2px solid transparent;
   }
@@ -331,6 +332,13 @@ if (currentCampusSlug) {
 
   .campus-header--static:hover {
     transform: none;
+  }
+
+  /* Section divider */
+  .section-divider {
+    height: 3px;
+    margin: 2rem 0 1rem 0;
+    border-radius: 2px;
   }
 
   /* Expand button (chevron only) */
@@ -385,11 +393,6 @@ if (currentCampusSlug) {
     border-left-color: var(--button-text-color);
     padding-left: 1.5rem;
     background-color: rgba(0, 0, 0, 0.03);
-  }
-
-  /* Section divider */
-  .section-divider {
-    margin: 2rem 0;
   }
 
   /* Footer section */
@@ -483,6 +486,23 @@ if (currentCampusSlug) {
       document.body.style.removeProperty('overflow');
       document.body.style.removeProperty('padding-right');
     }
+    
+    // Instant hide for navigation - no animation
+    function hideOffcanvasForNavigation() {
+      const backdrop = document.querySelector('.offcanvas-backdrop');
+      
+      // Instantly hide both elements
+      offcanvasElement.style.display = 'none';
+      if (backdrop) {
+        backdrop.style.display = 'none';
+      }
+      
+      // Clean up properly after navigation
+      setTimeout(() => {
+        closeOffcanvasManually();
+        offcanvasElement.style.display = '';
+      }, 100);
+    }
 
     // Setup expand buttons for all expandable sections
     const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
@@ -519,13 +539,11 @@ if (currentCampusSlug) {
         event.preventDefault();
         const targetUrl = link.getAttribute('href');
         
-        // Manually close the offcanvas
-        closeOffcanvasManually();
+        // Instantly hide offcanvas and backdrop
+        hideOffcanvasForNavigation();
         
-        // Navigate after a brief delay to ensure cleanup
-        setTimeout(() => {
-          navigate(targetUrl);
-        }, 150);
+        // Navigate immediately
+        navigate(targetUrl);
       });
     });
     
