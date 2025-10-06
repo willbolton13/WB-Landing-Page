@@ -28,10 +28,13 @@ if (mentor.fields.fullBio) {
   }
 }
 
-// Image URL with face focus for rectangular aspect
+// Get focus setting from Contentful field, default to 'face' if not set
+const imageFocus = mentor.fields.imageFocus || 'face';
+
+// Image URL with Contentful's focus parameter - using correct aspect ratio
+// The f parameter works with fit=thumb for focus area selection
 const imageUrl = mentor.fields.mentorPhoto?.fields?.file?.url 
-  ? `https:${mentor.fields.mentorPhoto.fields.file.url}?w=800&h=900&fit=crop&f=face&q=80`
-                                                            
+  ? `https:${mentor.fields.mentorPhoto.fields.file.url}?w=600&h=400&fit=thumb&f=${imageFocus}&q=80`
   : '/img/mentor-placeholder.jpg';
 
 // Campus badge color
@@ -63,7 +66,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
         )}
         
         <div class="mentor-image">
-          <img src={imageUrl} alt={mentor.fields.mentorName} />
+          <img src={imageUrl} alt={mentor.fields.mentorName} loading="lazy" />
           {/* Category badges - bottom right */}
           {mentorCategories.length > 0 && (
             <div class="category-badges">
@@ -82,9 +85,14 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
         <div class="mentor-content">
           <h3 class="mentor-name">{mentor.fields.mentorName}</h3>
           
-          {shortBioHtml && (
-            <div class="card-front-bio" set:html={shortBioHtml}></div>
-          )}
+          <div class="bio-wrapper">
+            {shortBioHtml && (
+              <div class="card-front-bio" set:html={shortBioHtml}></div>
+            )}
+            {!shortBioHtml && (
+              <div class="card-front-bio"></div>
+            )}
+          </div>
           
           <div class="mentor-actions">
             {mentor.fields.bookingLink && (
@@ -138,7 +146,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
 )}
 
 <style>
-  /* Card container and base */
+  /* Card container and base - Original sizing preserved */
   .mentor-card-container {
     perspective: 1000px;
     height: 100%;
@@ -150,7 +158,8 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: transform 0.6s;
     transform-style: preserve-3d;
-    min-height: 520px;
+    height: 100%;
+    min-height: 580px;
   }
 
   .mentor-card.flipped {
@@ -164,6 +173,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     backface-visibility: hidden;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent content from escaping card bounds */
   }
 
   .card-front {
@@ -206,18 +216,22 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     background: var(--accent-yellow);
   }
 
-  /* Image section */
+  /* Image section - Fixed height with proper aspect ratio */
   .mentor-image {
     position: relative;
-    height: 250px;
+    width: 100%;
+    height: 250px; 
     overflow: hidden;
+    background: #f0f0f0;
+    flex-shrink: 0; 
   }
 
   .mentor-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
+    object-position: center center;
+    display: block;
   }
 
   /* Category badges */
@@ -243,25 +257,67 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
 
   /* Content section */
   .mentor-content {
-    padding: 20px;
+    padding: 15px 20px 20px 20px; /* Reduced top padding */
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   .mentor-name {
     font-size: 1.3rem;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 5px; /* Reduced margin */
     text-transform: uppercase;
+    flex-shrink: 0;
   }
 
+  .bio-wrapper {
+    /* --- THIS IS THE CORE FIX --- */
+    flex: 1; /* CHANGED: This allows the bio wrapper to grow and fill the available space. */
+    margin-bottom: 10px;
+    overflow-y: auto; /* MOVED: Scrolling is now handled by this container. */
+    min-height: 0; /* ADDED: A crucial flexbox property to prevent overflow issues. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-yellow) rgba(0, 0, 0, 0.1);
+  }
+
+    /* Scrollbar styling for bio wrapper */
+  .bio-wrapper::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .bio-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .bio-wrapper::-webkit-scrollbar-thumb {
+    background: var(--accent-yellow);
+    border-radius: 4px;
+  }
+
+  .bio-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-red);
+  }
+
+  .card-front-bio {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding-right: 10px;
+    margin-top: 5px;
+    overflow-y: scroll;
+    overflow-x: hidden; 
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-yellow) rgba(0, 0, 0, 0.1);
+  }
 
   /* Action buttons */
   .mentor-actions {
     display: flex;
     gap: 10px;
-    margin-top: auto;
+    flex-shrink: 0;
+    margin-top: auto; /* Push to bottom but respect content above */
   }
 
   .mentor-book-btn {
@@ -349,21 +405,13 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
   .card-back-bio {
     font-size: 1rem;
     color: #ddd;
-    line-height: 1.1;
+    line-height: 1.5;
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 10px;
     margin-bottom: 15px;
-  }
-
-.card-front-bio {
-    font-size: 0.9rem;
-    line-height: 0.9;
-    flex: 1;
-    overflow-y: auto;
-    margin-top: 10px;
-    padding-right: 10px;
-    margin-bottom: 10px;
+    min-height: 0;
   }
 
   /* Scrollbar styling */
@@ -393,6 +441,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     text-decoration: none;
     text-transform: uppercase;
     flex-shrink: 0;
+    margin-top: auto;
   }
 
   .mentor-book-btn-back:hover {
@@ -405,18 +454,35 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     display: none;
   }
 
-  /* Mobile responsiveness */
+  /* Mobile responsiveness - Keep original responsive behavior */
   @media (max-width: 768px) {
     .mentor-card {
-      min-height: 480px;
     }
     
     .mentor-image {
-      height: 220px;
+      height: 260px;
+    }
+    
+    .card-front-bio {
+
+    }
+    
+    .card-back-bio {
+      max-height: 200px; /* Limit back bio height on mobile too */
     }
     
     .card-back-content {
       padding: 15px;
+    }
+    
+    .mentor-content {
+      padding: 10px 15px 15px 15px; /* Even less padding on mobile */
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .mentor-image {
+      height: 230px;
     }
   }
 </style>
