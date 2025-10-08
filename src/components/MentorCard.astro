@@ -188,7 +188,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: visible; /* FIXED: Allow scroll events to reach child */
+    overflow: hidden
   }
 
   /* Campus badge */
@@ -380,7 +380,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: visible; /* FIXED: Allow scroll events to reach child */
+    overflow: hidden;
     min-height: 0;
   }
 
@@ -406,7 +406,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     color: #ddd;
     line-height: 1.5;
     flex: 1;
-    overflow-y: scroll; /* FIXED: Changed from auto to scroll for always-visible scrollbar */
+    overflow-y: auto;
     overflow-x: hidden;
     padding-right: 10px;
     margin-bottom: 15px;
@@ -474,6 +474,14 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     .mentor-image {
       height: 230px;
     }
+  }
+
+    .mentor-card.flipped .card-front {
+    z-index: 1; /* Send the front to the back */
+  }
+
+  .mentor-card.flipped .card-back {
+    z-index: 3; /* Bring the back to the front */
   }
 </style>
 
