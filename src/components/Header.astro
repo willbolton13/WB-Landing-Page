@@ -110,23 +110,19 @@ if (currentCampusSlug) {
                         <div class="campus-group" data-campus={campusSlug}>
                             {hasCourses ? (
                                 <>
-                                    <div class="campus-header-wrapper">
-                                        <a 
-                                            href={`/${campusSlug}`}
-                                            class="campus-header"
-                                            data-campus-link={campusSlug}
-                                        >
-                                            {campus.fields.campusName}
-                                        </a>
-                                        <button 
-                                            class="expand-btn"
-                                            data-campus-slug={campusSlug}
-                                            type="button"
-                                            aria-label="Expand courses"
-                                        >
-                                           <i class="bi-chevron-down" data-lucide="chevron-down"></i>
-                                        </button>
-                                    </div>
+                                <div class="campus-header-wrapper" data-campus-slug={campusSlug} role="button" tabindex="0">
+                                  <div class="campus-header campus-header--static">
+                                      {campus.fields.campusName}
+                                  </div>
+                                  <button 
+                                      class="expand-btn"
+                                      type="button"
+                                      aria-label="Expand courses"
+                                      tabindex="-1"
+                                  >
+                                      <i class="bi-chevron-down" data-lucide="chevron-down"></i>
+                                  </button>
+                                </div>
                                     <div class="course-list" id={`courses-${campusSlug}`}>
                                         {campus.fields.courses.map((course) => (
                                             <a 
@@ -282,13 +278,17 @@ if (currentCampusSlug) {
     justify-content: space-between;
     width: 100%;
     border-bottom: 2px solid transparent;
-    transition: border-color 0.2s ease-in-out;
+    transition: border-color 0.2s ease-in-out, transform 0.2s ease-in-out;
   }
 
   .campus-header-wrapper:hover {
     border-bottom-color: var(--button-text-color);
+    transform: translateX(10px);
   }
 
+  .campus-header-wrapper .campus-header {
+  cursor: pointer;
+}
   /* Unified campus header styles */
   .campus-header {
     font-family: 'Futura PT';
@@ -438,8 +438,12 @@ if (currentCampusSlug) {
   }
 
   @media (max-width: 768px) {
+    .offcanvas .btn-close {
+      font-size: 1.6rem;
+    }
+
     .location-hamburger-btn {
-      font-size: 0.8rem;
+      font-size: 1.2rem;
       padding: 0.4rem 0.8rem;
     }
     
@@ -455,7 +459,20 @@ if (currentCampusSlug) {
       font-size: 1rem;
       padding: 0.4rem 0.8rem;
     }
-  }
+
+    .campus-header {
+      font-size: 2.2rem;
+    }
+
+    .course-item {
+      font-size: 1.6rem;
+      padding: 1rem;
+    }
+
+    .lucide.bi-chevron-down {
+      width: 4rem;
+      height: 4rem;
+    }
 </style>
 
 <script>
@@ -463,6 +480,7 @@ if (currentCampusSlug) {
 
   function setupOffcanvasNavigation() {
     const offcanvasElement = document.getElementById('offcanvasNavbar');
+    const triggerButton = document.querySelector('[data-bs-target="#offcanvasNavbar"]');
     if (!offcanvasElement || offcanvasElement.dataset.navListenerAttached) {
       return;
     }
@@ -470,6 +488,10 @@ if (currentCampusSlug) {
 
     // Manual close function that bypasses Bootstrap
     function closeOffcanvasManually() {
+      if (triggerButton) {
+      triggerButton.focus();
+      }
+
       // Remove show class from offcanvas
       offcanvasElement.classList.remove('show');
       offcanvasElement.removeAttribute('aria-modal');
@@ -504,29 +526,40 @@ if (currentCampusSlug) {
       }, 100);
     }
 
-    // Setup expand buttons for all expandable sections
-    const expandButtons = offcanvasElement.querySelectorAll('.expand-btn');
-    expandButtons.forEach(button => {
-      button.addEventListener('click', (event) => {
+    // Setup expand listeners for all expandable sections
+    const expandableWrappers = offcanvasElement.querySelectorAll('.campus-header-wrapper');
+    expandableWrappers.forEach(wrapper => {
+      // Add keyboard support for accessibility
+      wrapper.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          wrapper.click();
+        }
+      });
+
+      wrapper.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
         
-        const campusSlug = button.dataset.campusSlug;
+        const campusSlug = wrapper.dataset.campusSlug;
         const courseList = document.getElementById(`courses-${campusSlug}`);
+        const button = wrapper.querySelector('.expand-btn'); // Find the button inside
         
+        if (!courseList || !button) return;
+
         // Toggle expanded state
         button.classList.toggle('expanded');
         courseList.classList.toggle('expanded');
         
-        // Optional: Collapse other sections
-        expandButtons.forEach(otherButton => {
-          if (otherButton !== button) {
-            otherButton.classList.remove('expanded');
-            const otherSlug = otherButton.dataset.campusSlug;
+        // Collapse other sections
+        expandableWrappers.forEach(otherWrapper => {
+          if (otherWrapper !== wrapper) {
+            const otherButton = otherWrapper.querySelector('.expand-btn');
+            const otherSlug = otherWrapper.dataset.campusSlug;
             const otherList = document.getElementById(`courses-${otherSlug}`);
-            if (otherList) {
-              otherList.classList.remove('expanded');
-            }
+            
+            if (otherButton) otherButton.classList.remove('expanded');
+            if (otherList) otherList.classList.remove('expanded');
           }
         });
       });
