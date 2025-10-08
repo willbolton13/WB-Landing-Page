@@ -146,7 +146,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
 )}
 
 <style>
-  /* Card container and base - Original sizing preserved */
+  /* Card container and base */
   .mentor-card-container {
     perspective: 1000px;
     height: 100%;
@@ -173,7 +173,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     backface-visibility: hidden;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent content from escaping card bounds */
+    overflow: hidden;
   }
 
   .card-front {
@@ -188,7 +188,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: hidden;
+    overflow: visible; /* FIXED: Allow scroll events to reach child */
   }
 
   /* Campus badge */
@@ -216,7 +216,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     background: var(--accent-yellow);
   }
 
-  /* Image section - Fixed height with proper aspect ratio */
+  /* Image section */
   .mentor-image {
     position: relative;
     width: 100%;
@@ -258,7 +258,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
 
   /* Content section */
   .mentor-content {
-    padding: 15px 20px 20px 20px; /* Reduced top padding */
+    padding: 15px 20px 20px 20px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -268,28 +268,29 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
   .mentor-name {
     font-size: 1.3rem;
     font-weight: 700;
-    margin-bottom: 5px; /* Reduced margin */
+    margin-bottom: 5px;
     text-transform: uppercase;
     flex-shrink: 0;
   }
 
+  /* FIXED: Single scroll container for front bio */
   .bio-wrapper {
-    /* --- THIS IS THE CORE FIX --- */
-    flex: 1; /* CHANGED: This allows the bio wrapper to grow and fill the available space. */
+    flex: 1;
     margin-bottom: 10px;
-    overflow-y: auto; /* MOVED: Scrolling is now handled by this container. */
-    min-height: 0; /* ADDED: A crucial flexbox property to prevent overflow issues. */
+    overflow-y: auto; /* CHANGED: auto only shows scrollbar when needed */
+    overflow-x: hidden;
+    min-height: 0;
     scrollbar-width: thin;
-    scrollbar-color: var(--accent-yellow) rgba(0, 0, 0, 0.1);
+    scrollbar-color: var(--accent-yellow) transparent;
   }
 
-    /* Scrollbar styling for bio wrapper */
+  /* Scrollbar styling for bio wrapper */
   .bio-wrapper::-webkit-scrollbar {
     width: 8px;
   }
 
   .bio-wrapper::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
+    background: transparent; /* CHANGED: transparent so no grey box */
   }
 
   .bio-wrapper::-webkit-scrollbar-thumb {
@@ -306,11 +307,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     line-height: 1.4;
     padding-right: 10px;
     margin-top: 5px;
-    overflow-y: scroll;
-    overflow-x: hidden; 
-    scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-yellow) rgba(0, 0, 0, 0.1);
+    /* NO overflow properties - content only */
   }
 
   /* Action buttons */
@@ -318,7 +315,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     display: flex;
     gap: 10px;
     flex-shrink: 0;
-    margin-top: auto; /* Push to bottom but respect content above */
+    margin-top: auto;
   }
 
   .mentor-book-btn {
@@ -383,7 +380,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible; /* FIXED: Allow scroll events to reach child */
     min-height: 0;
   }
 
@@ -403,19 +400,22 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     flex-shrink: 0;
   }
 
+  /* FIXED: Back bio scrolling */
   .card-back-bio {
     font-size: 1rem;
     color: #ddd;
     line-height: 1.5;
     flex: 1;
-    overflow-y: auto;
+    overflow-y: scroll; /* FIXED: Changed from auto to scroll for always-visible scrollbar */
     overflow-x: hidden;
     padding-right: 10px;
     margin-bottom: 15px;
     min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-yellow) rgba(255, 255, 255, 0.1);
   }
 
-  /* Scrollbar styling */
+  /* Scrollbar styling for back bio */
   .card-back-bio::-webkit-scrollbar {
     width: 8px;
   }
@@ -455,21 +455,10 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     display: none;
   }
 
-  /* Mobile responsiveness - Keep original responsive behavior */
+  /* Mobile responsiveness */
   @media (max-width: 768px) {
-    .mentor-card {
-    }
-    
     .mentor-image {
       height: 260px;
-    }
-    
-    .card-front-bio {
-
-    }
-    
-    .card-back-bio {
-      max-height: 200px; /* Limit back bio height on mobile too */
     }
     
     .card-back-content {
@@ -477,7 +466,7 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     }
     
     .mentor-content {
-      padding: 10px 15px 15px 15px; /* Even less padding on mobile */
+      padding: 10px 15px 15px 15px;
     }
   }
 
