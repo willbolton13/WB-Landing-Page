@@ -76,60 +76,77 @@ if (contentType === 'eventList' && eventData) {
 
 <div class={`content-item content-type-${contentType}`} data-content-index={index}>
   
-  {/* Button Group */}
+{/* Button Group */}
   {contentType === 'buttonGroup' && (
-    <div class="button-group-section">
-      {(() => {
-        const columns = item.fields.columnsPerRow || 3;
-        const style = item.fields.buttonStyle || 'Yellow Portal Cards';
-        const buttons = item.fields.buttons || [];
+    (() => {
+      // 1. Determine Context
+      const isFirstItem = index === 0;
+      
+      const columns = item.fields.columnsPerRow || 3;
+      const style = item.fields.buttonStyle || 'Yellow Portal Cards';
+      const buttons = item.fields.buttons || [];
+      
+      // 2. Determine Background Logic
+      // If it's the first item, FORCE transparent background to blend with hero
+      // If it's later, use the configured background or default to white
+      const bgField = item.fields.backgroundColor || 'None';
+      const bgClass = isFirstItem ? '' : (bgField !== 'None' ? `bg-${bgField.toLowerCase()}` : 'bg-white');
+      
+      // 3. Container Class - distinct classes for Hero Overlay vs Standard Section
+      const containerClass = isFirstItem 
+        ? 'button-group-hero-overlay' 
+        : `button-group-section ${bgClass}`;
         
-        const styleClass = {
-          'Yellow Portal Cards': '',
-          'Green Action Buttons': 'portal-card-green',
-          'Red Accent Buttons': 'portal-card-red'
-        }[style] || '';
-        
-        const getColClass = () => {
-          switch(columns) {
-            case 2: return 'col-lg-6';
-            case 4: return 'col-lg-3';
-            default: return 'col-lg-4';
-          }
-        };
-        
-        const colClass = getColClass();
-        
-        return (
-          <>
-            {item.fields.groupName && (
-              <h2 class="button-group-title">{item.fields.groupName}</h2>
-            )}
-            
-            <div class="row g-4 justify-content-center mb-4">
-              {buttons.map(buttonRef => {
-                const button = findIncludedEntry(includes, buttonRef.sys.id) || buttonRef;
-                if (!button?.fields) return null;
-                
-                return (
-                  <div class={`${colClass} col-md-6`}>
-                    <a href={button.fields.link} target="_blank" class={`portal-card ${styleClass}`}>
-                      <div class="portal-card-icon">
-                        <i data-lucide={button.fields.icon || 'square'}></i>
-                      </div>
-                      <h3>{button.fields.buttonText}</h3>
-                      {button.fields.buttonSubtitle && (
-                        <p class="portal-card-subtitle">{button.fields.buttonSubtitle}</p>
-                      )}
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        );
-      })()}
-    </div>
+      // 4. Title Class - White+Shadow for Hero, Dark for Standard
+      const titleClass = isFirstItem
+        ? 'button-group-title hero-mode'
+        : 'button-group-title standard-mode';
+
+      const styleClass = {
+        'Yellow Portal Cards': '',
+        'Green Action Buttons': 'portal-card-green',
+        'Red Accent Buttons': 'portal-card-red'
+      }[style] || '';
+      
+      const getColClass = () => {
+        switch(columns) {
+          case 2: return 'col-lg-6';
+          case 4: return 'col-lg-3';
+          default: return 'col-lg-4';
+        }
+      };
+      
+      const colClass = getColClass();
+      
+      return (
+        <div class={containerClass}>
+          {item.fields.groupName && (
+            <h2 class={titleClass}>{item.fields.groupName}</h2>
+          )}
+          
+          <div class="row g-4 justify-content-center mb-4">
+            {buttons.map(buttonRef => {
+              const button = findIncludedEntry(includes, buttonRef.sys.id) || buttonRef;
+              if (!button?.fields) return null;
+              
+              return (
+                <div class={`${colClass} col-md-6`}>
+                  <a href={button.fields.link} target="_blank" class={`portal-card ${styleClass}`}>
+                    <div class="portal-card-icon">
+                      <i data-lucide={button.fields.icon || 'square'}></i>
+                    </div>
+                    <h3>{button.fields.buttonText}</h3>
+                    {button.fields.buttonSubtitle && (
+                      <p class="portal-card-subtitle">{button.fields.buttonSubtitle}</p>
+                    )}
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    })()
   )}
 
   {/* Info Block */}
@@ -379,6 +396,53 @@ if (contentType === 'eventList' && eventData) {
     text-transform: uppercase;
     margin-bottom: 1.5rem;
     color: #000;
+  }
+
+  /* 1. HERO OVERLAY MODE (Index 0) */
+  /* Mimics the clean look of the Course Page */
+  .button-group-hero-overlay {
+    background-color: transparent; /* See-through */
+    padding: 0; /* No padding needed */
+    margin-bottom: 3rem;
+  }
+
+  .button-group-title.hero-mode {
+    text-align: center;
+    font-size: 1.8rem; /* Matches course prompt size */
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    
+    /* Crucial: White text with shadow to read over image */
+    color: #ffffff; 
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); 
+    font-family: "Futura PT", sans-serif; /* Or 'Jost' if you prefer the prompt font */
+  }
+
+  .button-group-section {
+    margin-bottom: 3rem;
+    transition: background-color 0.3s ease;
+  }
+
+  /* Styles for when it has a background (White, Red, etc) */
+  .button-group-section.bg-white,
+  .button-group-section.bg-yellow,
+  .button-group-section.bg-red,
+  .button-group-section.bg-green,
+  .button-group-section.bg-black {
+    padding: 2rem;
+    border-radius: 2px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); /* Subtle lift */
+  }
+
+  .button-group-title.standard-mode {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    color: inherit; /* Inherits from bg-class (Black text on White bg) */
+    text-shadow: none; /* No shadow needed on solid bg */
   }
 
   .portal-card-red {
@@ -743,6 +807,96 @@ if (contentType === 'eventList' && eventData) {
 
   .mentor-grid-item:has(.mentor-card-container.hidden) {
     display: none;
+  }
+
+
+/* --- Rich Text Table Styling --- */
+  
+  /* Use :global() to target HTML injected by the rich text renderer */
+  .text-content :global(table) {
+    width: 100%;
+    border-collapse: collapse; /* Ensures borders touch */
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+  }
+
+  /* Table Headers */
+  .text-content :global(th) {
+    font-family: "Futura PT", sans-serif;
+    font-weight: 700; /* Bold Headers */
+    text-transform: uppercase;
+    padding: 1rem 0.5rem;
+    border-bottom: 2px solid #000; /* Strong divider under headers */
+    vertical-align: bottom;
+  }
+
+  /* Table Cells */
+  .text-content :global(td) {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #dee2e6; /* Clean grey divider lines */
+    vertical-align: middle;
+    font-weight: 400 !important; /* FORCE normal weight (Fixes the "All Bold" issue) */
+  }
+
+  /* Optional: Striped rows for readability */
+  .text-content :global(tr:nth-child(even)) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  /* Mobile responsiveness for tables */
+  @media (max-width: 768px) {
+    .text-content :global(table) {
+      display: block;
+      overflow-x: auto; /* Horizontal scroll on phone */
+      white-space: nowrap;
+    }
+  }
+
+  /* --- Rich Text List Styling (Global to affect injected HTML) --- */
+  .text-content :global(ul),
+  .content-block-text :global(ul) {
+    list-style: none; /* Remove default round bullets */
+    padding-left: 1.5rem; /* Create hanging indent space */
+    margin: 1.5rem 0;
+  }
+
+  .text-content :global(li),
+  .content-block-text :global(li) {
+    position: relative;
+    margin-bottom: 0.75rem; /* Breathing room between items */
+    line-height: 1.4;
+  }
+
+  /* Custom "On-Brand" Square Bullet */
+  .text-content :global(li::before),
+  .content-block-text :global(li::before) {
+    content: "";
+    position: absolute;
+    left: -1.5rem; /* Pull bullet into the margin */
+    top: 0.7em;    /* Align with the first line of text */
+    width: 8px;    /* Fixed, solid size */
+    height: 8px;
+    background-color: currentColor; /* Auto-matches text color (Black or White) */
+    /* Optional: transform: rotate(45deg); for a diamond shape */
+  }
+
+  /* --- Rich Text Link Styling --- */
+  /* Fixes the unreadable blue links */
+  .text-content :global(a),
+  .content-block-text :global(a) {
+    color: inherit !important; /* Forces link to be Black on Yellow (or White on Black) */
+    font-weight: 700;          /* Make it bold */
+    text-decoration: underline;
+    text-decoration-thickness: 2px; /* Chunky underline */
+    text-underline-offset: 4px;     /* Space between text and line */
+    transition: opacity 0.2s ease;
+  }
+
+  /* Hover State */
+  .text-content :global(a:hover),
+  .content-block-text :global(a:hover) {
+    opacity: 0.6;
+    text-decoration-thickness: 3px;
   }
 </style>
 

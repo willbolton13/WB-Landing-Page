@@ -78,20 +78,30 @@ if (currentCampusSlug) {
                     <strong class="text-warning">{currentResourceName}</strong>
                 </span>
             ) : (
-                <span><strong>Select your campus to get started</strong></span>
+                <span><strong>Select your campus</strong></span>
             )}
         </div>
         
-        <button 
-            class="location-hamburger-btn d-flex align-items-center gap-2" 
-            type="button" 
-            data-bs-toggle="offcanvas" 
-            data-bs-target="#offcanvasNavbar" 
-            aria-controls="offcanvasNavbar" 
-            aria-label="Toggle navigation"
-        >Menu
-             <i data-lucide="menu"></i>
-        </button>
+        <div class="header-actions d-flex align-items-center gap-2 gap-md-3">
+    
+          <a href="/help" class="header-help-btn d-flex align-items-center gap-2">
+              <span class="d-none d-lg-inline">HELP</span>
+              <i data-lucide="circle-help"></i>
+          </a>
+
+          <button 
+              class="location-hamburger-btn d-flex align-items-center gap-2" 
+              type="button" 
+              data-bs-toggle="offcanvas" 
+              data-bs-target="#offcanvasNavbar" 
+              aria-controls="offcanvasNavbar" 
+              aria-label="Toggle navigation"
+          >
+              <span class="d-none d-lg-inline">MENU</span>
+              <i data-lucide="menu"></i>
+          </button>
+        </div>
+
         
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
             <div class="offcanvas-header">
@@ -193,12 +203,25 @@ if (currentCampusSlug) {
 
   header .container {
     padding-right: 15px;
+    position: relative;
   }
 
-  .location-status {
-    color: var(--text-color);
-    font-size: 0.9rem;
-  }
+.location-status {
+  position: absolute;          /* Removes it from the flex flow */
+  left: 50%;                   /* Moves to middle of container */
+  transform: translateX(-50%); /* Centers exactly on its own width */
+  
+  color: var(--text-color);
+  font-size: 0.9rem;
+  max-width: 45vw;         /* Never take up more than 45% of screen width */
+  overflow: hidden;        /* Cut off text if it gets too long */
+  text-overflow: ellipsis; /* Add "..." at the end */
+  white-space: nowrap;     /* Keep it on one line */
+  
+  display: flex;           /* Ensures ellipsis works with flex children */
+  justify-content: center;
+  z-index: 1;
+}
 
   .location-status .bi-geo-alt-fill {
     color: var(--accent-yellow);
@@ -228,6 +251,66 @@ if (currentCampusSlug) {
     color: var(--button-text-color);
     transform: scale(1.05);
   }
+
+  /* Add to your <style> block */
+
+/* Wrapper alignment */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 2; /* Ensures buttons stay clickable if things get tight */
+}
+
+/* Shared styles for alignment */
+.header-help-btn,
+.location-hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px; /* Fixed height ensures they match perfectly */
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: all 0.2s ease-in-out;
+  border-radius: 0; /* Matches your brutalist/box aesthetic */
+  text-decoration: none; /* For the anchor tag */
+}
+
+/* Primary MENU Button (Existing logic refactored slightly) */
+.location-hamburger-btn {
+  background-color: var(--accent-yellow);
+  border: 2px solid var(--accent-yellow);
+  color: var(--button-text-color);
+}
+
+.location-hamburger-btn:hover {
+  background-color: var(--text-color); /* Turns white */
+  border-color: var(--text-color);
+  color: var(--button-text-color); /* Text stays black */
+  transform: scale(1.05);
+}
+
+/* Secondary HELP Button (Ghost Style) */
+.header-help-btn {
+  background-color: transparent;
+  border: 2px solid var(--accent-yellow); /* Matches brand yellow */
+  color: var(--accent-yellow);
+}
+
+.header-help-btn:hover {
+  background-color: var(--accent-yellow);
+  color: var(--button-text-color);
+  transform: scale(1.05);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 576px) {
+  .header-help-btn,
+  .location-hamburger-btn {
+    padding: 0 0.6rem; /* Smaller padding on mobile */
+  }
+}
 
   .offcanvas {
     background-color: var(--accent-yellow);
