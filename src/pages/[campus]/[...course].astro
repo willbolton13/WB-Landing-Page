@@ -750,6 +750,89 @@ if (!heroImageUrl) {
     color: var(--text-color);
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
   }
+
+/* =========================================
+     RICH TEXT STYLING (Parity with ContentRenderer)
+     ========================================= */
+
+  /* --- Tables --- */
+  .content-block-text :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+  }
+
+  /* Table Headers */
+  .content-block-text :global(th) {
+    font-family: "Futura PT", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1rem 0.5rem;
+    border-bottom: 2px solid #000;
+    vertical-align: bottom;
+  }
+
+  /* Table Cells */
+  .content-block-text :global(td) {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+    font-weight: 400 !important;
+  }
+
+  /* Striped rows */
+  .content-block-text :global(tr:nth-child(even)) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  /* Mobile responsiveness for tables */
+  @media (max-width: 768px) {
+    .content-block-text :global(table) {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+
+  /* --- Lists (Custom Square Bullets) --- */
+  .content-block-text :global(ul) {
+    list-style: none;
+    padding-left: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .content-block-text :global(li) {
+    position: relative;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .content-block-text :global(li::before) {
+    content: "";
+    position: absolute;
+    left: -1.5rem;
+    top: 0.7em;
+    width: 8px;
+    height: 8px;
+    background-color: currentColor; /* Matches text color */
+  }
+
+  /* --- Links --- */
+  .content-block-text :global(a) {
+    color: inherit !important;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    transition: opacity 0.2s ease;
+  }
+
+  .content-block-text :global(a:hover) {
+    opacity: 0.6;
+    text-decoration-thickness: 3px;
+  }
+  
 </style>
 
 <script>
