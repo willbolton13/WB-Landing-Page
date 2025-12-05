@@ -285,35 +285,29 @@ if (!heroImageUrl) {
           <p class="course-subtitle">{courseData.fields.courseName}</p>
         </div>
         
-        {/* Portal Cards - use campus custom buttons if available */}
-        {campusData.fields.useCustomButtons && customPortalButtons.length > 0 ? (
-          <div class="row g-4 justify-content-center mb-4">
-            {customPortalButtons.map((button) => (
-              <div class="col-lg-6 col-md-6">
-                <a href={button.fields.link} target="_blank" class="portal-card custom-portal-card">
-                  <div class="portal-card-icon">
-                    <i data-lucide={button.fields.icon || 'square'}></i>
-                  </div>
-                  <h3>{button.fields.buttonText}</h3>
-                  <p class="portal-card-subtitle">{button.fields.buttonSubtitle || ''}</p>
-                </a>
-              </div>
-            ))}
+       {/* --- TOGGLE CONTROL (Only if Info Blocks exist) --- */}
+        {courseData.fields.informationBlocks && courseData.fields.informationBlocks.length > 0 && (
+          <div class="view-toggle-container">
+            <div class="view-toggle">
+              <button class="toggle-btn active" data-target="quick-links-view">
+                <i data-lucide="layout-grid"></i> Quick Links
+              </button>
+              <button class="toggle-btn" data-target="news-view">
+                <i data-lucide="newspaper"></i> News & Info
+              </button>
+            </div>
           </div>
-        ) : (
-          <StaticPortalCards />
         )}
-        
-        {/* Dynamic Course Buttons */}
-        {courseData.fields.locationButtons && courseData.fields.locationButtons.length > 0 && (
-          <div class="row g-4 justify-content-center mb-4">
-            {courseData.fields.locationButtons.map((buttonRef) => {
-              const button = findIncludedEntry(courseResponse.includes, buttonRef.sys.id);
-              if (!button) return null;
-              
-              return (
-                <div class="portal-cards-container col-lg-6 col-md-6">
-                  <a href={button.fields.link} target="_blank" class="portal-card portal-card-green">
+
+        {/* --- VIEW 1: QUICK LINKS (Default) --- */}
+        <div id="quick-links-view" class="view-section active">
+          
+          {/* Portal Cards */}
+          {campusData.fields.useCustomButtons && customPortalButtons.length > 0 ? (
+            <div class="row g-4 justify-content-center mb-4">
+              {customPortalButtons.map((button) => (
+                <div class="col-lg-6 col-md-6">
+                  <a href={button.fields.link} target="_blank" class="portal-card custom-portal-card">
                     <div class="portal-card-icon">
                       <i data-lucide={button.fields.icon || 'square'}></i>
                     </div>
@@ -321,62 +315,90 @@ if (!heroImageUrl) {
                     <p class="portal-card-subtitle">{button.fields.buttonSubtitle || ''}</p>
                   </a>
                 </div>
-              );
-            })}
-          </div>
-        )}
-        
-        <!-- Information Blocks Section -->
+              ))}
+            </div>
+          ) : (
+            <StaticPortalCards />
+          )}
+          
+          {/* Dynamic Course Buttons (Location Buttons) */}
+          {courseData.fields.locationButtons && courseData.fields.locationButtons.length > 0 && (
+            <div class="row g-4 justify-content-center mb-4">
+              {courseData.fields.locationButtons.map((buttonRef) => {
+                const button = findIncludedEntry(courseResponse.includes, buttonRef.sys.id);
+                if (!button) return null;
+                
+                return (
+                  <div class="portal-cards-container col-lg-6 col-md-6">
+                    <a href={button.fields.link} target="_blank" class="portal-card portal-card-green">
+                      <div class="portal-card-icon">
+                        <i data-lucide={button.fields.icon || 'square'}></i>
+                      </div>
+                      <h3>{button.fields.buttonText}</h3>
+                      <p class="portal-card-subtitle">{button.fields.buttonSubtitle || ''}</p>
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* --- VIEW 2: NEWS / INFORMATION BLOCKS --- */}
         {courseData.fields.informationBlocks && courseData.fields.informationBlocks.length > 0 && (
-          <div>
+          <div id="news-view" class="view-section">
             {courseData.fields.informationBlocks.map((blockRef, index) => {
+            
               const block = findIncludedEntry(courseResponse.includes, blockRef.sys.id);
               if (!block) return null;
               
               const imageAsset = block.fields.image ? 
                 findIncludedAsset(courseResponse.includes, block.fields.image.sys.id) : null;
               const imageUrl = imageAsset ? 
-                `https:${imageAsset.fields.file.url}?w=1200&q=80` : null;
+                  `https:${imageAsset.fields.file.url}?w=1200&q=80` : null;
               
               const contentHtml = block.fields.content 
                 ? documentToHtmlString(block.fields.content)
-                  : '';
+                : '';
               
-              // Determine layout based on whether image exists
+
+              const bgColor = block.fields.backgroundColor || 'White';
+              const bgClass = bgColor !== 'None' ? `bg-${bgColor.toLowerCase()}` : '';
+
               const hasImage = !!imageUrl;
               const layoutClass = hasImage && index % 2 === 1 ? 'image-left' : '';
               
+              // NEW: Added bgClass to the wrapper div
               return (
-                <div class={`content-block ${layoutClass} ${!hasImage ? 'no-image' : ''}`}>
+                <div class={`content-block ${layoutClass} ${!hasImage ? 'no-image' : ''} ${bgClass}`}>
                   {hasImage ? (
-                    // Layout WITH image
                     <div class="row align-items-center justify-content-between">
                       <div class="col-md-7 content-block-text">
-                        <h2>{block.fields.heading}</h2>
+                         <h2>{block.fields.heading}</h2>
                         <div set:html={contentHtml}></div>
                       </div>
                       <div class="col-md-5 content-block-image">
-                        <img src={imageUrl} class="img-fluid rounded" alt={block.fields.heading}>
+                         <img src={imageUrl} class="img-fluid rounded" alt={block.fields.heading} />
                         {block.fields.buttonText && block.fields.buttonLink && (
                           <a href={block.fields.buttonLink} target="_blank" class="overlap-btn">
-                            {block.fields.buttonText}
+                             {block.fields.buttonText}
                           </a>
                         )}
                       </div>
                     </div>
-                  ) : (
-                    // Layout WITHOUT image - full width, left-aligned to match
+                   ) : (
                     <div class="row">
                       <div class="col-md-12 content-block-text">
                         <h2>{block.fields.heading}</h2>
-                        <div set:html={contentHtml}></div>
+                         <div set:html={contentHtml}></div>
                         {block.fields.buttonText && block.fields.buttonLink && (
                           <div class="button-container">
                             <a href={block.fields.buttonLink} target="_blank" class="overlap-btn position-relative">
-                              {block.fields.buttonText}
+                               {block.fields.buttonText}
                             </a>
                           </div>
-                        )}
+                    
+                         )}
                       </div>
                     </div>
                   )}
@@ -568,6 +590,9 @@ if (!heroImageUrl) {
   /* Content blocks */
   .content-block {
     margin-bottom: 3rem;
+    padding: 2rem;
+    border-radius: 2px;
+    transition: background-color 0.3s ease;
   }
 
   .content-block-text h2,
@@ -598,21 +623,88 @@ if (!heroImageUrl) {
 
   .overlap-btn {
     position: absolute;
-    bottom: -10px;
-    right: 20px;
-    background-color: var(--accent-green);
-    color: var(--text-color);
+    bottom: -30px;
+    right: -20px;
+    background-color: #000000; /* Changed to Black */
+    color: #ffffff;
     padding: 10px 25px;
     border-radius: 2px;
     font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
+    border: 1px solid transparent; /* Prepare for hover states */
   }
 
   .overlap-btn:hover {
-
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     transform: scale(1.05);
+    background-color: var(--accent-yellow); /* Optional: Pop color on hover */
+    color: #000000;
+  }
+
+  .bg-red {
+    background-color: #DE0029;
+    color: white;
+  }
+
+  .bg-yellow {
+    background-color: #F6DD0D;
+    color: #000;
+  }
+
+  .bg-green {
+    background-color: #6D9D7E;
+    color: white;
+  }
+
+  .bg-white {
+    background-color: #FFFFFF;
+    color: #000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .bg-black {
+    background-color: #000000;
+    color: white;
+  }
+  
+  /* Ensure headings are white on dark backgrounds */
+  .bg-red h2,
+  .bg-green h2,
+  .bg-black h2 {
+    color: white !important;
+    text-shadow: none;
+  }
+
+  /* Ensure headings are black on light backgrounds */
+  .bg-yellow h2,
+  .bg-white h2 {
+    color: #000 !important;
+    text-shadow: none;
+  }
+
+  /* Handle Rich Text Links on dark backgrounds [cite: 441] */
+  .bg-red .content-block-text :global(a),
+  .bg-green .content-block-text :global(a),
+  .bg-black .content-block-text :global(a) {
+    color: white !important;
+    text-decoration-color: rgba(255,255,255, 0.5);
+  }
+
+  /* Handle Rich Text Paragraphs on dark backgrounds */
+  .bg-red .content-block-text :global(p),
+  .bg-green .content-block-text :global(p),
+  .bg-black .content-block-text :global(p),
+  .bg-red .content-block-text :global(li),
+  .bg-green .content-block-text :global(li),
+  .bg-black .content-block-text :global(li) {
+    color: white !important;
+  }
+  
+  /* Special handling for the button if the background is also black */
+  .bg-black .overlap-btn {
+    background-color: #ffffff;
+    color: #000000;
   }
 
   /* Staff section */
@@ -832,7 +924,83 @@ if (!heroImageUrl) {
     opacity: 0.6;
     text-decoration-thickness: 3px;
   }
-  
+/* =========================================
+     TOGGLE VIEW STYLING
+     ========================================= */
+  .view-toggle-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 10;
+  }
+
+  .view-toggle {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 1);
+    backdrop-filter: blur(5px);
+    border: 2px solid var(--button-text-color); /* Black */
+    border-radius: 1px;
+    padding: 4px;
+    gap: 0;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 0.6rem 1.8rem;
+    border-radius: 1px;
+    font-family: 'Futura PT', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    color: var(--button-text-color); /* Black */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1;
+  }
+
+  .toggle-btn i {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-btn:hover {
+    background-color: rgba(0,0,0,0.05);
+    scale: 1.03;
+  }
+
+  .toggle-btn.active {
+    background-color: var(--button-text-color); /* Black */
+    color: var(--text-color); /* White */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  /* View Sections */
+  .view-section {
+    display: none; /* Hidden by default */
+    animation: fadeInSlide 0.4s ease-out forwards;
+  }
+
+  .view-section.active {
+    display: block; /* Visible when active */
+  }
+
+  @keyframes fadeInSlide {
+    from { 
+      opacity: 0; 
+      transform: translateY(15px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+
 </style>
 
 <script>
@@ -921,8 +1089,40 @@ if (!heroImageUrl) {
     });
   }
 
+function setupViewToggle() {
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    const sections = document.querySelectorAll('.view-section');
+
+    if (toggleButtons.length === 0) return;
+
+    toggleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // 1. Deactivate all buttons
+        toggleButtons.forEach(b => b.classList.remove('active'));
+        // 2. Activate clicked button
+        btn.classList.add('active');
+
+        // 3. Hide all sections
+        sections.forEach(s => s.classList.remove('active'));
+        
+        // 4. Show target section
+        const targetId = btn.getAttribute('data-target');
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+          targetSection.classList.add('active');
+          
+          // Optional: Re-trigger scroll animations for the new content
+          // if you want the "fade in up" effect to re-run
+          if (window.lucide) window.lucide.createIcons();
+        }
+      });
+    });
+  }
+
+
 document.addEventListener('astro:page-load', () => {
   setupPageAnimationsAdvanced();
+  setupViewToggle();
   //setupParallax(); 
 });
 </script>
