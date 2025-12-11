@@ -292,8 +292,13 @@ if (!heroImageUrl) {
               <button class="toggle-btn active" data-target="quick-links-view">
                 <i data-lucide="layout-grid"></i> Quick Links
               </button>
+
               <button class="toggle-btn" data-target="news-view">
                 <i data-lucide="newspaper"></i> News & Info
+
+              <span class="notification-badge">
+                  {courseData.fields.informationBlocks.length}
+                </span>
               </button>
             </div>
           </div>
@@ -378,7 +383,7 @@ if (!heroImageUrl) {
                         <div set:html={contentHtml}></div>
                       </div>
                       <div class="col-md-5 content-block-image">
-                         <img src={imageUrl} class="img-fluid rounded" alt={block.fields.heading} />
+                         <img src={imageUrl} class="img-fluid" alt={block.fields.heading} />
                         {block.fields.buttonText && block.fields.buttonLink && (
                           <a href={block.fields.buttonLink} target="_blank" class="overlap-btn">
                              {block.fields.buttonText}
@@ -602,10 +607,25 @@ if (!heroImageUrl) {
   }
 
   .content-block-text h2{
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 700;
     text-transform: uppercase;
     font-family: "Futura pt", sans-serif;
+    margin-bottom: 20px;
+  
+  }
+
+  @media (max-width: 768px) { 
+    .content-block-text h2{
+      text-align: center;
+      width fit-content;
+      font-size: 1.5rem;
+      top: -10px;
+      
+      
+
+
+    }
   }
 
   @media (min-width: 768px) {
@@ -616,23 +636,52 @@ if (!heroImageUrl) {
       order: 1;
     }
   }
+  .content-block {
+    position: relative;
+  }
 
   .content-block-image {
-    position: relative;
+    position: static;
   }
 
   .overlap-btn {
     position: absolute;
-    bottom: -30px;
+    bottom: -20px;
     right: -20px;
-    background-color: #000000; /* Changed to Black */
-    color: #ffffff;
+    left: auto;
+    background-color: #000000; 
+    color: #ffffff !important;
     padding: 10px 25px;
     border-radius: 2px;
     font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
     border: 1px solid transparent; /* Prepare for hover states */
+  }
+
+  .content-block.image-left .overlap-btn {
+    right: auto;       /* Unset the default right position */
+    left: -20px;       /* Hang off the left edge */
+  }
+
+  @media (max-width: 768px) {
+    .content-block-text a.overlap-btn,
+    .overlap-btn {
+      position: static;
+
+      display: block;
+      width fit-content;
+      margin-top: 1.5rem;
+
+      left: auto !important;
+      right: auto !important;
+      
+      text-align: center;
+    }
+    .content-block.image-left .overlap-btn {
+      left: auto !important;
+      right: auto !important;
+    }
   }
 
   .overlap-btn:hover {
@@ -683,7 +732,7 @@ if (!heroImageUrl) {
     text-shadow: none;
   }
 
-  /* Handle Rich Text Links on dark backgrounds [cite: 441] */
+  /* Handle Rich Text Links on dark backgrounds */
   .bg-red .content-block-text :global(a),
   .bg-green .content-block-text :global(a),
   .bg-black .content-block-text :global(a) {
@@ -703,8 +752,8 @@ if (!heroImageUrl) {
   
   /* Special handling for the button if the background is also black */
   .bg-black .overlap-btn {
-    background-color: #ffffff;
-    color: #000000;
+    background-color: #ffffff !important;
+    color: #bc1c1cd7 !important;
   }
 
   /* Staff section */
@@ -823,7 +872,7 @@ if (!heroImageUrl) {
 
   /* Optional: Add some padding to no-image blocks if needed */
   .content-block.no-image {
-    padding: 1rem 0;
+    padding: 2rem;
   }
 
   @media (max-width: 768px) {
@@ -936,6 +985,7 @@ if (!heroImageUrl) {
   }
 
   .view-toggle {
+    overflow: visible;
     display: inline-flex;
     background: rgba(255, 255, 255, 1);
     backdrop-filter: blur(5px);
@@ -947,6 +997,7 @@ if (!heroImageUrl) {
   }
 
   .toggle-btn {
+    position: relative;
     background: transparent;
     border: none;
     padding: 0.6rem 1.8rem;
@@ -964,6 +1015,38 @@ if (!heroImageUrl) {
     line-height: 1;
   }
 
+  .notification-badge {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background-color: var(--accent-red); /* Brand Red */
+    color: #ffffff;
+    font-family: 'Futura PT', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    
+    width: 30px;
+    height: 30px;
+    
+    /* Centering the number */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Visual Pop */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 2px solid #000000; /* White border to separate from background */
+    z-index: 20;
+    
+    /* Animation (optional - makes it pop in) */
+    animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes badgePop {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+  }
+
   .toggle-btn i {
     width: 18px;
     height: 18px;
@@ -979,6 +1062,8 @@ if (!heroImageUrl) {
     color: var(--text-color); /* White */
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
+
+
 
   /* View Sections */
   .view-section {
@@ -1000,6 +1085,25 @@ if (!heroImageUrl) {
       transform: translateY(0); 
     }
   }
+
+.content-block-text a.overlap-btn {
+    color: #ffffff !important;
+    text-decoration: none !important;
+  }
+
+  /* Fix for Black Backgrounds when button is inside text */
+  .bg-black .content-block-text a.overlap-btn {
+    background-color: #ffffff;
+    color: #000000 !important;
+  }
+  
+  /* Fix hover state when button is inside text */
+  .content-block-text a.overlap-btn:hover {
+     color: #000000 !important;
+     background-color: var(--accent-yellow);
+     opacity: 1 !important;
+  }
+
 
 </style>
 
