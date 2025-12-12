@@ -1,39 +1,43 @@
 ---
-// No props needed - these are always the same
+// 1. Export the data so other pages (like [...course].astro) can import it
+export const staticCardsData = [
+  {
+    fields: {
+      link: "https://waterbear.instructure.com/",
+      icon: "square-library",
+      buttonText: "Canvas",
+      buttonSubtitle: "Learning Materials and Assignments"
+    }
+  },
+  {
+    fields: {
+      link: "https://booker.optime.cloud/",
+      icon: "calendar-plus",
+      buttonText: "Booker",
+      buttonSubtitle: "Book Spaces, Studio & Rehearsal"
+    }
+  },
+  {
+    fields: {
+      link: "https://timetabler.optime.cloud/",
+      icon: "calendar-range",
+      buttonText: "Timetabler",
+      buttonSubtitle: "Your Timetable & Classes"
+    }
+  }
+];
 ---
 
-  <div class="row g-4 justify-content-center mb-4">
-  <div class="col-lg-4 col-md-4">
-    <a href="https://waterbear.instructure.com/" target="_blank" class="portal-card">
-      <div class="portal-card-icon">
-        <i data-lucide="square-library"></i>
-      </div>
-      <h3>Canvas</h3>
-      <p class="portal-card-subtitle">Learning Materials and Assignments</p>
-    </a>
-  </div>
-
-  <div class="col-lg-4 col-md-4">
-    <a href="https://booker.optime.cloud/" target="_blank" class="portal-card">
-      <div class="portal-card-icon">
-        <i data-lucide="calendar-plus"></i>
-      </div>
-      <h3>Booker</h3>
-      <p class="portal-card-subtitle">Book Spaces, Studio & Rehearsal</p>
-    </a>
-  </div>
-  
-  <div class="col-lg-4 col-md-4">
-    <a href="https://timetabler.optime.cloud/" target="_blank" class="portal-card">
-      <div class="portal-card-icon">
-        <i data-lucide="calendar-range"></i>
-      </div>
-      <h3>Timetabler</h3>
-      <p class="portal-card-subtitle">Your Timetable & Classes</p>
-    </a>
-  </div>
+<div class="row g-4 justify-content-center mb-4">
+  {staticCardsData.map((card) => (
+    <div class="col-lg-4 col-md-4">
+      <a href={card.fields.link} target="_blank" class="portal-card">
+        <div class="portal-card-icon">
+          <i data-lucide={card.fields.icon}></i>
+        </div>
+        <h3>{card.fields.buttonText}</h3>
+        <p class="portal-card-subtitle">{card.fields.buttonSubtitle}</p>
+      </a>
+    </div>
+  ))}
 </div>
-
-<style>
-  
-</style>
