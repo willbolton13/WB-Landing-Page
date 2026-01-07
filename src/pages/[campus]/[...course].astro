@@ -15,7 +15,7 @@ import {
 } from '../../lib/contentful';
 import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
 
-// Generate static paths for all campus and campus/course combinations
+// Generate static paths for all campus and campus/course combinations - update
 export async function getStaticPaths() {
   const campuses = await getCampuses();
   const paths = [];
