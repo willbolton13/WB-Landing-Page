@@ -1,0 +1,111 @@
+---
+// No layout - standalone page
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent-yellow: #F6DD0D;
+      --brand-black: #121212;
+      --button-text-color: #000;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background-color: var(--brand-black);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .error-container {
+      max-width: 600px;
+    }
+
+    h1 {
+      font-size: clamp(4rem, 10vw, 6rem);
+      font-weight: 900;
+      color: var(--accent-yellow);
+      line-height: 1;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: clamp(1rem, 2vw, 1rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      letter-spacing: 0.05em;
+      line-height: .8;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.9;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .btn-home {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      background-color: var(--accent-yellow);
+      color: var(--button-text-color);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+    }
+
+    .btn-home:hover {
+      background-color: white;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+
+      .btn-home {
+        padding: 0.875rem 2rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <h1>Not Yet Available</h1>
+    <h2>The Link You Have Clicked Is Not Currently Live</h2>
+    <p>Please note, Mentoring commences from Week 3, all other Bookable services begin at the start of this Study Block</p>
+    <a href="/" class="btn-home">Back to Home</a>
+  </div>
+</body>
+</html>
