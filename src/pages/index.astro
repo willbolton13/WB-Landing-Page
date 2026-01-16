@@ -1,16 +1,27 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import StaticPortalCards from '../components/StaticPortalCards.astro';
+import ContentRenderer from '../components/ContentRenderer.astro';
 import { 
   getAllHeroImages,
   getRotatingImage,
   getOptimizedImageUrl,
   generateSrcSet,
-  getPlaceholderImageUrl
+  getPlaceholderImageUrl,
+  getResourceWithFullContent,
+  findIncludedEntry,
+  processEventList,
+  processMentorList
 } from '../lib/contentful';
 
 // Get all hero images from all campuses
 const allHeroImages = await getAllHeroImages();
+const homepageSlug = 'homepage'; 
+const resourceResponse = await getResourceWithFullContent(homepageSlug);
+const resourceData = resourceResponse?.items?.[0] || null;
+
+const eventListsData = {};
+const mentorListsData = {};
 
 // Select a rotating image for the homepage
 let heroImage = null;
@@ -19,6 +30,7 @@ let heroImageSrcSet = null;
 let heroImageAlt = 'Welcome to WaterBear';
 let heroImageCampus = '';
 let placeholderUrl = null;
+let contentItems = [];
 
 if (allHeroImages && allHeroImages.length > 0) {
   // Get rotating image object (changes daily)
@@ -47,6 +59,30 @@ if (allHeroImages && allHeroImages.length > 0) {
     
     // Use image description if available
     heroImageAlt = heroImage.fields.description || heroImage.fields.title || `${heroImageCampus} campus`;
+  }
+}
+
+if (resourceData && resourceData.fields.pageContent) {
+  // Resolve the content items
+  contentItems = resourceData.fields.pageContent.map(contentRef => {
+    return findIncludedEntry(resourceResponse?.includes, contentRef.sys.id) || contentRef;
+  }).filter(item => item?.fields);
+
+  // Pre-fetch dynamic data if needed
+  for (const item of contentItems) {
+    const contentType = item?.sys?.contentType?.sys?.id;
+    
+    // Check for Event Lists
+    if (contentType === 'eventList') {
+      const events = await processEventList(item);
+      eventListsData[item.sys.id] = events;
+    }
+    
+    // Check for Mentor Lists
+    if (contentType === 'mentorList') {
+      const mentors = await processMentorList(item);
+      mentorListsData[item.sys.id] = mentors;
+    }
   }
 }
 ---
@@ -108,6 +144,40 @@ if (allHeroImages && allHeroImages.length > 0) {
             <p class="hero-subtitle--lg">Your Student Portal</p>
         </div>
         <StaticPortalCards />
+
+    {contentItems.length > 0 && (
+            <div class="homepage-news-section mt-5">
+            
+            <div class="news-header-bar">
+                    {resourceData.fields.pageTitle || "COLLEGE NEWS"}
+                </div>
+
+                {/* Optional: Add a header if the Resource has a pageTitle */}
+                {resourceData.fields.pageTitle && resourceData.fields.pageTitle !== 'Homepage' && (
+                    <div class="text-center mb-5">
+                        <h2 class="hero-title--md">{resourceData.fields.pageTitle}</h2>
+                    </div>
+                )}
+
+                {/* Render the blocks using your existing renderer */}
+                {contentItems.map((item, index) => {
+                    const contentType = item?.sys?.contentType?.sys?.id;
+                    const eventData = contentType === 'eventList' ? eventListsData[item.sys.id] : null;
+                    const mentorData = contentType === 'mentorList' ? mentorListsData[item.sys.id] : null;
+
+                    return (
+                        <ContentRenderer 
+                            item={item}
+                            includes={resourceResponse?.includes}
+                            index={index}
+                            eventData={eventData}
+                            mentorData={mentorData}
+                        />
+                    );
+                })}
+            </div>
+        )}    
+
     </main>
 </Layout>
 
@@ -120,10 +190,34 @@ if (allHeroImages && allHeroImages.length > 0) {
     z-index: 1;
     background: #000; /* Black background */
   }
+  
+  /* ... existing styles ... */
+
+  .homepage-news-section {
+    position: relative;
+    z-index: 2;
+    padding-top: rem;
+  }
+
+  /* 1. Black Header Bar Styles */
+  .news-header-bar {
+    background-color: var(--brand-black);
+    color: #ffffff;
+    padding: 0.8rem;
+    text-align: center;
+    
+    /* Typography per your guidelines */
+    font-family: 'Futura PT', sans-serif;
+    font-weight: 800; /* Extra Bold/Heavy */
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
 
 
 
-  /* Black placeholder - always visible */
+    /* Black placeholder - always visible */
   .hero-placeholder {
     position: absolute;
     top: 0;
