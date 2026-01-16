@@ -494,16 +494,27 @@ export async function getMentors(options = {}) {
     include: 2,
     limit: options.limit || 100,
   };
-  
-  // Filter by campus if specified
-  if (options.campus && options.campus !== 'All') {
-    query['fields.campus'] = options.campus;
+  // UPDATED: Filter by campus (supports single string or array of strings)
+  if (options.campus) {
+    // 1. Check if "All" is selected (either as string or inside array)
+    const isAll = options.campus === 'All' || 
+                 (Array.isArray(options.campus) && options.campus.includes('All'));
+
+    // 2. If not "All", apply specific filters
+    if (!isAll) {
+      if (Array.isArray(options.campus)) {
+        // If multiple campuses, use the 'in' operator with a comma-joined string
+        query['fields.campus[in]'] = options.campus;
+      } else {
+        // Legacy support: Single string exact match
+        query['fields.campus'] = options.campus;
+      }
+    }
   }
   
   // Filter by categories if specified
   if (options.categories && options.categories.length > 0) {
-    // This will match mentors that have ANY of the specified categories
-    query['fields.mentorCategories[in]'] = options.categories.join(',');
+    query['fields.mentorCategories[in]'] = options.categories;
   }
   
   const entries = await contentfulClient.getEntries(query);
@@ -542,17 +553,17 @@ export async function getMentorCategories() {
 export async function processMentorList(mentorList) {
   const filters = {};
   
-  // Add campus filter if specified
+  // This will now accept either a string ('Brighton') 
+  // or an array (['Brighton', 'Sheffield']) depending on your Contentful setup
   if (mentorList.fields.filterCampus) {
     filters.campus = mentorList.fields.filterCampus;
   }
   
-  // Add category filter if specified
+  // ... existing category logic ...
   if (mentorList.fields.filterCategories && mentorList.fields.filterCategories.length > 0) {
     filters.categories = mentorList.fields.filterCategories;
   }
   
-  // Get mentors using the filters
   const mentors = await getMentors(filters);
   
   return mentors;
