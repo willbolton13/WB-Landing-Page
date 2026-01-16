@@ -51,7 +51,31 @@ if (mentor.fields.campus === 'Brighton') {
 // Create data attributes for filtering
 const mentorCategories = mentor.fields.mentorCategories || [];
 const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, '-');
+
+let availabilityString = '';
+let availabilityStringDays = '';
+const days = mentor.fields.availabilityDay || [];
+const times = mentor.fields.availabilityTime || [];
+
+if (days.length > 0) {
+  // Map through days and find corresponding time by index
+  const availabilityParts = days.map((day, index) => {
+    // If there is a corresponding time, add it. Otherwise just show the day.
+    const dayName = `${day}s`;
+    const time = times[index];
+    return time ? `${dayName} from ${time}` : dayName;
+  });
+
+  const availabilityDays = days.map((day) => {
+    return `${day}s`;
+  });
+  
+  availabilityString = availabilityParts.join(', ');
+  availabilityStringDays = availabilityDays.join(', ');
+}
+
 ---
+
 
 {variant === 'card' && (
   <div class="mentor-card-container">
@@ -94,6 +118,13 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
             )}
           </div>
           
+          {availabilityString && (
+            <div class="mentor-availability">
+              <span class="availability-label">Bookable On </span>
+              {availabilityStringDays}
+            </div>
+          )}
+
           <div class="mentor-actions">
             {mentor.fields.bookingLink && (
               <a href={mentor.fields.bookingLink} class="mentor-book-btn">
@@ -128,6 +159,12 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
             {mentorCategories.length > 0 && (
               <div class="mentor-specialties">
                 <strong>Specialties: </strong> {mentorCategories.join(', ')}
+              </div>
+            )}
+
+            {availabilityString && (
+              <div class="mentor-availability availability-back">
+                <span>Bookable On: </span> <strong>{availabilityString}</strong>
               </div>
             )}
             
@@ -308,6 +345,34 @@ const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, 
     padding-right: 10px;
     margin-top: 5px;
     /* NO overflow properties - content only */
+  }
+
+  .mentor-availability {
+    background-color: var(--brand-black);
+    color: var(--accent-yellow);
+    font-size: 0.70rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 8px 10px;
+    margin-bottom: 12px; /* Space above buttons */
+    margin-top: 5px;     /* Space below bio */
+    border-radius: 0px;
+    line-height: 1.3;
+    flex-shrink: 0;      /* Don't let flexbox squash this */
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .availability-label {
+    opacity: 0.7;
+    font-weight: 400;
+
+  }
+
+  /* Optional style if you included it on the back card */
+  .availability-back {
+    background-color: rgba(255,255,255,0.1); /* Subtle on dark back */
+    color: var(--accent-yellow);
   }
 
   /* Action buttons */
