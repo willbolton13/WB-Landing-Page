@@ -48,6 +48,14 @@ if (mentor.fields.campus === 'Brighton') {
   campusBadgeClass = 'badge-sheffield';
 }
 
+const rawButtonValue = mentor.fields.bookingButton;
+
+const isButtonHidden = rawButtonValue === "Hidden";
+
+const buttonLabel = (rawButtonValue && !isButtonHidden)
+  ? rawButtonValue
+  : "BOOK MENTOR";
+
 // Create data attributes for filtering
 const mentorCategories = mentor.fields.mentorCategories || [];
 const categoriesString = mentorCategories.join(',').toLowerCase().replace(/ /g, '-');
@@ -126,9 +134,9 @@ if (days.length > 0) {
           )}
 
           <div class="mentor-actions">
-            {mentor.fields.bookingLink && (
+            {mentor.fields.bookingLink && !isButtonHidden && (
               <a href={mentor.fields.bookingLink} class="mentor-book-btn">
-                BOOK MENTOR
+                {buttonLabel}
               </a>
             )}
             
@@ -170,9 +178,9 @@ if (days.length > 0) {
             
             <div class="card-back-bio" set:html={fullBioHtml}></div>
             
-            {mentor.fields.bookingLink && (
+            {mentor.fields.bookingLink && !isButtonHidden && (
               <a href={mentor.fields.bookingLink} class="mentor-book-btn-back">
-                BOOK THIS MENTOR
+                {buttonLabel}
               </a>
             )}
           </div>
